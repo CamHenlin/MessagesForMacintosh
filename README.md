@@ -1,4 +1,2 @@
-# nuklear-quickdraw
-very messy, not quite working yet: QuickDraw (Classic Macintosh) back end implementation for nuklear, along with a very hacked up sample C app made from previous example apps
-
-still wip
+# Messages For Macintosh
+iMessage app (via a modern Mac...) for System 6 Macintoshes. Built on Retro68, Nuklear, CoprocessorJS
