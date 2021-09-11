@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="NuklearQuickDraw" Database="" Version="10.0.0">
+  <Project Name="NuklearQuickDraw" Path="NuklearQuickDraw.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Default Config" Selected="yes">
+      <Environment/>
+      <Project Name="NuklearQuickDraw" ConfigName="pce-mac-classic"/>
+      <Project Name="NuklearQuickDraw" ConfigName="Basilisk II"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

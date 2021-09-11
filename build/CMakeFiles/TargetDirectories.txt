@@ -1,0 +1,4 @@
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/rebuild_cache.dir
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/edit_cache.dir
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/NuklearQuickDraw_APPL.dir
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/NuklearQuickDraw.dir
