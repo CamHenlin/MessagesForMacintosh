@@ -45,7 +45,7 @@ OSErr writeSerialPortDebug(short refNum, const char* str)
     IOParam pb2;
     pb2.ioRefNum = serialPort;
     
-    char str2[255];
+    char str2[1024];
     sprintf(str2, "%s\n", str);
     pb2.ioBuffer = (Ptr) str2;
     pb2.ioReqCount = strlen(str2);

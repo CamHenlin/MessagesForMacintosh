@@ -455,7 +455,7 @@ static int nk_color_to_quickdraw_bw_color(struct nk_color color) {
        return blackColor;
    }
    
-   return whiteColor;
+   return blackColor;//whiteColor;
 }
 
 // i split this in to a 2nd routine because we can use the various shades of gray when filling rectangles and whatnot
@@ -551,6 +551,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     nk_foreach(cmd, ctx) {
 
         int color;
+        ForeColor(blackColor);
 
         if (lastEventWasKey && cmd->type == NK_COMMAND_TEXT) {
 

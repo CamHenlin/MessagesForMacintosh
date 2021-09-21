@@ -119,109 +119,153 @@ void AlertUser( void );
 
 char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
 
-// function to send messages in chat
-void sendMessage(message) {
 
-	char output[128];
-	// sprintf(output, "D%d,%d", x, y);
 
-	callFunctionOnCoprocessor("runEvent", output, jsFunctionResponse);
+int haveRun = 0;
+int chatFriendlyNamesCounter = 0;
+char chatFriendlyNames[16][64];
+char activeChat[64];
+int activeMessageCounter = 0;
+char activeChatMessages[10][2048];
+char box_input_buffer[2048];
+int box_len;
+int box_input_len;
+
+void getMessagesFromjsFunctionResponse() {
+
+	for (int i = 0; i < 8; i++) {
+		memset(&activeChatMessages[i], '\0', 2048);
+	}
+
+	activeMessageCounter = 0;
+
+	writeSerialPortDebug(boutRefNum, "BEGIN");
+
+	writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+	char *token = strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
+	// loop through the string to extract all other tokens
+	while (token != NULL) {
+
+    	writeSerialPortDebug(boutRefNum, "LOAD VALUE TO TOKEN");
+    	writeSerialPortDebug(boutRefNum, token);
+		sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
+    	writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
+    	writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
+		token = strtokm(NULL, "ENDLASTMESSAGE");
+		activeMessageCounter++;
+	}
+
+	return;
 }
+// function to send messages in chat
+void sendMessage() {
 
+	char output[2048];
+	sprintf(output, "%s&&&%s", activeChat, box_input_buffer);
+
+	callFunctionOnCoprocessor("sendMessage", output, jsFunctionResponse);
+	getMessagesFromjsFunctionResponse();
+
+	return;
+}
 // set up function to get messages in current chat
 // 	 limit to recent messages 
 // 	 figure out pagination?? button on the top that says "get previous chats"?
-void getMessages(thread, page) {
+void getMessages(char *thread, int page) {
 
-	char output[128];
-	// sprintf(output, "D%d,%d", x, y);
+	char output[62];
+	sprintf(output, "%s&&&%d", thread, page);
+    writeSerialPortDebug(boutRefNum, output);
 
-	callFunctionOnCoprocessor("runEvent", output, jsFunctionResponse);
+	callFunctionOnCoprocessor("getMessages", output, jsFunctionResponse);
+    writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+    getMessagesFromjsFunctionResponse();
+
+	return;
 }
-
 // set up function to get available chat (fill buttons on right hand side)
 //	 run it on some interval? make sure user is not typing!!!
-void getChats(thread) {
+void getChats() {
 
-	char output[128];
-	// sprintf(output, "D%d,%d", x, y);
+	if (haveRun) {
 
-	callFunctionOnCoprocessor("runEvent", output, jsFunctionResponse);
+		return;
+	}
+
+	haveRun = 1;
+
+	callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
+
+	char * token = strtokm(jsFunctionResponse, ",");
+	// loop through the string to extract all other tokens
+	while (token != NULL) {
+		sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
+		token = strtokm(NULL, ",");
+	}
+
+	return;
 }
 
 static void boxTest(struct nk_context *ctx) {
 
-    if (nk_begin(ctx, "Chats",  nk_rect(410, 0, 100, WINDOW_HEIGHT), NK_WINDOW_BORDER)) {
+    if (nk_begin(ctx, "Chats",  nk_rect(0, 0, 200, WINDOW_HEIGHT), NK_WINDOW_BORDER)) {
 
         nk_layout_row_dynamic(ctx, 25, 1);
-        if (nk_button_label(ctx, "chat 1")) {
 
-            writeSerialPortDebug(boutRefNum, "CLICK!");
+        getChats();
+
+        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
+
+	        if (nk_button_label(ctx, chatFriendlyNames[i])) {
+
+	            writeSerialPortDebug(boutRefNum, "CLICK!");
+	            writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
+	            sprintf(activeChat, "%s", chatFriendlyNames[i]);
+	            getMessages(activeChat, 0);
+	            writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
+	        }
         }
-        nk_button_label(ctx, "chat 2");
-        nk_button_label(ctx, "chat 3");
-        nk_button_label(ctx, "chat 4");
-        nk_button_label(ctx, "chat 5");
-        nk_button_label(ctx, "chat 6");
-        nk_button_label(ctx, "chat 7");
-        nk_button_label(ctx, "chat 8");
-        nk_button_label(ctx, "chat 9");
-        nk_button_label(ctx, "chat 10");
-        nk_button_label(ctx, "chat 11");
-        nk_button_label(ctx, "chat 12");
-        nk_button_label(ctx, "chat 13");
-        nk_button_label(ctx, "chat 14");
-        nk_button_label(ctx, "chat 15");
-        nk_button_label(ctx, "chat 16");
-        nk_button_label(ctx, "chat 17");
-        nk_button_label(ctx, "chat 18");
-        nk_button_label(ctx, "chat 19");
-        nk_button_label(ctx, "chat 20");
 
     	nk_end(ctx);
     }
 
-    if (nk_begin(ctx, "Message", nk_rect(0, 0, 410, WINDOW_HEIGHT), NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
-
-		static char box_buffer[512];
-		static char box_input_buffer[512];
-		static int box_len;
-		static int box_input_len;
-		int options = NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR;
-
-		// top part of the window
-		nk_layout_row_dynamic(ctx, 20, 1);
-		{
-			// chat label
-			nk_label(ctx, "chat name", NK_TEXT_ALIGN_CENTERED);
-		}
-		nk_layout_row_end(ctx);
-
-		nk_layout_row_dynamic(ctx, 208, 1);
-		{
-			// chat contents
-			nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
-		}
-		nk_layout_row_end(ctx);
-
+    if (nk_begin(ctx, "Message Input", nk_rect(200, WINDOW_HEIGHT - 50, 310, 50), NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 		// bottom text input		
-		nk_layout_row_begin(ctx, NK_STATIC, 50, 2);
+		nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
 		{
-			nk_layout_row_push(ctx, 300); // 40% wide
+			nk_layout_row_push(ctx, 200); // 40% wide
 
-			nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 512, nk_filter_default);
+			nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
 
 			nk_layout_row_push(ctx, 96); // 40% wide
 			if (nk_button_label(ctx, "send")) {
         		//fprintf(stdout, "pushed!\n");
+        		sendMessage();
 			}
-
-            nk_layout_row_end(ctx);
 		}
 		nk_layout_row_end(ctx);
 
     	nk_end(ctx);
 	}
+
+    if (nk_begin_titled(ctx, "Message", activeChat, nk_rect(200, 0, 310, WINDOW_HEIGHT - 50), NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
+
+		nk_layout_row_begin(ctx, NK_STATIC, 0, 1);
+		{
+		    for (int i = 0; i < activeMessageCounter; i++) {
+		        
+				nk_layout_row_push(ctx, 290); // 40% wide
+				// message label
+	            writeSerialPortDebug(boutRefNum, "create label!");
+	            writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
+
+				nk_label_wrap(ctx, activeChatMessages[i]);
+		    }
+
+		}
+		nk_layout_row_end(ctx);
+    	nk_end(ctx);
+    }
 
 
 }
@@ -230,6 +274,7 @@ static void boxTest(struct nk_context *ctx) {
 void main()
 {	
 	Initialize();					/* initialize the program */
+    sprintf(activeChat, "no active chat");
 
 	UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
 
@@ -918,7 +963,7 @@ Boolean TrapAvailable(tNumber,tType)
 {    
 	if ( ( tType == ToolTrap ) &&
 		( gMac.machineType > envMachUnknown ) &&
-		( gMac.machineType < envMacII ) ) {		/* it's a 512KE, Plus, or SE */
+		( gMac.machineType < envMacII ) ) {		/* it's a 2048KE, Plus, or SE */
 		tNumber = tNumber & 0x03FF;
 		if ( tNumber > 0x01FF )		 {			/* which means the tool traps */
 			tNumber = _Unimplemented;			/* only go to 0x01FF */

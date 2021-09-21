@@ -303,7 +303,7 @@ void readSerialPort(char* output) {
     strncat(output, tempOutput, totalByteCount);
 
     // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
-    memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE); 
+    memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);
 
     return;
 }

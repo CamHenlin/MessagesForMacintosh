@@ -25875,18 +25875,18 @@ nk_draw_scrollbar(struct nk_command_buffer *out, nk_flags state,
     }
 
     /* draw background */
-    if (background->type == NK_STYLE_ITEM_COLOR) {
+   //if (background->type == NK_STYLE_ITEM_COLOR) {
         nk_fill_rect(out, *bounds, style->rounding, background->data.color);
         nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
-    } else {
-        nk_draw_image(out, *bounds, &background->data.image, nk_white);
-    }
+    //} else {
+    //    nk_draw_image(out, *bounds, &background->data.image, nk_white);
+    //}
 
     /* draw cursor */
-    if (cursor->type == NK_STYLE_ITEM_COLOR) {
+    // if (cursor->type == NK_STYLE_ITEM_COLOR) {
         nk_fill_rect(out, *scroll, style->rounding_cursor, cursor->data.color);
         nk_stroke_rect(out, *scroll, style->rounding_cursor, style->border_cursor, style->cursor_border_color);
-    } else nk_draw_image(out, *scroll, &cursor->data.image, nk_white);
+    // } else nk_draw_image(out, *scroll, &cursor->data.image, nk_white);
 }
 NK_LIB int
 nk_do_scrollbarv(nk_flags *state,
@@ -25915,7 +25915,7 @@ nk_do_scrollbarv(nk_flags *state,
     if (target <= scroll.h) return 0;
 
     /* optional scrollbar buttons */
-    if (style->show_buttons) {
+    // if (style->show_buttons) {
         nk_flags ws;
         int scroll_h;
         struct nk_rect button;
@@ -25941,7 +25941,7 @@ nk_do_scrollbarv(nk_flags *state,
 
         scroll.y = scroll.y + button.h;
         scroll.h = scroll_h;
-    }
+    // }
 
     /* calculate scrollbar constants */
     scroll_step = NK_MIN(step, scroll.h);
@@ -26005,7 +26005,7 @@ nk_do_scrollbarh(nk_flags *state,
     if (target <= scroll.w) return 0;
 
     /* optional scrollbar buttons */
-    if (style->show_buttons) {
+    // if (style->show_buttons) {
         nk_flags ws;
         int scroll_w;
         struct nk_rect button;
@@ -26030,7 +26030,7 @@ nk_do_scrollbarh(nk_flags *state,
 
         scroll.x = scroll.x + button.w;
         scroll.w = scroll_w;
-    }
+    // }
 
     /* calculate scrollbar constants */
     scroll_step = NK_MIN(step, scroll.w);
