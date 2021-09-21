@@ -16,10 +16,10 @@ const defaultOptions = {
 }
 
 const client = new ApolloClient({
-  uri: 'http://10.0.1.166:4000/',
+  uri: 'http://10.0.1.167:4000/',
   cache: new InMemoryCache(),
   link: new createHttpLink({
-    uri: 'http://10.0.1.166:4000/'
+    uri: 'http://10.0.1.167:4000/'
   }),
   defaultOptions
 });

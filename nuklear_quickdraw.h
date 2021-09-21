@@ -394,7 +394,7 @@ int widthFor12ptFont[128] = {
 // doing this in a "fast" way by using a precomputed table for a 12pt font
 static int nk_quickdraw_font_get_text_width(nk_handle handle, int height, const char *text, int len) {
 
-    // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
+    // // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
 
     if (!text || len == 0) {
 
@@ -413,7 +413,7 @@ static int nk_quickdraw_font_get_text_width(nk_handle handle, int height, const 
 
 static int _get_text_width(const char *text, int len) {
 
-    // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
+    // // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
 
     if (!text || len == 0) {
 
@@ -447,7 +447,7 @@ static int nk_color_to_quickdraw_bw_color(struct nk_color color) {
 
        char stringMagicColorNumber[255];
        sprintf(stringMagicColorNumber, "stringMagicColorNumber: %f", magicColorNumber);
-       writeSerialPortDebug(boutRefNum, stringMagicColorNumber);
+       // writeSerialPortDebug(boutRefNum, stringMagicColorNumber);
     #endif
    
    if (magicColorNumber > 37) {
@@ -523,7 +523,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-            writeSerialPortDebug(boutRefNum, "NK_COMMAND_NOP");
+            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_NOP");
         #endif
 
         return;
@@ -556,17 +556,17 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         if (lastEventWasKey && cmd->type == NK_COMMAND_TEXT) {
 
 
-                //writeSerialPortDebug(boutRefNum, "FAST INPUT");
+                // //writeSerialPortDebug(boutRefNum, "FAST INPUT");
 
 
             const struct nk_command_text *t = (const struct nk_command_text*)cmd;
             
             #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
+                // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
                 char log[255];
                 sprintf(log, "%f: %c, %d", (int)t->height, &t->string, (int)t->length);
-                writeSerialPortDebug(boutRefNum, log);
+                // writeSerialPortDebug(boutRefNum, log);
             #endif
 
             MoveTo((int)t->x + _get_text_width(&t->string, (int)t->length - 1), (int)t->y + (int)t->height);
@@ -578,14 +578,14 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         } else if (!lastEventWasKey) {
 
 
-                // writeSerialPortDebug(boutRefNum, "SLOW INPUT");
+                // // writeSerialPortDebug(boutRefNum, "SLOW INPUT");
             switch (cmd->type) {
 
                 case NK_COMMAND_NOP:
                     
                     #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "NK_COMMAND_NOP");
+                        // writeSerialPortDebug(boutRefNum, "NK_COMMAND_NOP");
                     #endif
                     
 
@@ -594,7 +594,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_SCISSOR");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_SCISSOR");
                         #endif
 
                         const struct nk_command_scissor *s =(const struct nk_command_scissor*)cmd;
@@ -620,7 +620,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_LINE");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_LINE");
                         #endif
 
                         const struct nk_command_line *l = (const struct nk_command_line *)cmd;
@@ -640,7 +640,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT");
                         #endif
 
                         // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-102.html#MARKER-9-372
@@ -667,7 +667,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                     
                     #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED");
+                        // writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED");
                     #endif
 
                     const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled *)cmd;
@@ -695,7 +695,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                     
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE");
                         #endif
 
                         const struct nk_command_circle *c = (const struct nk_command_circle *)cmd;
@@ -718,7 +718,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE_FILLED");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE_FILLED");
                         #endif
 
                         const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
@@ -746,7 +746,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_TRIANGLE");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TRIANGLE");
                         #endif
 
                         const struct nk_command_triangle *t = (const struct nk_command_triangle*)cmd;
@@ -767,7 +767,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_TRIANGLE_FILLED");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TRIANGLE_FILLED");
                         #endif
 
                         const struct nk_command_triangle_filled *t = (const struct nk_command_triangle_filled *)cmd;
@@ -794,7 +794,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYGON");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYGON");
                         #endif
 
                         const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
@@ -826,7 +826,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYGON_FILLED");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYGON_FILLED");
                         #endif
 
                         const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
@@ -865,7 +865,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYLINE");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYLINE");
                         #endif
 
                         // this is similar to polygons except the polygon does not get closed to the 0th point
@@ -894,10 +894,10 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
                             char log[255];
                             sprintf(log, "%f: %c, %d", (int)t->height, &t->string, (int)t->length);
-                            writeSerialPortDebug(boutRefNum, log);
+                            // writeSerialPortDebug(boutRefNum, log);
                         #endif
 
                         color = nk_color_to_quickdraw_bw_color(t->foreground);
@@ -914,7 +914,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_CURVE");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_CURVE");
                         #endif
 
                         const struct nk_command_curve *q = (const struct nk_command_curve *)cmd;
@@ -933,7 +933,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_ARC");
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_ARC");
                         #endif
 
                         const struct nk_command_arc *a = (const struct nk_command_arc *)cmd;
@@ -958,7 +958,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "NK_COMMAND_IMAGE");  
+                            // writeSerialPortDebug(boutRefNum, "NK_COMMAND_IMAGE");  
                         #endif
 
                         const struct nk_command_image *i = (const struct nk_command_image *)cmd;
@@ -994,7 +994,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                 
                     #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_MULTI_COLOR/NK_COMMAND_ARC_FILLED/default");
+                        // writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_MULTI_COLOR/NK_COMMAND_ARC_FILLED/default");
                     #endif
                     break;
             }
@@ -1026,7 +1026,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     
     // char logx[255];
     // sprintf(logx, "nk_quickdraw_render() renderTime1 (pre-render) %ld, renderTime2 (render loop) %ld, renderTime3 (post-render) %ld ticks to execute\n", renderTime1, renderTime2, renderTime3);
-    // writeSerialPortDebug(boutRefNum, logx);
+    // // writeSerialPortDebug(boutRefNum, logx);
 
     lastEventWasKey = 0;
 }
@@ -1039,7 +1039,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
     FindWindow(event->where, &window); 
     // char logb[255];
     // sprintf(logb, "nk_quickdraw_handle_event event %d", event->what);
-    // writeSerialPortDebug(boutRefNum, logb);
+    // // writeSerialPortDebug(boutRefNum, logb);
 
     switch (event->what) {
         case updateEvt: {
@@ -1051,7 +1051,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
             // notice that we are actually calling nk_input_motion in the EventLoop for the program
             // instead, as handling this event directly does not appear to work for whatever reason
             // TODO: research this
-            writeSerialPortDebug(boutRefNum, "osEvt");
+            // writeSerialPortDebug(boutRefNum, "osEvt");
 
                 switch (event->message) {
 
@@ -1059,7 +1059,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                         #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
                             
-                            writeSerialPortDebug(boutRefNum, "mouseMovedMessage");
+                            // writeSerialPortDebug(boutRefNum, "mouseMovedMessage");
                         #endif
 
 
@@ -1078,13 +1078,13 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
         case mouseUp: 
             #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                writeSerialPortDebug(boutRefNum, "mouseUp!!!");
+                // writeSerialPortDebug(boutRefNum, "mouseUp!!!");
             #endif
         case mouseDown: {
 
             #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                writeSerialPortDebug(boutRefNum, "mouseUp/Down");
+                // writeSerialPortDebug(boutRefNum, "mouseUp/Down");
             #endif
             
             short part = FindWindow(event->where, &window);
@@ -1095,7 +1095,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     // TODO need to figure this out
                     #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "mouseUp/Down IN DEFAULT ZONE!!!!");
+                        // writeSerialPortDebug(boutRefNum, "mouseUp/Down IN DEFAULT ZONE!!!!");
                     #endif
 
                     // this converts the offset of the window to the actual location of the mouse within the window
@@ -1107,7 +1107,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                         
                         #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                            writeSerialPortDebug(boutRefNum, "no event location for mouse!!!!");
+                            // writeSerialPortDebug(boutRefNum, "no event location for mouse!!!!");
                         #endif
                         return 1;
                     }
@@ -1118,7 +1118,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                         char logx[255];
                         sprintf(logx, "mouse location at time of click h: %d,  v: %d", x, y);
-                        writeSerialPortDebug(boutRefNum, logx);
+                        // writeSerialPortDebug(boutRefNum, logx);
                     #endif
 
                     // nk_input_motion(nuklear_context, x, y); // you can enable this if you don't want to use motion tracking
@@ -1140,11 +1140,11 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                 #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                    writeSerialPortDebug(boutRefNum, "keyDown/autoKey");
+                    // writeSerialPortDebug(boutRefNum, "keyDown/autoKey");
 
                     char logy[255];
                     sprintf(logy, "key pressed: key: '%c', 02x: '%02X', return: '%02X', %d == %d ??", key, key, returnKey, (int)(key), (int)(returnKey));
-                    writeSerialPortDebug(boutRefNum, logy);
+                    // writeSerialPortDebug(boutRefNum, logy);
                 #endif
 
                 const Boolean isKeyDown = event->what == keyDown;
@@ -1224,7 +1224,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                     #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
+                        // writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
                     #endif
                     
                     nk_input_unicode(nuklear_context, charKey);
@@ -1238,7 +1238,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
         default: {
                 #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                    writeSerialPortDebug(boutRefNum, "default unhandled event");
+                    // writeSerialPortDebug(boutRefNum, "default unhandled event");
                 #endif
             
                 return 1; 

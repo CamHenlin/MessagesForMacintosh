@@ -132,7 +132,7 @@
 /// Define                          | Description
 /// --------------------------------|---------------------------------------
 /// NK_BUFFER_DEFAULT_INITIAL_SIZE  | Initial buffer size allocated by all buffers while using the default allocator functions included by defining NK_INCLUDE_DEFAULT_ALLOCATOR. If you don't want to allocate the default 4k memory then redefine it.
-/// NK_MAX_NUMBER_BUFFER            | Maximum buffer size for the conversion buffer between int and string Under normal circumstances this should be more than sufficient.
+/// NK_MAX_NUMBER_BUFFER            | Maximum buffer size for the conversion buffer between float and string Under normal circumstances this should be more than sufficient.
 /// NK_INPUT_MAX                    | Defines the max number of bytes which can be added as text input in one frame. Under normal circumstances this should be more than sufficient.
 ///
 /// !!! WARNING
@@ -144,7 +144,7 @@
 /// ### Dependencies
 /// Function    | Description
 /// ------------|---------------------------------------------------------------
-/// // NK_ASSERT   | If you don't define this, nuklear will use <assert.h> with assert().
+/// NK_ASSERT   | If you don't define this, nuklear will use <assert.h> with assert().
 /// NK_MEMSET   | You can define this to 'memset' or your own memset implementation replacement. If not nuklear will use its own version.
 /// NK_MEMCPY   | You can define this to 'memcpy' or your own memcpy implementation replacement. If not nuklear will use its own version.
 /// NK_SQRT     | You can define this to 'sqrt' or your own sqrt implementation replacement. If not nuklear will use its own slow and not highly accurate version.
@@ -156,11 +156,11 @@
 ///
 /// !!! WARNING
 ///     The following dependencies will pull in the standard C library if not redefined:
-///     - // NK_ASSERT
+///     - NK_ASSERT
 ///
 /// !!! WARNING
 ///     The following dependencies if defined need to be defined for both header and implementation:
-///     - // NK_ASSERT
+///     - NK_ASSERT
 ///
 /// !!! WARNING
 ///     The following dependencies if defined need to be defined only for the implementation part:
@@ -179,7 +179,7 @@
 /// // init gui state
 /// enum {EASY, HARD};
 /// static int op = EASY;
-/// static int value = 0.6f;
+/// static float value = 0.6f;
 /// static int i =  20;
 /// struct nk_context ctx;
 ///
@@ -203,7 +203,7 @@
 ///         nk_layout_row_push(&ctx, 50);
 ///         nk_label(&ctx, "Volume:", NK_TEXT_LEFT);
 ///         nk_layout_row_push(&ctx, 110);
-///         nk_slider_int(&ctx, 0, &value, 1.0f, 0.1f);
+///         nk_slider_float(&ctx, 0, &value, 1.0f, 0.1f);
 ///     }
 ///     nk_layout_row_end(&ctx);
 /// }
@@ -473,14 +473,15 @@ struct nk_style_window;
 
 enum {nk_false, nk_true};
 struct nk_color {nk_byte r,g,b,a;};
-struct nk_colorf {int r,g,b,a;};
-struct nk_vec2 {int x,y;};
+struct nk_colorf {float r,g,b,a;};
+struct nk_vec2 {float x,y;};
 struct nk_vec2i {short x, y;};
-struct nk_rect {int x,y,w,h;};
+struct nk_rect {float x,y,w,h;};
 struct nk_recti {short x,y,w,h;};
 typedef char nk_glyph[NK_UTF_SIZE];
 typedef union {void *ptr; int id;} nk_handle;
-struct nk_image {nk_handle handle;unsigned short w,h;unsigned short region[4];};
+struct nk_image {nk_handle handle; nk_ushort w, h; nk_ushort region[4];};
+struct nk_nine_slice {struct nk_image img; nk_ushort l, t, r, b;};
 struct nk_cursor {struct nk_image img; struct nk_vec2 size, offset;};
 struct nk_scroll {nk_uint x, y;};
 
@@ -1106,14 +1107,14 @@ NK_API void nk_input_end(struct nk_context*);
 /// // fill configuration
 /// struct your_vertex
 /// {
-///     int pos[2]; // important to keep it to 2 ints
-///     int uv[2];
+///     float pos[2]; // important to keep it to 2 floats
+///     float uv[2];
 ///     unsigned char col[4];
 /// };
 /// struct nk_convert_config cfg = {};
 /// static const struct nk_draw_vertex_layout_element vertex_layout[] = {
-///     {NK_VERTEX_POSITION, NK_FORMAT_int, NK_OFFSETOF(struct your_vertex, pos)},
-///     {NK_VERTEX_TEXCOORD, NK_FORMAT_int, NK_OFFSETOF(struct your_vertex, uv)},
+///     {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(struct your_vertex, pos)},
+///     {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(struct your_vertex, uv)},
 ///     {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(struct your_vertex, col)},
 ///     {NK_VERTEX_LAYOUT_END}
 /// };
@@ -1170,7 +1171,7 @@ struct nk_draw_null_texture {
     struct nk_vec2 uv; /* coordinates to a white pixel in the texture  */
 };
 struct nk_convert_config {
-    int global_alpha; /* global alpha value */
+    float global_alpha; /* global alpha value */
     enum nk_anti_aliasing line_AA; /* line anti-aliasing flag can be turned off if you are tight on memory */
     enum nk_anti_aliasing shape_AA; /* shape anti-aliasing flag can be turned off if you are tight on memory */
     unsigned circle_segment_count; /* number of segments used for circles: default to 22 */
@@ -1251,7 +1252,7 @@ NK_API const struct nk_command* nk__next(struct nk_context*, const struct nk_com
 /// Parameter                       | Description
 /// --------------------------------|-----------------------------------------------------------
 /// NK_CONVERT_SUCCESS              | Signals a successful draw command to vertex buffer conversion
-/// NK_CONVERT_INVALID_PARAM        | An invalid argument was passed in the function c / ---------------------all
+/// NK_CONVERT_INVALID_PARAM        | An invalid argument was passed in the function call
 /// NK_CONVERT_COMMAND_BUFFER_FULL  | The provided buffer for storing draw commands is full or failed to allocate more memory
 /// NK_CONVERT_VERTEX_BUFFER_FULL   | The provided buffer for storing vertices is full or failed to allocate more memory
 /// NK_CONVERT_ELEMENT_BUFFER_FULL  | The provided buffer for storing indicies is full or failed to allocate more memory
@@ -1600,7 +1601,7 @@ NK_API struct nk_vec2 nk_window_get_size(const struct nk_context*);
 /// !!! WARNING
 ///     Only call this function between calls `nk_begin_xxx` and `nk_end`
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_window_get_width(const struct nk_context *ctx);
+/// float nk_window_get_width(const struct nk_context *ctx);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -1609,14 +1610,14 @@ NK_API struct nk_vec2 nk_window_get_size(const struct nk_context*);
 ///
 /// Returns the current window width
 */
-NK_API int nk_window_get_width(const struct nk_context*);
+NK_API float nk_window_get_width(const struct nk_context*);
 /*/// #### nk_window_get_height
 /// Returns the height of the currently processed window.
 ///
 /// !!! WARNING
 ///     Only call this function between calls `nk_begin_xxx` and `nk_end`
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_window_get_height(const struct nk_context *ctx);
+/// float nk_window_get_height(const struct nk_context *ctx);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -1625,7 +1626,7 @@ NK_API int nk_window_get_width(const struct nk_context*);
 ///
 /// Returns the current window height
 */
-NK_API int nk_window_get_height(const struct nk_context*);
+NK_API float nk_window_get_height(const struct nk_context*);
 /*/// #### nk_window_get_panel
 /// Returns the underlying panel which contains all processing state of the current window.
 ///
@@ -2152,7 +2153,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 ///     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
 ///     if (nk_begin_xxx(...) {
 ///         // two rows with height: 30 composed of two widgets with width 60 and 40
-///         const int size[] = {60,40};
+///         const float size[] = {60,40};
 ///         nk_layout_row(ctx, NK_STATIC, 30, 2, ratio);
 ///         nk_widget(...);
 ///         nk_widget(...);
@@ -2160,7 +2161,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 ///         nk_widget(...);
 ///         //
 ///         // two rows with height: 30 composed of two widgets with window ratio 0.25 and 0.75
-///         const int ratio[] = {0.25, 0.75};
+///         const float ratio[] = {0.25, 0.75};
 ///         nk_layout_row(ctx, NK_DYNAMIC, 30, 2, ratio);
 ///         nk_widget(...);
 ///         nk_widget(...);
@@ -2168,7 +2169,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 ///         nk_widget(...);
 ///         //
 ///         // two rows with auto generated height composed of two widgets with window ratio 0.25 and 0.75
-///         const int ratio[] = {0.25, 0.75};
+///         const float ratio[] = {0.25, 0.75};
 ///         nk_layout_row(ctx, NK_DYNAMIC, 30, 2, ratio);
 ///         nk_widget(...);
 ///         nk_widget(...);
@@ -2282,7 +2283,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 ///     as well as padding. No internal padding is added.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_set_min_row_height(struct nk_context*, int height);
+/// void nk_layout_set_min_row_height(struct nk_context*, float height);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2290,7 +2291,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 /// __ctx__     | Must point to an previously initialized `nk_context` struct after call `nk_begin_xxx`
 /// __height__  | New minimum row height to be used for auto generating the row height
 */
-NK_API void nk_layout_set_min_row_height(struct nk_context*, int height);
+NK_API void nk_layout_set_min_row_height(struct nk_context*, float height);
 /*/// #### nk_layout_reset_min_row_height
 /// Reset the currently used minimum row height back to `font_height + text_padding + padding`
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2318,7 +2319,7 @@ NK_API struct nk_rect nk_layout_widget_bounds(struct nk_context*);
 /*/// #### nk_layout_ratio_from_pixel
 /// Utility functions to calculate window ratio from pixel size
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_layout_ratio_from_pixel(struct nk_context*, int pixel_width);
+/// float nk_layout_ratio_from_pixel(struct nk_context*, float pixel_width);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2328,13 +2329,13 @@ NK_API struct nk_rect nk_layout_widget_bounds(struct nk_context*);
 ///
 /// Returns `nk_rect` with both position and size of the next row
 */
-NK_API int nk_layout_ratio_from_pixel(struct nk_context*, int pixel_width);
+NK_API float nk_layout_ratio_from_pixel(struct nk_context*, float pixel_width);
 /*/// #### nk_layout_row_dynamic
 /// Sets current row layout to share horizontal space
 /// between @cols number of widgets evenly. Once called all subsequent widget
 /// calls greater than @cols will allocate a new row with same layout.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_dynamic(struct nk_context *ctx, int height, int cols);
+/// void nk_layout_row_dynamic(struct nk_context *ctx, float height, int cols);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2343,13 +2344,13 @@ NK_API int nk_layout_ratio_from_pixel(struct nk_context*, int pixel_width);
 /// __height__  | Holds height of each widget in row or zero for auto layouting
 /// __columns__ | Number of widget inside row
 */
-NK_API void nk_layout_row_dynamic(struct nk_context *ctx, int height, int cols);
+NK_API void nk_layout_row_dynamic(struct nk_context *ctx, float height, int cols);
 /*/// #### nk_layout_row_static
 /// Sets current row layout to fill @cols number of widgets
 /// in row with same @item_width horizontal size. Once called all subsequent widget
 /// calls greater than @cols will allocate a new row with same layout.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_static(struct nk_context *ctx, int height, int item_width, int cols);
+/// void nk_layout_row_static(struct nk_context *ctx, float height, int item_width, int cols);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2359,11 +2360,11 @@ NK_API void nk_layout_row_dynamic(struct nk_context *ctx, int height, int cols);
 /// __width__   | Holds pixel width of each widget in the row
 /// __columns__ | Number of widget inside row
 */
-NK_API void nk_layout_row_static(struct nk_context *ctx, int height, int item_width, int cols);
+NK_API void nk_layout_row_static(struct nk_context *ctx, float height, int item_width, int cols);
 /*/// #### nk_layout_row_begin
 /// Starts a new dynamic or fixed row with given height and columns.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt, int row_height, int cols);
+/// void nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt, float row_height, int cols);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2373,11 +2374,11 @@ NK_API void nk_layout_row_static(struct nk_context *ctx, int height, int item_wi
 /// __height__  | holds height of each widget in row or zero for auto layouting
 /// __columns__ | Number of widget inside row
 */
-NK_API void nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt, int row_height, int cols);
+NK_API void nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt, float row_height, int cols);
 /*/// #### nk_layout_row_push
 /// Specifies either window ratio or width of a single column
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_push(struct nk_context*, int value);
+/// void nk_layout_row_push(struct nk_context*, float value);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2385,7 +2386,7 @@ NK_API void nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fm
 /// __ctx__     | Must point to an previously initialized `nk_context` struct after call `nk_begin_xxx`
 /// __value__   | either a window ratio or fixed width depending on @fmt in previous `nk_layout_row_begin` call
 */
-NK_API void nk_layout_row_push(struct nk_context*, int value);
+NK_API void nk_layout_row_push(struct nk_context*, float value);
 /*/// #### nk_layout_row_end
 /// Finished previously started row
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2400,7 +2401,7 @@ NK_API void nk_layout_row_end(struct nk_context*);
 /*/// #### nk_layout_row
 /// Specifies row columns in array as either window ratio or size
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row(struct nk_context*, enum nk_layout_format, int height, int cols, const int *ratio);
+/// void nk_layout_row(struct nk_context*, enum nk_layout_format, float height, int cols, const float *ratio);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2410,11 +2411,11 @@ NK_API void nk_layout_row_end(struct nk_context*);
 /// __height__  | Holds height of each widget in row or zero for auto layouting
 /// __columns__ | Number of widget inside row
 */
-NK_API void nk_layout_row(struct nk_context*, enum nk_layout_format, int height, int cols, const int *ratio);
+NK_API void nk_layout_row(struct nk_context*, enum nk_layout_format, float height, int cols, const float *ratio);
 /*/// #### nk_layout_row_template_begin
 /// Begins the row template declaration
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_template_begin(struct nk_context*, int row_height);
+/// void nk_layout_row_template_begin(struct nk_context*, float row_height);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2422,7 +2423,7 @@ NK_API void nk_layout_row(struct nk_context*, enum nk_layout_format, int height,
 /// __ctx__     | Must point to an previously initialized `nk_context` struct after call `nk_begin_xxx`
 /// __height__  | Holds height of each widget in row or zero for auto layouting
 */
-NK_API void nk_layout_row_template_begin(struct nk_context*, int row_height);
+NK_API void nk_layout_row_template_begin(struct nk_context*, float row_height);
 /*/// #### nk_layout_row_template_push_dynamic
 /// Adds a dynamic column that dynamically grows and can go to zero if not enough space
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2438,7 +2439,7 @@ NK_API void nk_layout_row_template_push_dynamic(struct nk_context*);
 /*/// #### nk_layout_row_template_push_variable
 /// Adds a variable column that dynamically grows but does not shrink below specified pixel width
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_template_push_variable(struct nk_context*, int min_width);
+/// void nk_layout_row_template_push_variable(struct nk_context*, float min_width);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2446,11 +2447,11 @@ NK_API void nk_layout_row_template_push_dynamic(struct nk_context*);
 /// __ctx__     | Must point to an previously initialized `nk_context` struct after call `nk_begin_xxx`
 /// __width__   | Holds the minimum pixel width the next column must always be
 */
-NK_API void nk_layout_row_template_push_variable(struct nk_context*, int min_width);
+NK_API void nk_layout_row_template_push_variable(struct nk_context*, float min_width);
 /*/// #### nk_layout_row_template_push_static
 /// Adds a static column that does not grow and will always have the same size
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_row_template_push_static(struct nk_context*, int width);
+/// void nk_layout_row_template_push_static(struct nk_context*, float width);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2458,7 +2459,7 @@ NK_API void nk_layout_row_template_push_variable(struct nk_context*, int min_wid
 /// __ctx__     | Must point to an previously initialized `nk_context` struct after call `nk_begin_xxx`
 /// __width__   | Holds the absolute pixel width value the next column must be
 */
-NK_API void nk_layout_row_template_push_static(struct nk_context*, int width);
+NK_API void nk_layout_row_template_push_static(struct nk_context*, float width);
 /*/// #### nk_layout_row_template_end
 /// Marks the end of the row template
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2473,7 +2474,7 @@ NK_API void nk_layout_row_template_end(struct nk_context*);
 /*/// #### nk_layout_space_begin
 /// Begins a new layouting space that allows to specify each widgets position and size.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_layout_space_begin(struct nk_context*, enum nk_layout_format, int height, int widget_count);
+/// void nk_layout_space_begin(struct nk_context*, enum nk_layout_format, float height, int widget_count);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -2483,7 +2484,7 @@ NK_API void nk_layout_row_template_end(struct nk_context*);
 /// __height__  | Holds height of each widget in row or zero for auto layouting
 /// __columns__ | Number of widgets inside row
 */
-NK_API void nk_layout_space_begin(struct nk_context*, enum nk_layout_format, int height, int widget_count);
+NK_API void nk_layout_space_begin(struct nk_context*, enum nk_layout_format, float height, int widget_count);
 /*/// #### nk_layout_space_push
 /// Pushes position and size of the next widget in own coordinate space either as pixel or ratio
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2871,7 +2872,7 @@ NK_API void nk_group_set_scroll(struct nk_context*, const char *id, nk_uint x_of
 ///
 /// Returns `true(1)` if visible and fillable with widgets or `false(0)` otherwise
 */
-#define nk_tree_push(ctx, type, title, state) nk_tree_push_hashed(ctx, type, title, state, NK_FILE_LINE,strlen(NK_FILE_LINE),__LINE__)
+#define nk_tree_push(ctx, type, title, state) nk_tree_push_hashed(ctx, type, title, state, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),__LINE__)
 /*/// #### nk_tree_push_id
 /// Starts a collapsable UI section with internal state management callable in a look
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -2888,7 +2889,7 @@ NK_API void nk_group_set_scroll(struct nk_context*, const char *id, nk_uint x_of
 ///
 /// Returns `true(1)` if visible and fillable with widgets or `false(0)` otherwise
 */
-#define nk_tree_push_id(ctx, type, title, state, id) nk_tree_push_hashed(ctx, type, title, state, NK_FILE_LINE,strlen(NK_FILE_LINE),id)
+#define nk_tree_push_id(ctx, type, title, state, id) nk_tree_push_hashed(ctx, type, title, state, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),id)
 /*/// #### nk_tree_push_hashed
 /// Start a collapsable UI section with internal state management with full
 /// control over internal unique ID used to store state
@@ -2931,7 +2932,7 @@ NK_API nk_bool nk_tree_push_hashed(struct nk_context*, enum nk_tree_type, const 
 ///
 /// Returns `true(1)` if visible and fillable with widgets or `false(0)` otherwise
 */
-#define nk_tree_image_push(ctx, type, img, title, state) nk_tree_image_push_hashed(ctx, type, img, title, state, NK_FILE_LINE,strlen(NK_FILE_LINE),__LINE__)
+#define nk_tree_image_push(ctx, type, img, title, state) nk_tree_image_push_hashed(ctx, type, img, title, state, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),__LINE__)
 /*/// #### nk_tree_image_push_id
 /// Start a collapsable UI section with image and label header and internal state
 /// management callable in a look
@@ -2951,7 +2952,7 @@ NK_API nk_bool nk_tree_push_hashed(struct nk_context*, enum nk_tree_type, const 
 ///
 /// Returns `true(1)` if visible and fillable with widgets or `false(0)` otherwise
 */
-#define nk_tree_image_push_id(ctx, type, img, title, state, id) nk_tree_image_push_hashed(ctx, type, img, title, state, NK_FILE_LINE,strlen(NK_FILE_LINE),id)
+#define nk_tree_image_push_id(ctx, type, img, title, state, id) nk_tree_image_push_hashed(ctx, type, img, title, state, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),id)
 /*/// #### nk_tree_image_push_hashed
 /// Start a collapsable UI section with internal state management with full
 /// control over internal unique ID used to store state
@@ -3029,8 +3030,8 @@ NK_API nk_bool nk_tree_state_image_push(struct nk_context*, enum nk_tree_type, s
 */
 NK_API void nk_tree_state_pop(struct nk_context*);
 
-#define nk_tree_element_push(ctx, type, title, state, sel) nk_tree_element_push_hashed(ctx, type, title, state, sel, NK_FILE_LINE,strlen(NK_FILE_LINE),__LINE__)
-#define nk_tree_element_push_id(ctx, type, title, state, sel, id) nk_tree_element_push_hashed(ctx, type, title, state, sel, NK_FILE_LINE,strlen(NK_FILE_LINE),id)
+#define nk_tree_element_push(ctx, type, title, state, sel) nk_tree_element_push_hashed(ctx, type, title, state, sel, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),__LINE__)
+#define nk_tree_element_push_id(ctx, type, title, state, sel, id) nk_tree_element_push_hashed(ctx, type, title, state, sel, NK_FILE_LINE,nk_strlen(NK_FILE_LINE),id)
 NK_API nk_bool nk_tree_element_push_hashed(struct nk_context*, enum nk_tree_type, const char *title, enum nk_collapse_states initial_state, nk_bool *selected, const char *hash, int len, int seed);
 NK_API nk_bool nk_tree_element_image_push_hashed(struct nk_context*, enum nk_tree_type, struct nk_image, const char *title, enum nk_collapse_states initial_state, nk_bool *selected, const char *hash, int len,int seed);
 NK_API void nk_tree_element_pop(struct nk_context*);
@@ -3076,8 +3077,8 @@ NK_API enum nk_widget_layout_states nk_widget_fitting(struct nk_rect*, struct nk
 NK_API struct nk_rect nk_widget_bounds(struct nk_context*);
 NK_API struct nk_vec2 nk_widget_position(struct nk_context*);
 NK_API struct nk_vec2 nk_widget_size(struct nk_context*);
-NK_API int nk_widget_width(struct nk_context*);
-NK_API int nk_widget_height(struct nk_context*);
+NK_API float nk_widget_width(struct nk_context*);
+NK_API float nk_widget_height(struct nk_context*);
 NK_API nk_bool nk_widget_is_hovered(struct nk_context*);
 NK_API nk_bool nk_widget_is_mouse_clicked(struct nk_context*, enum nk_buttons);
 NK_API nk_bool nk_widget_has_mouse_click_down(struct nk_context*, enum nk_buttons, nk_bool down);
@@ -3122,9 +3123,9 @@ NK_API void nk_labelfv_colored_wrap(struct nk_context*, struct nk_color, NK_PRIN
 NK_API void nk_value_bool(struct nk_context*, const char *prefix, int);
 NK_API void nk_value_int(struct nk_context*, const char *prefix, int);
 NK_API void nk_value_uint(struct nk_context*, const char *prefix, unsigned int);
-// NK_API void nk_value_int(struct nk_context*, const char *prefix, int);
+NK_API void nk_value_float(struct nk_context*, const char *prefix, float);
 NK_API void nk_value_color_byte(struct nk_context*, const char *prefix, struct nk_color);
-NK_API void nk_value_color_int(struct nk_context*, const char *prefix, struct nk_color);
+NK_API void nk_value_color_float(struct nk_context*, const char *prefix, struct nk_color);
 NK_API void nk_value_color_hex(struct nk_context*, const char *prefix, struct nk_color);
 #endif
 /* =============================================================================
@@ -3198,10 +3199,10 @@ NK_API nk_bool nk_select_symbol_text(struct nk_context*,enum nk_symbol_type, con
  *                                  SLIDER
  *
  * ============================================================================= */
+NK_API float nk_slide_float(struct nk_context*, float min, float val, float max, float step);
 NK_API int nk_slide_int(struct nk_context*, int min, int val, int max, int step);
-// NK_API int nk_slide_int(struct nk_context*, int min, int val, int max, int step);
+NK_API nk_bool nk_slider_float(struct nk_context*, float min, float *val, float max, float step);
 NK_API nk_bool nk_slider_int(struct nk_context*, int min, int *val, int max, int step);
-// NK_API nk_bool nk_slider_int(struct nk_context*, int min, int *val, int max, int step);
 /* =============================================================================
  *
  *                                  PROGRESSBAR
@@ -3286,10 +3287,10 @@ NK_API nk_bool nk_color_pick(struct nk_context*, struct nk_colorf*, enum nk_colo
 /// Function            | Description
 /// --------------------|-------------------------------------------
 /// nk_property_int     | Integer property directly modifing a passed in value
-/// nk_property_int   | int property directly modifing a passed in value
+/// nk_property_float   | Float property directly modifing a passed in value
 /// nk_property_double  | Double property directly modifing a passed in value
 /// nk_propertyi        | Integer property returning the modified int value
-/// nk_propertyf        | int property returning the modified int value
+/// nk_propertyf        | Float property returning the modified float value
 /// nk_propertyd        | Double property returning the modified double value
 ///
 */
@@ -3300,7 +3301,7 @@ NK_API nk_bool nk_color_pick(struct nk_context*, struct nk_colorf*, enum nk_colo
 ///     a `#` at the beginning. It will not be shown but guarantees correct behavior.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_property_int(struct nk_context *ctx, const char *name, int min, int *val, int max, int step, int inc_per_pixel);
+/// void nk_property_int(struct nk_context *ctx, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter           | Description
@@ -3313,15 +3314,15 @@ NK_API nk_bool nk_color_pick(struct nk_context*, struct nk_colorf*, enum nk_colo
 /// __step__            | Increment added and subtracted on increment and decrement button
 /// __inc_per_pixel__   | Value per pixel added or subtracted on dragging
 */
-NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *val, int max, int step, int inc_per_pixel);
-/*/// #### nk_property_int
-/// int property directly modifing a passed in value
+NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
+/*/// #### nk_property_float
+/// Float property directly modifing a passed in value
 /// !!! WARNING
 ///     To generate a unique property ID using the same label make sure to insert
 ///     a `#` at the beginning. It will not be shown but guarantees correct behavior.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// void nk_property_int(struct nk_context *ctx, const char *name, int min, int *val, int max, int step, int inc_per_pixel);
+/// void nk_property_float(struct nk_context *ctx, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter           | Description
@@ -3329,12 +3330,12 @@ NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *
 /// __ctx__             | Must point to an previously initialized `nk_context` struct after calling a layouting function
 /// __name__            | String used both as a label as well as a unique identifier
 /// __min__             | Minimum value not allowed to be underflown
-/// __val__             | int pointer to be modified
+/// __val__             | Float pointer to be modified
 /// __max__             | Maximum value not allowed to be overflown
 /// __step__            | Increment added and subtracted on increment and decrement button
 /// __inc_per_pixel__   | Value per pixel added or subtracted on dragging
 */
-NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *val, int max, int step, int inc_per_pixel);
+NK_API void nk_property_float(struct nk_context*, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
 /*/// #### nk_property_double
 /// Double property directly modifing a passed in value
 /// !!! WARNING
@@ -3355,7 +3356,7 @@ NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *
 /// __step__            | Increment added and subtracted on increment and decrement button
 /// __inc_per_pixel__   | Value per pixel added or subtracted on dragging
 */
-NK_API void nk_property_double(struct nk_context*, const char *name, double min, double *val, double max, double step, int inc_per_pixel);
+NK_API void nk_property_double(struct nk_context*, const char *name, double min, double *val, double max, double step, float inc_per_pixel);
 /*/// #### nk_propertyi
 /// Integer property modifing a passed in value and returning the new value
 /// !!! WARNING
@@ -3363,7 +3364,7 @@ NK_API void nk_property_double(struct nk_context*, const char *name, double min,
 ///     a `#` at the beginning. It will not be shown but guarantees correct behavior.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_propertyi(struct nk_context *ctx, const char *name, int min, int val, int max, int step, int inc_per_pixel);
+/// int nk_propertyi(struct nk_context *ctx, const char *name, int min, int val, int max, int step, float inc_per_pixel);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter           | Description
@@ -3378,15 +3379,15 @@ NK_API void nk_property_double(struct nk_context*, const char *name, double min,
 ///
 /// Returns the new modified integer value
 */
-NK_API int nk_propertyi(struct nk_context*, const char *name, int min, int val, int max, int step, int inc_per_pixel);
+NK_API int nk_propertyi(struct nk_context*, const char *name, int min, int val, int max, int step, float inc_per_pixel);
 /*/// #### nk_propertyf
-/// int property modifing a passed in value and returning the new value
+/// Float property modifing a passed in value and returning the new value
 /// !!! WARNING
 ///     To generate a unique property ID using the same label make sure to insert
 ///     a `#` at the beginning. It will not be shown but guarantees correct behavior.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_propertyf(struct nk_context *ctx, const char *name, int min, int val, int max, int step, int inc_per_pixel);
+/// float nk_propertyf(struct nk_context *ctx, const char *name, float min, float val, float max, float step, float inc_per_pixel);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter           | Description
@@ -3394,22 +3395,22 @@ NK_API int nk_propertyi(struct nk_context*, const char *name, int min, int val, 
 /// __ctx__             | Must point to an previously initialized `nk_context` struct after calling a layouting function
 /// __name__            | String used both as a label as well as a unique identifier
 /// __min__             | Minimum value not allowed to be underflown
-/// __val__             | Current int value to be modified and returned
+/// __val__             | Current float value to be modified and returned
 /// __max__             | Maximum value not allowed to be overflown
 /// __step__            | Increment added and subtracted on increment and decrement button
 /// __inc_per_pixel__   | Value per pixel added or subtracted on dragging
 ///
-/// Returns the new modified int value
+/// Returns the new modified float value
 */
-NK_API int nk_propertyf(struct nk_context*, const char *name, int min, int val, int max, int step, int inc_per_pixel);
+NK_API float nk_propertyf(struct nk_context*, const char *name, float min, float val, float max, float step, float inc_per_pixel);
 /*/// #### nk_propertyd
-/// int property modifing a passed in value and returning the new value
+/// Float property modifing a passed in value and returning the new value
 /// !!! WARNING
 ///     To generate a unique property ID using the same label make sure to insert
 ///     a `#` at the beginning. It will not be shown but guarantees correct behavior.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// int nk_propertyd(struct nk_context *ctx, const char *name, double min, double val, double max, double step, double inc_per_pixel);
+/// float nk_propertyd(struct nk_context *ctx, const char *name, double min, double val, double max, double step, double inc_per_pixel);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter           | Description
@@ -3424,7 +3425,7 @@ NK_API int nk_propertyf(struct nk_context*, const char *name, int min, int val, 
 ///
 /// Returns the new modified double value
 */
-NK_API double nk_propertyd(struct nk_context*, const char *name, double min, double val, double max, double step, int inc_per_pixel);
+NK_API double nk_propertyd(struct nk_context*, const char *name, double min, double val, double max, double step, float inc_per_pixel);
 /* =============================================================================
  *
  *                                  TEXT EDIT
@@ -3468,15 +3469,15 @@ NK_API void nk_edit_unfocus(struct nk_context*);
  *                                  CHART
  *
  * ============================================================================= */
-NK_API nk_bool nk_chart_begin(struct nk_context*, enum nk_chart_type, int num, int min, int max);
-NK_API nk_bool nk_chart_begin_colored(struct nk_context*, enum nk_chart_type, struct nk_color, struct nk_color active, int num, int min, int max);
-NK_API void nk_chart_add_slot(struct nk_context *ctx, const enum nk_chart_type, int count, int min_value, int max_value);
-NK_API void nk_chart_add_slot_colored(struct nk_context *ctx, const enum nk_chart_type, struct nk_color, struct nk_color active, int count, int min_value, int max_value);
-NK_API nk_flags nk_chart_push(struct nk_context*, int);
-NK_API nk_flags nk_chart_push_slot(struct nk_context*, int, int);
+NK_API nk_bool nk_chart_begin(struct nk_context*, enum nk_chart_type, int num, float min, float max);
+NK_API nk_bool nk_chart_begin_colored(struct nk_context*, enum nk_chart_type, struct nk_color, struct nk_color active, int num, float min, float max);
+NK_API void nk_chart_add_slot(struct nk_context *ctx, const enum nk_chart_type, int count, float min_value, float max_value);
+NK_API void nk_chart_add_slot_colored(struct nk_context *ctx, const enum nk_chart_type, struct nk_color, struct nk_color active, int count, float min_value, float max_value);
+NK_API nk_flags nk_chart_push(struct nk_context*, float);
+NK_API nk_flags nk_chart_push_slot(struct nk_context*, float, int);
 NK_API void nk_chart_end(struct nk_context*);
-NK_API void nk_plot(struct nk_context*, enum nk_chart_type, const int *values, int count, int offset);
-NK_API void nk_plot_function(struct nk_context*, enum nk_chart_type, void *userdata, int(*value_getter)(void* user, int index), int count, int offset);
+NK_API void nk_plot(struct nk_context*, enum nk_chart_type, const float *values, int count, int offset);
+NK_API void nk_plot_function(struct nk_context*, enum nk_chart_type, void *userdata, float(*value_getter)(void* user, int index), int count, int offset);
 /* =============================================================================
  *
  *                                  POPUP
@@ -3546,7 +3547,7 @@ NK_API void nk_tooltip(struct nk_context*, const char*);
 NK_API void nk_tooltipf(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, ...) NK_PRINTF_VARARG_FUNC(2);
 NK_API void nk_tooltipfv(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, va_list) NK_PRINTF_VALIST_FUNC(2);
 #endif
-NK_API nk_bool nk_tooltip_begin(struct nk_context*, int width);
+NK_API nk_bool nk_tooltip_begin(struct nk_context*, float width);
 NK_API void nk_tooltip_end(struct nk_context*);
 /* =============================================================================
  *
@@ -3628,14 +3629,14 @@ NK_API void nk_style_show_cursor(struct nk_context*);
 NK_API void nk_style_hide_cursor(struct nk_context*);
 
 NK_API nk_bool nk_style_push_font(struct nk_context*, const struct nk_user_font*);
-NK_API nk_bool nk_style_push_int(struct nk_context*, int*, int);
+NK_API nk_bool nk_style_push_float(struct nk_context*, float*, float);
 NK_API nk_bool nk_style_push_vec2(struct nk_context*, struct nk_vec2*, struct nk_vec2);
 NK_API nk_bool nk_style_push_style_item(struct nk_context*, struct nk_style_item*, struct nk_style_item);
 NK_API nk_bool nk_style_push_flags(struct nk_context*, nk_flags*, nk_flags);
 NK_API nk_bool nk_style_push_color(struct nk_context*, struct nk_color*, struct nk_color);
 
 NK_API nk_bool nk_style_pop_font(struct nk_context*);
-NK_API nk_bool nk_style_pop_int(struct nk_context*);
+NK_API nk_bool nk_style_pop_float(struct nk_context*);
 NK_API nk_bool nk_style_pop_vec2(struct nk_context*);
 NK_API nk_bool nk_style_pop_style_item(struct nk_context*);
 NK_API nk_bool nk_style_pop_flags(struct nk_context*);
@@ -3648,8 +3649,8 @@ NK_API nk_bool nk_style_pop_color(struct nk_context*);
 NK_API struct nk_color nk_rgb(int r, int g, int b);
 NK_API struct nk_color nk_rgb_iv(const int *rgb);
 NK_API struct nk_color nk_rgb_bv(const nk_byte* rgb);
-NK_API struct nk_color nk_rgb_f(int r, int g, int b);
-NK_API struct nk_color nk_rgb_fv(const int *rgb);
+NK_API struct nk_color nk_rgb_f(float r, float g, float b);
+NK_API struct nk_color nk_rgb_fv(const float *rgb);
 NK_API struct nk_color nk_rgb_cf(struct nk_colorf c);
 NK_API struct nk_color nk_rgb_hex(const char *rgb);
 
@@ -3657,31 +3658,31 @@ NK_API struct nk_color nk_rgba(int r, int g, int b, int a);
 NK_API struct nk_color nk_rgba_u32(nk_uint);
 NK_API struct nk_color nk_rgba_iv(const int *rgba);
 NK_API struct nk_color nk_rgba_bv(const nk_byte *rgba);
-NK_API struct nk_color nk_rgba_f(int r, int g, int b, int a);
-NK_API struct nk_color nk_rgba_fv(const int *rgba);
+NK_API struct nk_color nk_rgba_f(float r, float g, float b, float a);
+NK_API struct nk_color nk_rgba_fv(const float *rgba);
 NK_API struct nk_color nk_rgba_cf(struct nk_colorf c);
 NK_API struct nk_color nk_rgba_hex(const char *rgb);
 
-NK_API struct nk_colorf nk_hsva_colorf(int h, int s, int v, int a);
-NK_API struct nk_colorf nk_hsva_colorfv(int *c);
-NK_API void nk_colorf_hsva_f(int *out_h, int *out_s, int *out_v, int *out_a, struct nk_colorf in);
-NK_API void nk_colorf_hsva_fv(int *hsva, struct nk_colorf in);
+NK_API struct nk_colorf nk_hsva_colorf(float h, float s, float v, float a);
+NK_API struct nk_colorf nk_hsva_colorfv(float *c);
+NK_API void nk_colorf_hsva_f(float *out_h, float *out_s, float *out_v, float *out_a, struct nk_colorf in);
+NK_API void nk_colorf_hsva_fv(float *hsva, struct nk_colorf in);
 
 NK_API struct nk_color nk_hsv(int h, int s, int v);
 NK_API struct nk_color nk_hsv_iv(const int *hsv);
 NK_API struct nk_color nk_hsv_bv(const nk_byte *hsv);
-NK_API struct nk_color nk_hsv_f(int h, int s, int v);
-NK_API struct nk_color nk_hsv_fv(const int *hsv);
+NK_API struct nk_color nk_hsv_f(float h, float s, float v);
+NK_API struct nk_color nk_hsv_fv(const float *hsv);
 
 NK_API struct nk_color nk_hsva(int h, int s, int v, int a);
 NK_API struct nk_color nk_hsva_iv(const int *hsva);
 NK_API struct nk_color nk_hsva_bv(const nk_byte *hsva);
-NK_API struct nk_color nk_hsva_f(int h, int s, int v, int a);
-NK_API struct nk_color nk_hsva_fv(const int *hsva);
+NK_API struct nk_color nk_hsva_f(float h, float s, float v, float a);
+NK_API struct nk_color nk_hsva_fv(const float *hsva);
 
 /* color (conversion nuklear --> user) */
-NK_API void nk_color_f(int *r, int *g, int *b, int *a, struct nk_color);
-NK_API void nk_color_fv(int *rgba_out, struct nk_color);
+NK_API void nk_color_f(float *r, float *g, float *b, float *a, struct nk_color);
+NK_API void nk_color_fv(float *rgba_out, struct nk_color);
 NK_API struct nk_colorf nk_color_cf(struct nk_color);
 NK_API void nk_color_d(double *r, double *g, double *b, double *a, struct nk_color);
 NK_API void nk_color_dv(double *rgba_out, struct nk_color);
@@ -3694,15 +3695,15 @@ NK_API void nk_color_hsv_i(int *out_h, int *out_s, int *out_v, struct nk_color);
 NK_API void nk_color_hsv_b(nk_byte *out_h, nk_byte *out_s, nk_byte *out_v, struct nk_color);
 NK_API void nk_color_hsv_iv(int *hsv_out, struct nk_color);
 NK_API void nk_color_hsv_bv(nk_byte *hsv_out, struct nk_color);
-NK_API void nk_color_hsv_f(int *out_h, int *out_s, int *out_v, struct nk_color);
-NK_API void nk_color_hsv_fv(int *hsv_out, struct nk_color);
+NK_API void nk_color_hsv_f(float *out_h, float *out_s, float *out_v, struct nk_color);
+NK_API void nk_color_hsv_fv(float *hsv_out, struct nk_color);
 
 NK_API void nk_color_hsva_i(int *h, int *s, int *v, int *a, struct nk_color);
 NK_API void nk_color_hsva_b(nk_byte *h, nk_byte *s, nk_byte *v, nk_byte *a, struct nk_color);
 NK_API void nk_color_hsva_iv(int *hsva_out, struct nk_color);
 NK_API void nk_color_hsva_bv(nk_byte *hsva_out, struct nk_color);
-NK_API void nk_color_hsva_f(int *out_h, int *out_s, int *out_v, int *out_a, struct nk_color);
-NK_API void nk_color_hsva_fv(int *hsva_out, struct nk_color);
+NK_API void nk_color_hsva_f(float *out_h, float *out_s, float *out_v, float *out_a, struct nk_color);
+NK_API void nk_color_hsva_fv(float *hsva_out, struct nk_color);
 /* =============================================================================
  *
  *                                  IMAGE
@@ -3714,27 +3715,39 @@ NK_API struct nk_image nk_image_handle(nk_handle);
 NK_API struct nk_image nk_image_ptr(void*);
 NK_API struct nk_image nk_image_id(int);
 NK_API nk_bool nk_image_is_subimage(const struct nk_image* img);
-NK_API struct nk_image nk_subimage_ptr(void*, unsigned short w, unsigned short h, struct nk_rect sub_region);
-NK_API struct nk_image nk_subimage_id(int, unsigned short w, unsigned short h, struct nk_rect sub_region);
-NK_API struct nk_image nk_subimage_handle(nk_handle, unsigned short w, unsigned short h, struct nk_rect sub_region);
+NK_API struct nk_image nk_subimage_ptr(void*, nk_ushort w, nk_ushort h, struct nk_rect sub_region);
+NK_API struct nk_image nk_subimage_id(int, nk_ushort w, nk_ushort h, struct nk_rect sub_region);
+NK_API struct nk_image nk_subimage_handle(nk_handle, nk_ushort w, nk_ushort h, struct nk_rect sub_region);
+/* =============================================================================
+ *
+ *                                  9-SLICE
+ *
+ * ============================================================================= */
+NK_API struct nk_nine_slice nk_nine_slice_handle(nk_handle, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
+NK_API struct nk_nine_slice nk_nine_slice_ptr(void*, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
+NK_API struct nk_nine_slice nk_nine_slice_id(int, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
+NK_API int nk_nine_slice_is_sub9slice(const struct nk_nine_slice* img);
+NK_API struct nk_nine_slice nk_sub9slice_ptr(void*, nk_ushort w, nk_ushort h, struct nk_rect sub_region, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
+NK_API struct nk_nine_slice nk_sub9slice_id(int, nk_ushort w, nk_ushort h, struct nk_rect sub_region, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
+NK_API struct nk_nine_slice nk_sub9slice_handle(nk_handle, nk_ushort w, nk_ushort h, struct nk_rect sub_region, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b);
 /* =============================================================================
  *
  *                                  MATH
  *
  * ============================================================================= */
 NK_API nk_hash nk_murmur_hash(const void *key, int len, nk_hash seed);
-NK_API void nk_triangle_from_direction(struct nk_vec2 *result, struct nk_rect r, int pad_x, int pad_y, enum nk_heading);
+NK_API void nk_triangle_from_direction(struct nk_vec2 *result, struct nk_rect r, float pad_x, float pad_y, enum nk_heading);
 
-NK_API struct nk_vec2 nk_vec2(int x, int y);
+NK_API struct nk_vec2 nk_vec2(float x, float y);
 NK_API struct nk_vec2 nk_vec2i(int x, int y);
-NK_API struct nk_vec2 nk_vec2v(const int *xy);
+NK_API struct nk_vec2 nk_vec2v(const float *xy);
 NK_API struct nk_vec2 nk_vec2iv(const int *xy);
 
 NK_API struct nk_rect nk_get_null_rect(void);
-NK_API struct nk_rect nk_rect(int x, int y, int w, int h);
+NK_API struct nk_rect nk_rect(float x, float y, float w, float h);
 NK_API struct nk_rect nk_recti(int x, int y, int w, int h);
 NK_API struct nk_rect nk_recta(struct nk_vec2 pos, struct nk_vec2 size);
-NK_API struct nk_rect nk_rectv(const int *xywh);
+NK_API struct nk_rect nk_rectv(const float *xywh);
 NK_API struct nk_rect nk_rectiv(const int *xywh);
 NK_API struct nk_vec2 nk_rect_pos(struct nk_rect);
 NK_API struct nk_vec2 nk_rect_size(struct nk_rect);
@@ -3747,7 +3760,7 @@ NK_API int nk_strlen(const char *str);
 NK_API int nk_stricmp(const char *s1, const char *s2);
 NK_API int nk_stricmpn(const char *s1, const char *s2, int n);
 NK_API int nk_strtoi(const char *str, const char **endptr);
-NK_API int nk_strtof(const char *str, const char **endptr);
+NK_API float nk_strtof(const char *str, const char **endptr);
 #ifndef NK_STRTOD
 #define NK_STRTOD nk_strtod
 NK_API double nk_strtod(const char *str, const char **endptr);
@@ -3788,10 +3801,10 @@ NK_API const char* nk_utf_at(const char *buffer, int length, int index, nk_rune 
     over the complete life time! I know this sucks but it is currently the only
     way to switch between fonts.
 
-        int your_text_width_calculation(nk_handle handle, int height, const char *text, int len)
+        float your_text_width_calculation(nk_handle handle, float height, const char *text, int len)
         {
             your_font_type *type = handle.ptr;
-            int text_width = ...;
+            float text_width = ...;
             return text_width;
         }
 
@@ -3813,13 +3826,13 @@ NK_API const char* nk_utf_at(const char *buffer, int length, int index, nk_rune 
     information (offset, size, ...). So it is still possible to provide your own
     font and use the vertex buffer output.
 
-        int your_text_width_calculation(nk_handle handle, int height, const char *text, int len)
+        float your_text_width_calculation(nk_handle handle, float height, const char *text, int len)
         {
             your_font_type *type = handle.ptr;
-            int text_width = ...;
+            float text_width = ...;
             return text_width;
         }
-        void query_your_font_glyph(nk_handle handle, int font_height, struct nk_user_font_glyph *glyph, nk_rune codepoint, nk_rune next_codepoint)
+        void query_your_font_glyph(nk_handle handle, float font_height, struct nk_user_font_glyph *glyph, nk_rune codepoint, nk_rune next_codepoint)
         {
             your_font_type *type = handle.ptr;
             glyph.width = ...;
@@ -3914,8 +3927,8 @@ NK_API const char* nk_utf_at(const char *buffer, int length, int index, nk_rune 
 
 */
 struct nk_user_font_glyph;
-typedef int(*nk_text_width_f)(nk_handle, int h, const char*, int len);
-typedef void(*nk_query_font_glyph_f)(nk_handle handle, int font_height,
+typedef float(*nk_text_width_f)(nk_handle, float h, const char*, int len);
+typedef void(*nk_query_font_glyph_f)(nk_handle handle, float font_height,
                                     struct nk_user_font_glyph *glyph,
                                     nk_rune codepoint, nk_rune next_codepoint);
 
@@ -3925,9 +3938,9 @@ struct nk_user_font_glyph {
     /* texture coordinates */
     struct nk_vec2 offset;
     /* offset between top left and glyph */
-    int width, height;
+    float width, height;
     /* size of the glyph  */
-    int xadvance;
+    float xadvance;
     /* offset to the next glyph */
 };
 #endif
@@ -3935,7 +3948,7 @@ struct nk_user_font_glyph {
 struct nk_user_font {
     nk_handle userdata;
     /* user provided font handle */
-    int height;
+    float height;
     /* max height of the font */
     nk_text_width_f width;
     /* font string width in pixel callback */
@@ -3955,9 +3968,9 @@ enum nk_font_coord_type {
 
 struct nk_font;
 struct nk_baked_font {
-    int height;
+    float height;
     /* height of the font  */
-    int ascent, descent;
+    float ascent, descent;
     /* font glyphs ascent and descent  */
     nk_rune glyph_offset;
     /* glyph array offset inside the font glyph baking output array  */
@@ -3987,7 +4000,7 @@ struct nk_font_config {
     /* rasterize at hight quality for sub-pixel position */
     unsigned char padding[3];
 
-    int size;
+    float size;
     /* baked pixel height of the font */
     enum nk_font_coord_type coord_type;
     /* texture coordinate format with either pixel or UV coordinates */
@@ -4005,16 +4018,16 @@ struct nk_font_config {
 
 struct nk_font_glyph {
     nk_rune codepoint;
-    int xadvance;
-    int x0, y0, x1, y1, w, h;
-    int u0, v0, u1, v1;
+    float xadvance;
+    float x0, y0, x1, y1, w, h;
+    float u0, v0, u1, v1;
 };
 
 struct nk_font {
     struct nk_font *next;
     struct nk_user_font handle;
     struct nk_baked_font info;
-    int scale;
+    float scale;
     struct nk_font_glyph *glyphs;
     const struct nk_font_glyph *fallback;
     nk_rune fallback_codepoint;
@@ -4058,17 +4071,17 @@ NK_API void nk_font_atlas_init_default(struct nk_font_atlas*);
 NK_API void nk_font_atlas_init(struct nk_font_atlas*, struct nk_allocator*);
 NK_API void nk_font_atlas_init_custom(struct nk_font_atlas*, struct nk_allocator *persistent, struct nk_allocator *transient);
 NK_API void nk_font_atlas_begin(struct nk_font_atlas*);
-NK_API struct nk_font_config nk_font_config(int pixel_height);
+NK_API struct nk_font_config nk_font_config(float pixel_height);
 NK_API struct nk_font *nk_font_atlas_add(struct nk_font_atlas*, const struct nk_font_config*);
 #ifdef NK_INCLUDE_DEFAULT_FONT
-NK_API struct nk_font* nk_font_atlas_add_default(struct nk_font_atlas*, int height, const struct nk_font_config*);
+NK_API struct nk_font* nk_font_atlas_add_default(struct nk_font_atlas*, float height, const struct nk_font_config*);
 #endif
-NK_API struct nk_font* nk_font_atlas_add_from_memory(struct nk_font_atlas *atlas, void *memory, nk_size size, int height, const struct nk_font_config *config);
+NK_API struct nk_font* nk_font_atlas_add_from_memory(struct nk_font_atlas *atlas, void *memory, nk_size size, float height, const struct nk_font_config *config);
 #ifdef NK_INCLUDE_STANDARD_IO
-NK_API struct nk_font* nk_font_atlas_add_from_file(struct nk_font_atlas *atlas, const char *file_path, int height, const struct nk_font_config*);
+NK_API struct nk_font* nk_font_atlas_add_from_file(struct nk_font_atlas *atlas, const char *file_path, float height, const struct nk_font_config*);
 #endif
-NK_API struct nk_font *nk_font_atlas_add_compressed(struct nk_font_atlas*, void *memory, nk_size size, int height, const struct nk_font_config*);
-NK_API struct nk_font* nk_font_atlas_add_compressed_base85(struct nk_font_atlas*, const char *data, int height, const struct nk_font_config *config);
+NK_API struct nk_font *nk_font_atlas_add_compressed(struct nk_font_atlas*, void *memory, nk_size size, float height, const struct nk_font_config*);
+NK_API struct nk_font* nk_font_atlas_add_compressed_base85(struct nk_font_atlas*, const char *data, float height, const struct nk_font_config *config);
 NK_API const void* nk_font_atlas_bake(struct nk_font_atlas*, int *width, int *height, enum nk_font_atlas_format);
 NK_API void nk_font_atlas_end(struct nk_font_atlas*, nk_handle tex, struct nk_draw_null_texture*);
 NK_API const struct nk_font_glyph* nk_font_find_glyph(struct nk_font*, nk_rune unicode);
@@ -4145,7 +4158,7 @@ struct nk_buffer {
     /* memory management type */
     struct nk_memory memory;
     /* memory and size of the current memory block */
-    int grow_factor;
+    float grow_factor;
     /* growing factor for dynamic memory management */
     nk_size allocated;
     /* total amount of memory allocated */
@@ -4314,14 +4327,14 @@ struct nk_text_edit {
     unsigned char single_line;
     unsigned char active;
     unsigned char padding1;
-    int preferred_x;
+    float preferred_x;
     struct nk_text_undo_state undo;
 };
 
 /* filter function */
 NK_API nk_bool nk_filter_default(const struct nk_text_edit*, nk_rune unicode);
 NK_API nk_bool nk_filter_ascii(const struct nk_text_edit*, nk_rune unicode);
-NK_API nk_bool nk_filter_int(const struct nk_text_edit*, nk_rune unicode);
+NK_API nk_bool nk_filter_float(const struct nk_text_edit*, nk_rune unicode);
 NK_API nk_bool nk_filter_decimal(const struct nk_text_edit*, nk_rune unicode);
 NK_API nk_bool nk_filter_hex(const struct nk_text_edit*, nk_rune unicode);
 NK_API nk_bool nk_filter_oct(const struct nk_text_edit*, nk_rune unicode);
@@ -4510,7 +4523,7 @@ struct nk_command_arc {
     short cx, cy;
     unsigned short r;
     unsigned short line_thickness;
-    int a[2];
+    float a[2];
     struct nk_color color;
 };
 
@@ -4518,7 +4531,7 @@ struct nk_command_arc_filled {
     struct nk_command header;
     short cx, cy;
     unsigned short r;
-    int a[2];
+    float a[2];
     struct nk_color color;
 };
 
@@ -4570,7 +4583,7 @@ struct nk_command_text {
     struct nk_color foreground;
     short x, y;
     unsigned short w, h;
-    int height;
+    float height;
     int length;
     char string[1];
 };
@@ -4589,25 +4602,26 @@ struct nk_command_buffer {
 };
 
 /* shape outlines */
-NK_API void nk_stroke_line(struct nk_command_buffer *b, int x0, int y0, int x1, int y1, int line_thickness, struct nk_color);
-NK_API void nk_stroke_curve(struct nk_command_buffer*, int, int, int, int, int, int, int, int, int line_thickness, struct nk_color);
-NK_API void nk_stroke_rect(struct nk_command_buffer*, struct nk_rect, int rounding, int line_thickness, struct nk_color);
-NK_API void nk_stroke_circle(struct nk_command_buffer*, struct nk_rect, int line_thickness, struct nk_color);
-NK_API void nk_stroke_arc(struct nk_command_buffer*, int cx, int cy, int radius, int a_min, int a_max, int line_thickness, struct nk_color);
-NK_API void nk_stroke_triangle(struct nk_command_buffer*, int, int, int, int, int, int, int line_thichness, struct nk_color);
-NK_API void nk_stroke_polyline(struct nk_command_buffer*, int *points, int point_count, int line_thickness, struct nk_color col);
-NK_API void nk_stroke_polygon(struct nk_command_buffer*, int*, int point_count, int line_thickness, struct nk_color);
+NK_API void nk_stroke_line(struct nk_command_buffer *b, float x0, float y0, float x1, float y1, float line_thickness, struct nk_color);
+NK_API void nk_stroke_curve(struct nk_command_buffer*, float, float, float, float, float, float, float, float, float line_thickness, struct nk_color);
+NK_API void nk_stroke_rect(struct nk_command_buffer*, struct nk_rect, float rounding, float line_thickness, struct nk_color);
+NK_API void nk_stroke_circle(struct nk_command_buffer*, struct nk_rect, float line_thickness, struct nk_color);
+NK_API void nk_stroke_arc(struct nk_command_buffer*, float cx, float cy, float radius, float a_min, float a_max, float line_thickness, struct nk_color);
+NK_API void nk_stroke_triangle(struct nk_command_buffer*, float, float, float, float, float, float, float line_thichness, struct nk_color);
+NK_API void nk_stroke_polyline(struct nk_command_buffer*, float *points, int point_count, float line_thickness, struct nk_color col);
+NK_API void nk_stroke_polygon(struct nk_command_buffer*, float*, int point_count, float line_thickness, struct nk_color);
 
 /* filled shades */
-NK_API void nk_fill_rect(struct nk_command_buffer*, struct nk_rect, int rounding, struct nk_color);
+NK_API void nk_fill_rect(struct nk_command_buffer*, struct nk_rect, float rounding, struct nk_color);
 NK_API void nk_fill_rect_multi_color(struct nk_command_buffer*, struct nk_rect, struct nk_color left, struct nk_color top, struct nk_color right, struct nk_color bottom);
 NK_API void nk_fill_circle(struct nk_command_buffer*, struct nk_rect, struct nk_color);
-NK_API void nk_fill_arc(struct nk_command_buffer*, int cx, int cy, int radius, int a_min, int a_max, struct nk_color);
-NK_API void nk_fill_triangle(struct nk_command_buffer*, int x0, int y0, int x1, int y1, int x2, int y2, struct nk_color);
-NK_API void nk_fill_polygon(struct nk_command_buffer*, int*, int point_count, struct nk_color);
+NK_API void nk_fill_arc(struct nk_command_buffer*, float cx, float cy, float radius, float a_min, float a_max, struct nk_color);
+NK_API void nk_fill_triangle(struct nk_command_buffer*, float x0, float y0, float x1, float y1, float x2, float y2, struct nk_color);
+NK_API void nk_fill_polygon(struct nk_command_buffer*, float*, int point_count, struct nk_color);
 
 /* misc */
 NK_API void nk_draw_image(struct nk_command_buffer*, struct nk_rect, const struct nk_image*, struct nk_color);
+NK_API void nk_draw_nine_slice(struct nk_command_buffer*, struct nk_rect, const struct nk_nine_slice*, struct nk_color);
 NK_API void nk_draw_text(struct nk_command_buffer*, struct nk_rect, const char *text, int len, const struct nk_user_font*, struct nk_color, struct nk_color);
 NK_API void nk_push_scissor(struct nk_command_buffer*, struct nk_rect);
 NK_API void nk_push_custom(struct nk_command_buffer*, struct nk_rect, nk_command_custom_callback, nk_handle usr);
@@ -4709,7 +4723,7 @@ enum nk_draw_vertex_layout_format {
     NK_FORMAT_UCHAR,
     NK_FORMAT_USHORT,
     NK_FORMAT_UINT,
-    NK_FORMAT_int,
+    NK_FORMAT_FLOAT,
     NK_FORMAT_DOUBLE,
 
 NK_FORMAT_COLOR_BEGIN,
@@ -4721,7 +4735,7 @@ NK_FORMAT_COLOR_BEGIN,
     NK_FORMAT_B8G8R8A8,
     NK_FORMAT_R16G15B16A16,
     NK_FORMAT_R32G32B32A32,
-    NK_FORMAT_R32G32B32A32_int,
+    NK_FORMAT_R32G32B32A32_FLOAT,
     NK_FORMAT_R32G32B32A32_DOUBLE,
 
     NK_FORMAT_RGB32,
@@ -4787,31 +4801,31 @@ NK_API const struct nk_draw_command* nk__draw_list_end(const struct nk_draw_list
 /* path */
 NK_API void nk_draw_list_path_clear(struct nk_draw_list*);
 NK_API void nk_draw_list_path_line_to(struct nk_draw_list*, struct nk_vec2 pos);
-NK_API void nk_draw_list_path_arc_to_fast(struct nk_draw_list*, struct nk_vec2 center, int radius, int a_min, int a_max);
-NK_API void nk_draw_list_path_arc_to(struct nk_draw_list*, struct nk_vec2 center, int radius, int a_min, int a_max, unsigned int segments);
-NK_API void nk_draw_list_path_rect_to(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, int rounding);
+NK_API void nk_draw_list_path_arc_to_fast(struct nk_draw_list*, struct nk_vec2 center, float radius, int a_min, int a_max);
+NK_API void nk_draw_list_path_arc_to(struct nk_draw_list*, struct nk_vec2 center, float radius, float a_min, float a_max, unsigned int segments);
+NK_API void nk_draw_list_path_rect_to(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, float rounding);
 NK_API void nk_draw_list_path_curve_to(struct nk_draw_list*, struct nk_vec2 p2, struct nk_vec2 p3, struct nk_vec2 p4, unsigned int num_segments);
 NK_API void nk_draw_list_path_fill(struct nk_draw_list*, struct nk_color);
-NK_API void nk_draw_list_path_stroke(struct nk_draw_list*, struct nk_color, enum nk_draw_list_stroke closed, int thickness);
+NK_API void nk_draw_list_path_stroke(struct nk_draw_list*, struct nk_color, enum nk_draw_list_stroke closed, float thickness);
 
 /* stroke */
-NK_API void nk_draw_list_stroke_line(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, struct nk_color, int thickness);
-NK_API void nk_draw_list_stroke_rect(struct nk_draw_list*, struct nk_rect rect, struct nk_color, int rounding, int thickness);
-NK_API void nk_draw_list_stroke_triangle(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, struct nk_vec2 c, struct nk_color, int thickness);
-NK_API void nk_draw_list_stroke_circle(struct nk_draw_list*, struct nk_vec2 center, int radius, struct nk_color, unsigned int segs, int thickness);
-NK_API void nk_draw_list_stroke_curve(struct nk_draw_list*, struct nk_vec2 p0, struct nk_vec2 cp0, struct nk_vec2 cp1, struct nk_vec2 p1, struct nk_color, unsigned int segments, int thickness);
-NK_API void nk_draw_list_stroke_poly_line(struct nk_draw_list*, const struct nk_vec2 *pnts, const unsigned int cnt, struct nk_color, enum nk_draw_list_stroke, int thickness, enum nk_anti_aliasing);
+NK_API void nk_draw_list_stroke_line(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, struct nk_color, float thickness);
+NK_API void nk_draw_list_stroke_rect(struct nk_draw_list*, struct nk_rect rect, struct nk_color, float rounding, float thickness);
+NK_API void nk_draw_list_stroke_triangle(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, struct nk_vec2 c, struct nk_color, float thickness);
+NK_API void nk_draw_list_stroke_circle(struct nk_draw_list*, struct nk_vec2 center, float radius, struct nk_color, unsigned int segs, float thickness);
+NK_API void nk_draw_list_stroke_curve(struct nk_draw_list*, struct nk_vec2 p0, struct nk_vec2 cp0, struct nk_vec2 cp1, struct nk_vec2 p1, struct nk_color, unsigned int segments, float thickness);
+NK_API void nk_draw_list_stroke_poly_line(struct nk_draw_list*, const struct nk_vec2 *pnts, const unsigned int cnt, struct nk_color, enum nk_draw_list_stroke, float thickness, enum nk_anti_aliasing);
 
 /* fill */
-NK_API void nk_draw_list_fill_rect(struct nk_draw_list*, struct nk_rect rect, struct nk_color, int rounding);
+NK_API void nk_draw_list_fill_rect(struct nk_draw_list*, struct nk_rect rect, struct nk_color, float rounding);
 NK_API void nk_draw_list_fill_rect_multi_color(struct nk_draw_list*, struct nk_rect rect, struct nk_color left, struct nk_color top, struct nk_color right, struct nk_color bottom);
 NK_API void nk_draw_list_fill_triangle(struct nk_draw_list*, struct nk_vec2 a, struct nk_vec2 b, struct nk_vec2 c, struct nk_color);
-NK_API void nk_draw_list_fill_circle(struct nk_draw_list*, struct nk_vec2 center, int radius, struct nk_color col, unsigned int segs);
+NK_API void nk_draw_list_fill_circle(struct nk_draw_list*, struct nk_vec2 center, float radius, struct nk_color col, unsigned int segs);
 NK_API void nk_draw_list_fill_poly_convex(struct nk_draw_list*, const struct nk_vec2 *points, const unsigned int count, struct nk_color, enum nk_anti_aliasing);
 
 /* misc */
 NK_API void nk_draw_list_add_image(struct nk_draw_list*, struct nk_image texture, struct nk_rect rect, struct nk_color);
-NK_API void nk_draw_list_add_text(struct nk_draw_list*, const struct nk_user_font*, struct nk_rect, const char *text, int len, int font_height, struct nk_color);
+NK_API void nk_draw_list_add_text(struct nk_draw_list*, const struct nk_user_font*, struct nk_rect, const char *text, int len, float font_height, struct nk_color);
 #ifdef NK_INCLUDE_COMMAND_USERDATA
 NK_API void nk_draw_list_push_userdata(struct nk_draw_list*, nk_handle userdata);
 #endif
@@ -4825,12 +4839,14 @@ NK_API void nk_draw_list_push_userdata(struct nk_draw_list*, nk_handle userdata)
  * ===============================================================*/
 enum nk_style_item_type {
     NK_STYLE_ITEM_COLOR,
-    NK_STYLE_ITEM_IMAGE
+    NK_STYLE_ITEM_IMAGE,
+    NK_STYLE_ITEM_NINE_SLICE
 };
 
 union nk_style_item_data {
-    struct nk_image image;
     struct nk_color color;
+    struct nk_image image;
+    struct nk_nine_slice slice;
 };
 
 struct nk_style_item {
@@ -4858,8 +4874,8 @@ struct nk_style_button {
     nk_flags text_alignment;
 
     /* properties */
-    int border;
-    int rounding;
+    float border;
+    float rounding;
     struct nk_vec2 padding;
     struct nk_vec2 image_padding;
     struct nk_vec2 touch_padding;
@@ -4891,8 +4907,8 @@ struct nk_style_toggle {
     /* properties */
     struct nk_vec2 padding;
     struct nk_vec2 touch_padding;
-    int spacing;
-    int border;
+    float spacing;
+    float border;
 
     /* optional user callbacks */
     nk_handle userdata;
@@ -4924,7 +4940,7 @@ struct nk_style_selectable {
     nk_flags text_alignment;
 
     /* properties */
-    int rounding;
+    float rounding;
     struct nk_vec2 padding;
     struct nk_vec2 touch_padding;
     struct nk_vec2 image_padding;
@@ -4954,9 +4970,9 @@ struct nk_style_slider {
     struct nk_style_item cursor_active;
 
     /* properties */
-    int border;
-    int rounding;
-    int bar_height;
+    float border;
+    float rounding;
+    float bar_height;
     struct nk_vec2 padding;
     struct nk_vec2 spacing;
     struct nk_vec2 cursor_size;
@@ -4988,10 +5004,10 @@ struct nk_style_progress {
     struct nk_color cursor_border_color;
 
     /* properties */
-    int rounding;
-    int border;
-    int cursor_border;
-    int cursor_rounding;
+    float rounding;
+    float border;
+    float cursor_border;
+    float cursor_rounding;
     struct nk_vec2 padding;
 
     /* optional user callbacks */
@@ -5014,10 +5030,10 @@ struct nk_style_scrollbar {
     struct nk_color cursor_border_color;
 
     /* properties */
-    int border;
-    int rounding;
-    int border_cursor;
-    int rounding_cursor;
+    float border;
+    float rounding;
+    float border_cursor;
+    float rounding_cursor;
     struct nk_vec2 padding;
 
     /* optional buttons */
@@ -5059,12 +5075,12 @@ struct nk_style_edit {
     struct nk_color selected_text_hover;
 
     /* properties */
-    int border;
-    int rounding;
-    int cursor_size;
+    float border;
+    float rounding;
+    float cursor_size;
     struct nk_vec2 scrollbar_size;
     struct nk_vec2 padding;
-    int row_padding;
+    float row_padding;
 };
 
 struct nk_style_property {
@@ -5084,8 +5100,8 @@ struct nk_style_property {
     enum nk_symbol_type sym_right;
 
     /* properties */
-    int border;
-    int rounding;
+    float border;
+    float rounding;
     struct nk_vec2 padding;
 
     struct nk_style_edit edit;
@@ -5106,8 +5122,8 @@ struct nk_style_chart {
     struct nk_color color;
 
     /* properties */
-    int border;
-    int rounding;
+    float border;
+    float rounding;
     struct nk_vec2 padding;
 };
 
@@ -5135,8 +5151,8 @@ struct nk_style_combo {
     enum nk_symbol_type sym_active;
 
     /* properties */
-    int border;
-    int rounding;
+    float border;
+    float rounding;
     struct nk_vec2 content_padding;
     struct nk_vec2 button_padding;
     struct nk_vec2 spacing;
@@ -5157,9 +5173,9 @@ struct nk_style_tab {
     enum nk_symbol_type sym_maximize;
 
     /* properties */
-    int border;
-    int rounding;
-    int indent;
+    float border;
+    float rounding;
+    float indent;
     struct nk_vec2 padding;
     struct nk_vec2 spacing;
 };
@@ -5207,16 +5223,16 @@ struct nk_style_window {
     struct nk_color tooltip_border_color;
     struct nk_style_item scaler;
 
-    int border;
-    int combo_border;
-    int contextual_border;
-    int menu_border;
-    int group_border;
-    int tooltip_border;
-    int popup_border;
-    int min_row_height_padding;
+    float border;
+    float combo_border;
+    float contextual_border;
+    float menu_border;
+    float group_border;
+    float tooltip_border;
+    float popup_border;
+    float min_row_height_padding;
 
-    int rounding;
+    float rounding;
     struct nk_vec2 spacing;
     struct nk_vec2 scrollbar_size;
     struct nk_vec2 min_size;
@@ -5256,8 +5272,9 @@ struct nk_style {
     struct nk_style_window window;
 };
 
-NK_API struct nk_style_item nk_style_item_image(struct nk_image img);
 NK_API struct nk_style_item nk_style_item_color(struct nk_color);
+NK_API struct nk_style_item nk_style_item_image(struct nk_image img);
+NK_API struct nk_style_item nk_style_item_nine_slice(struct nk_nine_slice slice);
 NK_API struct nk_style_item nk_style_item_hide(void);
 
 /*==============================================================
@@ -5290,7 +5307,7 @@ struct nk_chart_slot {
     enum nk_chart_type type;
     struct nk_color color;
     struct nk_color highlight;
-    int min, max, range;
+    float min, max, range;
     int count;
     struct nk_vec2 last;
     int index;
@@ -5298,7 +5315,7 @@ struct nk_chart_slot {
 
 struct nk_chart {
     int slot;
-    int x, y, w, h;
+    float x, y, w, h;
     struct nk_chart_slot slots[NK_CHART_MAX_SLOT];
 };
 
@@ -5317,17 +5334,17 @@ enum nk_panel_row_layout_type {
 struct nk_row_layout {
     enum nk_panel_row_layout_type type;
     int index;
-    int height;
-    int min_height;
+    float height;
+    float min_height;
     int columns;
-    const int *ratio;
-    int item_width;
-    int item_height;
-    int item_offset;
-    int filled;
+    const float *ratio;
+    float item_width;
+    float item_height;
+    float item_offset;
+    float filled;
     struct nk_rect item;
     int tree_depth;
-    int templates[NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS];
+    float templates[NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS];
 };
 
 struct nk_popup_buffer {
@@ -5339,7 +5356,7 @@ struct nk_popup_buffer {
 };
 
 struct nk_menu_state {
-    int x, y, w, h;
+    float x, y, w, h;
     struct nk_scroll offset;
 };
 
@@ -5349,10 +5366,10 @@ struct nk_panel {
     struct nk_rect bounds;
     nk_uint *offset_x;
     nk_uint *offset_y;
-    int at_x, at_y, max_x;
-    int footer_height;
-    int header_height;
-    int border;
+    float at_x, at_y, max_x;
+    float footer_height;
+    float header_height;
+    float border;
     unsigned int has_scrolling;
     struct nk_rect clip;
     struct nk_menu_state menu;
@@ -5436,7 +5453,7 @@ struct nk_window {
     struct nk_scroll scrollbar;
     struct nk_command_buffer buffer;
     struct nk_panel *layout;
-    int scrollbar_hiding_timer;
+    float scrollbar_hiding_timer;
 
     /* persistent widget state */
     struct nk_property_state property;
@@ -5474,7 +5491,7 @@ struct nk_window {
  *      nk_style_pop_style_item(ctx);
  *      nk_style_pop_vec2(ctx);
  *
- * Nuklear has a stack for style_items, int properties, vector properties,
+ * Nuklear has a stack for style_items, float properties, vector properties,
  * flags, colors, fonts and for button_behavior. Each has it's own fixed size stack
  * which can be changed at compile time.
  */
@@ -5490,8 +5507,8 @@ struct nk_window {
 #define NK_STYLE_ITEM_STACK_SIZE 16
 #endif
 
-#ifndef NK_int_STACK_SIZE
-#define NK_int_STACK_SIZE 32
+#ifndef NK_FLOAT_STACK_SIZE
+#define NK_FLOAT_STACK_SIZE 32
 #endif
 
 #ifndef NK_VECTOR_STACK_SIZE
@@ -5517,9 +5534,9 @@ struct nk_window {
         struct nk_config_stack_##type##_element elements[size];\
     }
 
-#define nk_int int
+#define nk_float float
 NK_CONFIGURATION_STACK_TYPE(struct nk, style_item, style_item);
-NK_CONFIGURATION_STACK_TYPE(nk ,int, int);
+NK_CONFIGURATION_STACK_TYPE(nk ,float, float);
 NK_CONFIGURATION_STACK_TYPE(struct nk, vec2, vec2);
 NK_CONFIGURATION_STACK_TYPE(nk ,flags, flags);
 NK_CONFIGURATION_STACK_TYPE(struct nk, color, color);
@@ -5527,7 +5544,7 @@ NK_CONFIGURATION_STACK_TYPE(const struct nk, user_font, user_font*);
 NK_CONFIGURATION_STACK_TYPE(enum nk, button_behavior, button_behavior);
 
 NK_CONFIG_STACK(style_item, NK_STYLE_ITEM_STACK_SIZE);
-NK_CONFIG_STACK(int, NK_int_STACK_SIZE);
+NK_CONFIG_STACK(float, NK_FLOAT_STACK_SIZE);
 NK_CONFIG_STACK(vec2, NK_VECTOR_STACK_SIZE);
 NK_CONFIG_STACK(flags, NK_FLAGS_STACK_SIZE);
 NK_CONFIG_STACK(color, NK_COLOR_STACK_SIZE);
@@ -5536,7 +5553,7 @@ NK_CONFIG_STACK(button_behavior, NK_BUTTON_BEHAVIOR_STACK_SIZE);
 
 struct nk_configuration_stacks {
     struct nk_config_stack_style_item style_items;
-    struct nk_config_stack_int ints;
+    struct nk_config_stack_float floats;
     struct nk_config_stack_vec2 vectors;
     struct nk_config_stack_flags flags;
     struct nk_config_stack_color colors;
@@ -5596,7 +5613,7 @@ struct nk_context {
     nk_flags last_widget_state;
     enum nk_button_behavior button_behavior;
     struct nk_configuration_stacks stacks;
-    int delta_time_seconds;
+    float delta_time_seconds;
 
 /* private:
     should only be accessed if you
@@ -5633,7 +5650,7 @@ struct nk_context {
  * =============================================================== */
 #define NK_PI 3.141592654f
 #define NK_UTF_INVALID 0xFFFD
-#define NK_MAX_int_PRECISION 2
+#define NK_MAX_FLOAT_PRECISION 2
 
 #define NK_UNUSED(x) ((void)(x))
 #define NK_SATURATE(x) (NK_MAX(0, NK_MIN(1.0f, x)))
@@ -5680,9 +5697,11 @@ struct nk_context {
 #define NK_ALIGN_PTR_BACK(x, mask)\
     (NK_UINT_TO_PTR((NK_PTR_TO_UINT((nk_byte*)(x)) & ~(mask-1))))
 
+#if defined(__GNUC__) || defined(__clang__)
+#define NK_OFFSETOF(st,m) (__builtin_offsetof(st,m))
+#else
 #define NK_OFFSETOF(st,m) ((nk_ptr)&(((st*)0)->m))
-#define NK_CONTAINER_OF(ptr,type,member)\
-    (type*)((void*)((char*)(1 ? (ptr): &((type*)0)->member) - NK_OFFSETOF(type, member)))
+#endif
 
 #ifdef __cplusplus
 }
@@ -5695,11 +5714,14 @@ template<typename T> struct nk_helper<T,0>{enum {value = nk_alignof<T>::value};}
 template<typename T> struct nk_alignof{struct Big {T x; char c;}; enum {
     diff = sizeof(Big) - sizeof(T), value = nk_helper<Big, diff>::value};};
 #define NK_ALIGNOF(t) (nk_alignof<t>::value)
-#elif defined(_MSC_VER)
-#define NK_ALIGNOF(t) (__alignof(t))
 #else
-#define NK_ALIGNOF(t) ((char*)(&((struct {char c; t _h;}*)0)->_h) - (char*)0)
+#define NK_ALIGNOF(t) NK_OFFSETOF(struct {char c; t _h;}, _h)
 #endif
+
+#define NK_CONTAINER_OF(ptr,type,member)\
+    (type*)((void*)((char*)(1 ? (ptr): &((type*)0)->member) - NK_OFFSETOF(type, member)))
+
+
 
 #endif /* NK_NUKLEAR_H_ */
 
@@ -5785,7 +5807,7 @@ NK_STATIC_ASSERT(sizeof(nk_bool) == 4);
 #endif
 
 NK_GLOBAL const struct nk_rect nk_null_rect = {-8192.0f, -8192.0f, 16384, 16384};
-#define NK_int_PRECISION 0.00000000000001
+#define NK_FLOAT_PRECISION 0.00000000000001
 
 NK_GLOBAL const struct nk_color nk_red = {255,0,0,255};
 NK_GLOBAL const struct nk_color nk_green = {0,255,0,255};
@@ -5801,21 +5823,21 @@ NK_GLOBAL const struct nk_color nk_yellow = {255,255,0,255};
     else (*(s)) = NK_WIDGET_STATE_INACTIVE;
 
 /* math */
-NK_LIB int nk_inv_sqrt(int n);
+NK_LIB float nk_inv_sqrt(float n);
 #ifndef NK_SIN
-NK_LIB int nk_sin(int x);
+NK_LIB float nk_sin(float x);
 #endif
 #ifndef NK_COS
-NK_LIB int nk_cos(int x);
+NK_LIB float nk_cos(float x);
 #endif
 NK_LIB nk_uint nk_round_up_pow2(nk_uint v);
-NK_LIB struct nk_rect nk_shrink_rect(struct nk_rect r, int amount);
+NK_LIB struct nk_rect nk_shrink_rect(struct nk_rect r, float amount);
 NK_LIB struct nk_rect nk_pad_rect(struct nk_rect r, struct nk_vec2 pad);
-NK_LIB void nk_unify(struct nk_rect *clip, const struct nk_rect *a, int x0, int y0, int x1, int y1);
+NK_LIB void nk_unify(struct nk_rect *clip, const struct nk_rect *a, float x0, float y0, float x1, float y1);
 NK_LIB double nk_pow(double x, int n);
 NK_LIB int nk_ifloord(double x);
-NK_LIB int nk_ifloorf(int x);
-NK_LIB int nk_iceilf(int x);
+NK_LIB int nk_ifloorf(float x);
+NK_LIB int nk_iceilf(float x);
 NK_LIB int nk_log10(double n);
 
 /* util */
@@ -5833,12 +5855,12 @@ NK_LIB void nk_memset(void *ptr, int c0, nk_size size);
 #endif
 NK_LIB void nk_zero(void *ptr, nk_size size);
 NK_LIB char *nk_itoa(char *s, long n);
-NK_LIB int nk_string_int_limit(char *string, int prec);
+NK_LIB int nk_string_float_limit(char *string, int prec);
 #ifndef NK_DTOA
 NK_LIB char *nk_dtoa(char *s, double n);
 #endif
-NK_LIB int nk_text_clamp(const struct nk_user_font *font, const char *text, int text_len, int space, int *glyphs, int *text_width, nk_rune *sep_list, int sep_count);
-NK_LIB struct nk_vec2 nk_text_calculate_text_bounds(const struct nk_user_font *font, const char *begin, int byte_len, int row_height, const char **remaining, struct nk_vec2 *out_offset, int *glyphs, int op);
+NK_LIB int nk_text_clamp(const struct nk_user_font *font, const char *text, int text_len, float space, int *glyphs, float *text_width, nk_rune *sep_list, int sep_count);
+NK_LIB struct nk_vec2 nk_text_calculate_text_bounds(const struct nk_user_font *font, const char *begin, int byte_len, float row_height, const char **remaining, struct nk_vec2 *out_offset, int *glyphs, int op);
 #ifdef NK_INCLUDE_STANDARD_VARARGS
 NK_LIB int nk_strfmt(char *buf, int buf_size, const char *fmt, va_list args);
 #endif
@@ -5859,7 +5881,7 @@ NK_LIB void* nk_buffer_realloc(struct nk_buffer *b, nk_size capacity, nk_size *s
 NK_LIB void nk_command_buffer_init(struct nk_command_buffer *cb, struct nk_buffer *b, enum nk_command_clipping clip);
 NK_LIB void nk_command_buffer_reset(struct nk_command_buffer *b);
 NK_LIB void* nk_command_buffer_push(struct nk_command_buffer* b, enum nk_command_type t, nk_size size);
-NK_LIB void nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type, struct nk_rect content, struct nk_color background, struct nk_color foreground, int border_width, const struct nk_user_font *font);
+NK_LIB void nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type, struct nk_rect content, struct nk_color background, struct nk_color foreground, float border_width, const struct nk_user_font *font);
 
 /* buffering */
 NK_LIB void nk_start_buffer(struct nk_context *ctx, struct nk_command_buffer *b);
@@ -5872,9 +5894,9 @@ NK_LIB void nk_build(struct nk_context *ctx);
 
 /* text editor */
 NK_LIB void nk_textedit_clear_state(struct nk_text_edit *state, enum nk_text_edit_type type, nk_plugin_filter filter);
-NK_LIB void nk_textedit_click(struct nk_text_edit *state, int x, int y, const struct nk_user_font *font, int row_height);
-NK_LIB void nk_textedit_drag(struct nk_text_edit *state, int x, int y, const struct nk_user_font *font, int row_height);
-NK_LIB void nk_textedit_key(struct nk_text_edit *state, enum nk_keys key, int shift_mod, const struct nk_user_font *font, int row_height);
+NK_LIB void nk_textedit_click(struct nk_text_edit *state, float x, float y, const struct nk_user_font *font, float row_height);
+NK_LIB void nk_textedit_drag(struct nk_text_edit *state, float x, float y, const struct nk_user_font *font, float row_height);
+NK_LIB void nk_textedit_key(struct nk_text_edit *state, enum nk_keys key, int shift_mod, const struct nk_user_font *font, float row_height);
 
 /* window */
 enum nk_window_insert_location {
@@ -5911,7 +5933,7 @@ NK_LIB void *nk_create_panel(struct nk_context *ctx);
 NK_LIB void nk_free_panel(struct nk_context*, struct nk_panel *pan);
 NK_LIB nk_bool nk_panel_has_header(nk_flags flags, const char *title);
 NK_LIB struct nk_vec2 nk_panel_get_padding(const struct nk_style *style, enum nk_panel_type type);
-NK_LIB int nk_panel_get_border(const struct nk_style *style, nk_flags flags, enum nk_panel_type type);
+NK_LIB float nk_panel_get_border(const struct nk_style *style, nk_flags flags, enum nk_panel_type type);
 NK_LIB struct nk_color nk_panel_get_border_color(const struct nk_style *style, enum nk_panel_type type);
 NK_LIB nk_bool nk_panel_is_sub(enum nk_panel_type type);
 NK_LIB nk_bool nk_panel_is_nonblock(enum nk_panel_type type);
@@ -5919,9 +5941,9 @@ NK_LIB nk_bool nk_panel_begin(struct nk_context *ctx, const char *title, enum nk
 NK_LIB void nk_panel_end(struct nk_context *ctx);
 
 /* layout */
-NK_LIB int nk_layout_row_calculate_usable_space(const struct nk_style *style, enum nk_panel_type type, int total_space, int columns);
-NK_LIB void nk_panel_layout(const struct nk_context *ctx, struct nk_window *win, int height, int cols);
-NK_LIB void nk_row_layout(struct nk_context *ctx, enum nk_layout_format fmt, int height, int cols, int width);
+NK_LIB float nk_layout_row_calculate_usable_space(const struct nk_style *style, enum nk_panel_type type, float total_space, int columns);
+NK_LIB void nk_panel_layout(const struct nk_context *ctx, struct nk_window *win, float height, int cols);
+NK_LIB void nk_row_layout(struct nk_context *ctx, enum nk_layout_format fmt, float height, int cols, int width);
 NK_LIB void nk_panel_alloc_row(const struct nk_context *ctx, struct nk_window *win);
 NK_LIB void nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx, struct nk_window *win, int modify);
 NK_LIB void nk_panel_alloc_space(struct nk_rect *bounds, const struct nk_context *ctx);
@@ -5970,15 +5992,15 @@ NK_LIB void nk_draw_progress(struct nk_command_buffer *out, nk_flags state, cons
 NK_LIB nk_size nk_do_progress(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, nk_size value, nk_size max, nk_bool modifiable, const struct nk_style_progress *style, struct nk_input *in);
 
 /* slider */
-NK_LIB int nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor, struct nk_rect *visual_cursor, struct nk_input *in, struct nk_rect bounds, int slider_min, int slider_max, int slider_value, int slider_step, int slider_steps);
-NK_LIB void nk_draw_slider(struct nk_command_buffer *out, nk_flags state, const struct nk_style_slider *style, const struct nk_rect *bounds, const struct nk_rect *visual_cursor, int min, int value, int max);
-NK_LIB int nk_do_slider(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, int min, int val, int max, int step, const struct nk_style_slider *style, struct nk_input *in, const struct nk_user_font *font);
+NK_LIB float nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor, struct nk_rect *visual_cursor, struct nk_input *in, struct nk_rect bounds, float slider_min, float slider_max, float slider_value, float slider_step, float slider_steps);
+NK_LIB void nk_draw_slider(struct nk_command_buffer *out, nk_flags state, const struct nk_style_slider *style, const struct nk_rect *bounds, const struct nk_rect *visual_cursor, float min, float value, float max);
+NK_LIB float nk_do_slider(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, float min, float val, float max, float step, const struct nk_style_slider *style, struct nk_input *in, const struct nk_user_font *font);
 
 /* scrollbar */
-NK_LIB int nk_scrollbar_behavior(nk_flags *state, struct nk_input *in, int has_scrolling, const struct nk_rect *scroll, const struct nk_rect *cursor, const struct nk_rect *empty0, const struct nk_rect *empty1, int scroll_offset, int target, int scroll_step, enum nk_orientation o);
+NK_LIB float nk_scrollbar_behavior(nk_flags *state, struct nk_input *in, int has_scrolling, const struct nk_rect *scroll, const struct nk_rect *cursor, const struct nk_rect *empty0, const struct nk_rect *empty1, float scroll_offset, float target, float scroll_step, enum nk_orientation o);
 NK_LIB void nk_draw_scrollbar(struct nk_command_buffer *out, nk_flags state, const struct nk_style_scrollbar *style, const struct nk_rect *bounds, const struct nk_rect *scroll);
-NK_LIB int nk_do_scrollbarv(nk_flags *state, struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling, int offset, int target, int step, int button_pixel_inc, const struct nk_style_scrollbar *style, struct nk_input *in, const struct nk_user_font *font);
-NK_LIB int nk_do_scrollbarh(nk_flags *state, struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling, int offset, int target, int step, int button_pixel_inc, const struct nk_style_scrollbar *style, struct nk_input *in, const struct nk_user_font *font);
+NK_LIB float nk_do_scrollbarv(nk_flags *state, struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling, float offset, float target, float step, float button_pixel_inc, const struct nk_style_scrollbar *style, struct nk_input *in, const struct nk_user_font *font);
+NK_LIB float nk_do_scrollbarh(nk_flags *state, struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling, float offset, float target, float step, float button_pixel_inc, const struct nk_style_scrollbar *style, struct nk_input *in, const struct nk_user_font *font);
 
 /* selectable */
 NK_LIB void nk_draw_selectable(struct nk_command_buffer *out, nk_flags state, const struct nk_style_selectable *style, nk_bool active, const struct nk_rect *bounds, const struct nk_rect *icon, const struct nk_image *img, enum nk_symbol_type sym, const char *string, int len, nk_flags align, const struct nk_user_font *font);
@@ -5986,7 +6008,7 @@ NK_LIB nk_bool nk_do_selectable(nk_flags *state, struct nk_command_buffer *out, 
 NK_LIB nk_bool nk_do_selectable_image(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, const char *str, int len, nk_flags align, nk_bool *value, const struct nk_image *img, const struct nk_style_selectable *style, const struct nk_input *in, const struct nk_user_font *font);
 
 /* edit */
-NK_LIB void nk_edit_draw_text(struct nk_command_buffer *out, const struct nk_style_edit *style, int pos_x, int pos_y, int x_offset, const char *text, int byte_len, int row_height, const struct nk_user_font *font, struct nk_color background, struct nk_color foreground, nk_bool is_selected);
+NK_LIB void nk_edit_draw_text(struct nk_command_buffer *out, const struct nk_style_edit *style, float pos_x, float pos_y, float x_offset, const char *text, int byte_len, float row_height, const struct nk_user_font *font, struct nk_color background, struct nk_color foreground, nk_bool is_selected);
 NK_LIB nk_flags nk_do_edit(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, nk_flags flags, nk_plugin_filter filter, struct nk_text_edit *edit, const struct nk_style_edit *style, struct nk_input *in, const struct nk_user_font *font);
 
 /* color-picker */
@@ -6002,16 +6024,16 @@ enum nk_property_status {
 };
 enum nk_property_filter {
     NK_FILTER_INT,
-    NK_FILTER_int
+    NK_FILTER_FLOAT
 };
 enum nk_property_kind {
     NK_PROPERTY_INT,
-    NK_PROPERTY_int,
+    NK_PROPERTY_FLOAT,
     NK_PROPERTY_DOUBLE
 };
 union nk_property {
     int i;
-    int f;
+    float f;
     double d;
 };
 struct nk_property_variant {
@@ -6022,14 +6044,14 @@ struct nk_property_variant {
     union nk_property step;
 };
 NK_LIB struct nk_property_variant nk_property_variant_int(int value, int min_value, int max_value, int step);
-// NK_LIB struct nk_property_variant nk_property_variant_int(int value, int min_value, int max_value, int step);
+NK_LIB struct nk_property_variant nk_property_variant_float(float value, float min_value, float max_value, float step);
 NK_LIB struct nk_property_variant nk_property_variant_double(double value, double min_value, double max_value, double step);
 
-NK_LIB void nk_drag_behavior(nk_flags *state, const struct nk_input *in, struct nk_rect drag, struct nk_property_variant *variant, int inc_per_pixel);
-NK_LIB void nk_property_behavior(nk_flags *ws, const struct nk_input *in, struct nk_rect property,  struct nk_rect label, struct nk_rect edit, struct nk_rect empty, int *state, struct nk_property_variant *variant, int inc_per_pixel);
+NK_LIB void nk_drag_behavior(nk_flags *state, const struct nk_input *in, struct nk_rect drag, struct nk_property_variant *variant, float inc_per_pixel);
+NK_LIB void nk_property_behavior(nk_flags *ws, const struct nk_input *in, struct nk_rect property,  struct nk_rect label, struct nk_rect edit, struct nk_rect empty, int *state, struct nk_property_variant *variant, float inc_per_pixel);
 NK_LIB void nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *style, const struct nk_rect *bounds, const struct nk_rect *label, nk_flags state, const char *name, int len, const struct nk_user_font *font);
-NK_LIB void nk_do_property(nk_flags *ws, struct nk_command_buffer *out, struct nk_rect property, const char *name, struct nk_property_variant *variant, int inc_per_pixel, char *buffer, int *len, int *state, int *cursor, int *select_begin, int *select_end, const struct nk_style_property *style, enum nk_property_filter filter, struct nk_input *in, const struct nk_user_font *font, struct nk_text_edit *text_edit, enum nk_button_behavior behavior);
-NK_LIB void nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant, int inc_per_pixel, const enum nk_property_filter filter);
+NK_LIB void nk_do_property(nk_flags *ws, struct nk_command_buffer *out, struct nk_rect property, const char *name, struct nk_property_variant *variant, float inc_per_pixel, char *buffer, int *len, int *state, int *cursor, int *select_begin, int *select_end, const struct nk_style_property *style, enum nk_property_filter filter, struct nk_input *in, const struct nk_user_font *font, struct nk_text_edit *text_edit, enum nk_button_behavior behavior);
+NK_LIB void nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant, float inc_per_pixel, const enum nk_property_filter filter);
 
 #ifdef NK_INCLUDE_FONT_BAKING
 
@@ -6068,7 +6090,7 @@ nk_stbtt_free(void *ptr, void *user_data) {
  *                              MATH
  *
  * ===============================================================*/
-/*  Since nuklear is supposed to work on all systems providing inting point
+/*  Since nuklear is supposed to work on all systems providing floating point
     math without any dependencies I also had to implement my own math functions
     for sqrt, sin and cos. Since the actual highly accurate implementations for
     the standard library functions are quite complex and I do not need high
@@ -6080,7 +6102,7 @@ nk_stbtt_free(void *ptr, void *user_data) {
     https://en.wikipedia.org/wiki/Fast_inverse_square_root with
     slightly tweaked magic constant. While on today's hardware it is
     probably not faster it is still fast and accurate enough for
-    nuklear's use cases. IMPORTANT: this requires int format IEEE 754
+    nuklear's use cases. IMPORTANT: this requires float format IEEE 754
 
     Sine/Cosine
     -----------
@@ -6095,13 +6117,12 @@ nk_stbtt_free(void *ptr, void *user_data) {
     (it can actually approximate a lot more functions) can be
     found here: www.lolengine.net/wiki/oss/lolremez
 */
-NK_LIB int
-nk_inv_sqrt(int n)
+NK_LIB float
+nk_inv_sqrt(float n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - n / nk_inv_sqrt");
-    int x2;
-    const int threehalfs = 1.5f;
-    union {nk_uint i; int f;} conv = {0};
+    float x2;
+    const float threehalfs = 1.5f;
+    union {nk_uint i; float f;} conv = {0};
     conv.f = n;
     x2 = n * 0.5f;
     conv.i = 0x5f375A84 - (conv.i >> 1);
@@ -6110,45 +6131,42 @@ nk_inv_sqrt(int n)
 }
 #ifndef NK_SIN
 #define NK_SIN nk_sin
-NK_LIB int
-nk_sin(int x)
+NK_LIB float
+nk_sin(float x)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_sin");
-    NK_STORAGE const int a0 = +1.91059300966915117e-31f;
-    NK_STORAGE const int a1 = +1.00086760103908896f;
-    NK_STORAGE const int a2 = -1.21276126894734565e-2f;
-    NK_STORAGE const int a3 = -1.38078780785773762e-1f;
-    NK_STORAGE const int a4 = -2.67353392911981221e-2f;
-    NK_STORAGE const int a5 = +2.08026600266304389e-2f;
-    NK_STORAGE const int a6 = -3.03996055049204407e-3f;
-    NK_STORAGE const int a7 = +1.38235642404333740e-4f;
+    NK_STORAGE const float a0 = +1.91059300966915117e-31f;
+    NK_STORAGE const float a1 = +1.00086760103908896f;
+    NK_STORAGE const float a2 = -1.21276126894734565e-2f;
+    NK_STORAGE const float a3 = -1.38078780785773762e-1f;
+    NK_STORAGE const float a4 = -2.67353392911981221e-2f;
+    NK_STORAGE const float a5 = +2.08026600266304389e-2f;
+    NK_STORAGE const float a6 = -3.03996055049204407e-3f;
+    NK_STORAGE const float a7 = +1.38235642404333740e-4f;
     return a0 + x*(a1 + x*(a2 + x*(a3 + x*(a4 + x*(a5 + x*(a6 + x*a7))))));
 }
 #endif
 #ifndef NK_COS
 #define NK_COS nk_cos
-NK_LIB int
-nk_cos(int x)
+NK_LIB float
+nk_cos(float x)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_cos");
     /* New implementation. Also generated using lolremez. */
     /* Old version significantly deviated from expected results. */
-    NK_STORAGE const int a0 = 9.9995999154986614e-1f;
-    NK_STORAGE const int a1 = 1.2548995793001028e-3f;
-    NK_STORAGE const int a2 = -5.0648546280678015e-1f;
-    NK_STORAGE const int a3 = 1.2942246466519995e-2f;
-    NK_STORAGE const int a4 = 2.8668384702547972e-2f;
-    NK_STORAGE const int a5 = 7.3726485210586547e-3f;
-    NK_STORAGE const int a6 = -3.8510875386947414e-3f;
-    NK_STORAGE const int a7 = 4.7196604604366623e-4f;
-    NK_STORAGE const int a8 = -1.8776444013090451e-5f;
+    NK_STORAGE const float a0 = 9.9995999154986614e-1f;
+    NK_STORAGE const float a1 = 1.2548995793001028e-3f;
+    NK_STORAGE const float a2 = -5.0648546280678015e-1f;
+    NK_STORAGE const float a3 = 1.2942246466519995e-2f;
+    NK_STORAGE const float a4 = 2.8668384702547972e-2f;
+    NK_STORAGE const float a5 = 7.3726485210586547e-3f;
+    NK_STORAGE const float a6 = -3.8510875386947414e-3f;
+    NK_STORAGE const float a7 = 4.7196604604366623e-4f;
+    NK_STORAGE const float a8 = -1.8776444013090451e-5f;
     return a0 + x*(a1 + x*(a2 + x*(a3 + x*(a4 + x*(a5 + x*(a6 + x*(a7 + x*a8)))))));
 }
 #endif
 NK_LIB nk_uint
 nk_round_up_pow2(nk_uint v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - v / nk_round_up_pow2");
     v--;
     v |= v >> 1;
     v |= v >> 2;
@@ -6161,7 +6179,6 @@ nk_round_up_pow2(nk_uint v)
 NK_LIB double
 nk_pow(double x, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_pow");
     /*  check the sign of n */
     double r = 1;
     int plus = n >= 0;
@@ -6177,34 +6194,30 @@ nk_pow(double x, int n)
 NK_LIB int
 nk_ifloord(double x)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_ifloord");
     x = (double)((int)x - ((x < 0.0) ? 1 : 0));
     return (int)x;
 }
 NK_LIB int
-nk_ifloorf(int x)
+nk_ifloorf(float x)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_ifloorf");
-    x = (int)((int)x - ((x < 0.0f) ? 1 : 0));
+    x = (float)((int)x - ((x < 0.0f) ? 1 : 0));
     return (int)x;
 }
 NK_LIB int
-nk_iceilf(int x)
+nk_iceilf(float x)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_iceilf");
     if (x >= 0) {
         int i = (int)x;
         return (x > i) ? i+1: i;
     } else {
         int t = (int)x;
-        int r = x - (int)t;
+        float r = x - (float)t;
         return (r > 0.0f) ? t+1: t;
     }
 }
 NK_LIB int
 nk_log10(double n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - n / nk_log10");
     int neg;
     int ret;
     int exp = 0;
@@ -6221,13 +6234,11 @@ nk_log10(double n)
 NK_API struct nk_rect
 nk_get_null_rect(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_get_null_rect");
     return nk_null_rect;
 }
 NK_API struct nk_rect
-nk_rect(int x, int y, int w, int h)
+nk_rect(float x, float y, float w, float h)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_rect");
     struct nk_rect r;
     r.x = x; r.y = y;
     r.w = w; r.h = h;
@@ -6236,36 +6247,31 @@ nk_rect(int x, int y, int w, int h)
 NK_API struct nk_rect
 nk_recti(int x, int y, int w, int h)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_recti");
     struct nk_rect r;
-    r.x = (int)x;
-    r.y = (int)y;
-    r.w = (int)w;
-    r.h = (int)h;
+    r.x = (float)x;
+    r.y = (float)y;
+    r.w = (float)w;
+    r.h = (float)h;
     return r;
 }
 NK_API struct nk_rect
 nk_recta(struct nk_vec2 pos, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_vec2 / nk_recta");
     return nk_rect(pos.x, pos.y, size.x, size.y);
 }
 NK_API struct nk_rect
-nk_rectv(const int *r)
+nk_rectv(const float *r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rectv");
     return nk_rect(r[0], r[1], r[2], r[3]);
 }
 NK_API struct nk_rect
 nk_rectiv(const int *r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rectiv");
     return nk_recti(r[0], r[1], r[2], r[3]);
 }
 NK_API struct nk_vec2
 nk_rect_pos(struct nk_rect r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_rect_pos");
     struct nk_vec2 ret;
     ret.x = r.x; ret.y = r.y;
     return ret;
@@ -6273,15 +6279,13 @@ nk_rect_pos(struct nk_rect r)
 NK_API struct nk_vec2
 nk_rect_size(struct nk_rect r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_rect_size");
     struct nk_vec2 ret;
     ret.x = r.w; ret.y = r.h;
     return ret;
 }
 NK_LIB struct nk_rect
-nk_shrink_rect(struct nk_rect r, int amount)
+nk_shrink_rect(struct nk_rect r, float amount)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_shrink_rect");
     struct nk_rect res;
     r.w = NK_MAX(r.w, 2 * amount);
     r.h = NK_MAX(r.h, 2 * amount);
@@ -6294,7 +6298,6 @@ nk_shrink_rect(struct nk_rect r, int amount)
 NK_LIB struct nk_rect
 nk_pad_rect(struct nk_rect r, struct nk_vec2 pad)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_pad_rect");
     r.w = NK_MAX(r.w, 2 * pad.x);
     r.h = NK_MAX(r.h, 2 * pad.y);
     r.x += pad.x; r.y += pad.y;
@@ -6303,9 +6306,8 @@ nk_pad_rect(struct nk_rect r, struct nk_vec2 pad)
     return r;
 }
 NK_API struct nk_vec2
-nk_vec2(int x, int y)
+nk_vec2(float x, float y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_vec2");
     struct nk_vec2 ret;
     ret.x = x; ret.y = y;
     return ret;
@@ -6313,31 +6315,27 @@ nk_vec2(int x, int y)
 NK_API struct nk_vec2
 nk_vec2i(int x, int y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x / nk_vec2i");
     struct nk_vec2 ret;
-    ret.x = (int)x;
-    ret.y = (int)y;
+    ret.x = (float)x;
+    ret.y = (float)y;
     return ret;
 }
 NK_API struct nk_vec2
-nk_vec2v(const int *v)
+nk_vec2v(const float *v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_vec2v");
     return nk_vec2(v[0], v[1]);
 }
 NK_API struct nk_vec2
 nk_vec2iv(const int *v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_vec2iv");
     return nk_vec2i(v[0], v[1]);
 }
 NK_LIB void
-nk_unify(struct nk_rect *clip, const struct nk_rect *a, int x0, int y0,
-    int x1, int y1)
+nk_unify(struct nk_rect *clip, const struct nk_rect *a, float x0, float y0,
+    float x1, float y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x1, /     int");
-    // NK_ASSERT(a);
-    // NK_ASSERT(clip);
+    NK_ASSERT(a);
+    NK_ASSERT(clip);
     clip->x = NK_MAX(a->x, x0);
     clip->y = NK_MAX(a->y, y0);
     clip->w = NK_MIN(a->x + a->w, x1) - clip->x;
@@ -6348,11 +6346,10 @@ nk_unify(struct nk_rect *clip, const struct nk_rect *a, int x0, int y0,
 
 NK_API void
 nk_triangle_from_direction(struct nk_vec2 *result, struct nk_rect r,
-    int pad_x, int pad_y, enum nk_heading direction)
+    float pad_x, float pad_y, enum nk_heading direction)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pad_x, /     int");
-    int w_half, h_half;
-    // NK_ASSERT(result);
+    float w_half, h_half;
+    NK_ASSERT(result);
 
     r.w = NK_MAX(2 * pad_x, r.w);
     r.h = NK_MAX(2 * pad_y, r.h);
@@ -6405,7 +6402,6 @@ NK_LIB int nk_to_lower(int c) {return (c >= 'A' && c <= 'Z') ? (c - ('a' + 'A'))
 NK_LIB void*
 nk_memcopy(void *dst0, const void *src0, nk_size length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - dst0 / nk_memcopy");
     nk_ptr t;
     char *dst = (char*)dst0;
     const char *src = (const char*)src0;
@@ -6465,7 +6461,6 @@ done:
 NK_LIB void
 nk_memset(void *ptr, int c0, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - ptr / nk_memset");
     #define nk_word unsigned
     #define nk_wsize sizeof(nk_word)
     #define nk_wmask (nk_wsize - 1)
@@ -6518,28 +6513,25 @@ nk_memset(void *ptr, int c0, nk_size size)
 NK_LIB void
 nk_zero(void *ptr, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - ptr / nk_zero");
-    // NK_ASSERT(ptr);
+    NK_ASSERT(ptr);
     NK_MEMSET(ptr, 0, size);
 }
 NK_API int
 nk_strlen(const char *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_strlen");
     int siz = 0;
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     while (str && *str++ != '\0') siz++;
     return siz;
 }
 NK_API int
 nk_strtoi(const char *str, const char **endptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_strtoi");
     int neg = 1;
     const char *p = str;
     int value = 0;
 
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str) return 0;
 
     /* skip whitespace */
@@ -6559,14 +6551,13 @@ nk_strtoi(const char *str, const char **endptr)
 NK_API double
 nk_strtod(const char *str, const char **endptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_strtod");
     double m;
     double neg = 1.0;
     const char *p = str;
     double value = 0;
     double number = 0;
 
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str) return 0;
 
     /* skip whitespace */
@@ -6614,20 +6605,18 @@ nk_strtod(const char *str, const char **endptr)
         *endptr = p;
     return number;
 }
-NK_API int
+NK_API float
 nk_strtof(const char *str, const char **endptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_strtof");
-    int int_value;
+    float float_value;
     double double_value;
     double_value = NK_STRTOD(str, endptr);
-    int_value = (int)double_value;
-    return int_value;
+    float_value = (float)double_value;
+    return float_value;
 }
 NK_API int
 nk_stricmp(const char *s1, const char *s2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_stricmp");
     nk_int c1,c2,d;
     do {
         c1 = *s1++;
@@ -6650,9 +6639,8 @@ nk_stricmp(const char *s1, const char *s2)
 NK_API int
 nk_stricmpn(const char *s1, const char *s2, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_stricmpn");
     int c1,c2,d;
-    // NK_ASSERT(n >= 0);
+    NK_ASSERT(n >= 0);
     do {
         c1 = *s1++;
         c2 = *s2++;
@@ -6676,7 +6664,6 @@ nk_stricmpn(const char *s1, const char *s2, int n)
 NK_INTERN int
 nk_str_match_here(const char *regexp, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_str_match_here");
     if (regexp[0] == '\0')
         return 1;
     if (regexp[1] == '*')
@@ -6690,7 +6677,6 @@ nk_str_match_here(const char *regexp, const char *text)
 NK_INTERN int
 nk_str_match_star(int c, const char *regexp, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_str_match_star");
     do {/* a '* matches zero or more instances */
         if (nk_str_match_here(regexp, text))
             return 1;
@@ -6700,7 +6686,6 @@ nk_str_match_star(int c, const char *regexp, const char *text)
 NK_API int
 nk_strfilter(const char *text, const char *regexp)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_strfilter");
     /*
     c    matches any literal character c
     .    matches any single character
@@ -6719,7 +6704,6 @@ NK_API int
 nk_strmatch_fuzzy_text(const char *str, int str_len,
     const char *pattern, int *out_score)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pattern /     const");
     /* Returns true if each character in pattern is found sequentially within str
      * if found then out_score is also set. Score value has no intrinsic meaning.
      * Range varies with pattern. Can only compare scores with same search pattern. */
@@ -6751,20 +6735,22 @@ nk_strmatch_fuzzy_text(const char *str, int str_len,
     int best_letter_score = 0;
 
     /* loop over strings */
-    // NK_ASSERT(str);
-    // NK_ASSERT(pattern);
+    NK_ASSERT(str);
+    NK_ASSERT(pattern);
     if (!str || !str_len || !pattern) return 0;
     while (str_iter < str_len)
     {
         const char pattern_letter = *pattern_iter;
         const char str_letter = str[str_iter];
 
-        int next_match = *pattern_iter != '\0' &&            nk_to_lower(pattern_letter) == nk_to_lower(str_letter);
+        int next_match = *pattern_iter != '\0' &&
+            nk_to_lower(pattern_letter) == nk_to_lower(str_letter);
         int rematch = best_letter && nk_to_upper(*best_letter) == nk_to_upper(str_letter);
 
         int advanced = next_match && best_letter;
         int pattern_repeat = best_letter && *pattern_iter != '\0';
-        pattern_repeat = pattern_repeat &&            nk_to_lower(*best_letter) == nk_to_lower(pattern_letter);
+        pattern_repeat = pattern_repeat &&
+            nk_to_lower(*best_letter) == nk_to_lower(pattern_letter);
 
         if (advanced || pattern_repeat) {
             score += best_letter_score;
@@ -6838,13 +6824,11 @@ nk_strmatch_fuzzy_text(const char *str, int str_len,
 NK_API int
 nk_strmatch_fuzzy_string(char const *str, char const *pattern, int *out_score)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - const / nk_strmatch_fuzzy_string");
-    return nk_strmatch_fuzzy_text(str, strlen(str), pattern, out_score);
+    return nk_strmatch_fuzzy_text(str, nk_strlen(str), pattern, out_score);
 }
 NK_LIB int
-nk_string_int_limit(char *string, int prec)
+nk_string_float_limit(char *string, int prec)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - string / nk_string_int_limit");
     int dot = 0;
     char *c = string;
     while (*c) {
@@ -6865,8 +6849,7 @@ nk_string_int_limit(char *string, int prec)
 NK_INTERN void
 nk_strrev_ascii(char *s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - s / nk_strrev_ascii");
-    int len = strlen(s);
+    int len = nk_strlen(s);
     int end = len / 2;
     int i = 0;
     char t;
@@ -6879,7 +6862,6 @@ nk_strrev_ascii(char *s)
 NK_LIB char*
 nk_itoa(char *s, long n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - s / nk_itoa");
     long i = 0;
     if (n == 0) {
         s[i++] = '0';
@@ -6906,13 +6888,12 @@ nk_itoa(char *s, long n)
 NK_LIB char*
 nk_dtoa(char *s, double n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - s / nk_dtoa");
     int useExp = 0;
     int digit = 0, m = 0, m1 = 0;
     char *c = s;
     int neg = 0;
 
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s) return 0;
 
     if (n == 0.0) {
@@ -6941,7 +6922,7 @@ nk_dtoa(char *s, double n)
     }
 
     /* convert the number */
-    while (n > NK_int_PRECISION || m >= 0) {
+    while (n > NK_FLOAT_PRECISION || m >= 0) {
         double weight = nk_pow(10.0, m);
         if (weight > 0) {
             double t = (double)n / weight;
@@ -6988,8 +6969,6 @@ nk_dtoa(char *s, double n)
 NK_INTERN int
 nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - buf / nk_vsnprintf");
-    //writeSerialPort(boutRefNum, "nk_vsnprintf");
     enum nk_arg_type {
         NK_ARG_TYPE_CHAR,
         NK_ARG_TYPE_SHORT,
@@ -7014,8 +6993,8 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
     int result = -1;
     const char *iter = fmt;
 
-    // NK_ASSERT(buf);
-    // NK_ASSERT(buf_size);
+    NK_ASSERT(buf);
+    NK_ASSERT(buf_size);
     if (!buf || !buf_size || !fmt) return 0;
     for (iter = fmt; *iter && len < buf_size; iter++) {
         /* copy all non-format characters */
@@ -7078,27 +7057,27 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
 
         /* specifier */
         if (*iter == '%') {
-            // NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
-            // NK_ASSERT(precision == NK_DEFAULT);
-            // NK_ASSERT(width == NK_DEFAULT);
+            NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
+            NK_ASSERT(precision == NK_DEFAULT);
+            NK_ASSERT(width == NK_DEFAULT);
             if (len < buf_size)
                 buf[len++] = '%';
         } else if (*iter == 's') {
             /* string  */
             const char *str = va_arg(args, const char*);
-            // NK_ASSERT(str != buf && "buffer and argument are not allowed to overlap!");
-            // NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
-            // NK_ASSERT(precision == NK_DEFAULT);
-            // NK_ASSERT(width == NK_DEFAULT);
+            NK_ASSERT(str != buf && "buffer and argument are not allowed to overlap!");
+            NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
+            NK_ASSERT(precision == NK_DEFAULT);
+            NK_ASSERT(width == NK_DEFAULT);
             if (str == buf) return -1;
             while (str && *str && len < buf_size)
                 buf[len++] = *str++;
         } else if (*iter == 'n') {
             /* current length callback */
             signed int *n = va_arg(args, int*);
-            // NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
-            // NK_ASSERT(precision == NK_DEFAULT);
-            // NK_ASSERT(width == NK_DEFAULT);
+            NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
+            NK_ASSERT(precision == NK_DEFAULT);
+            NK_ASSERT(width == NK_DEFAULT);
             if (n) *n = len;
         } else if (*iter == 'c' || *iter == 'i' || *iter == 'd') {
             /* signed integer */
@@ -7121,7 +7100,7 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
 
             /* convert number to string */
             nk_itoa(number_buffer, value);
-            num_len = strlen(number_buffer);
+            num_len = nk_strlen(number_buffer);
             padding = NK_MAX(cur_width - NK_MAX(cur_precision, num_len), 0);
             if ((flag & NK_ARG_FLAG_PLUS) || (flag & NK_ARG_FLAG_SPACE))
                 padding = NK_MAX(padding-1, 0);
@@ -7233,7 +7212,7 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
                     buf[len++] = ' ';
             }
         } else if (*iter == 'f') {
-            /* inting point */
+            /* floating point */
             const char *num_iter;
             int cur_precision = (precision < 0) ? 6: precision;
             int prefix, cur_width = NK_MAX(width, 0);
@@ -7241,9 +7220,9 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
             int num_len = 0, frac_len = 0, dot = 0;
             int padding = 0;
 
-            // NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
+            NK_ASSERT(arg_type == NK_ARG_TYPE_DEFAULT);
             NK_DTOA(number_buffer, value);
-            num_len = strlen(number_buffer);
+            num_len = nk_strlen(number_buffer);
 
             /* calculate padding */
             num_iter = number_buffer;
@@ -7297,7 +7276,7 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
             }
         } else {
             /* Specifier not supported: g,G,e,E,p,z */
-            // NK_ASSERT(0 && "specifier is not supported!");
+            NK_ASSERT(0 && "specifier is not supported!");
             return result;
         }
     }
@@ -7309,10 +7288,9 @@ nk_vsnprintf(char *buf, int buf_size, const char *fmt, va_list args)
 NK_LIB int
 nk_strfmt(char *buf, int buf_size, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - buf / nk_strfmt");
     int result = -1;
-    // NK_ASSERT(buf);
-    // NK_ASSERT(buf_size);
+    NK_ASSERT(buf);
+    NK_ASSERT(buf_size);
     if (!buf || !buf_size || !fmt) return 0;
 #ifdef NK_INCLUDE_STANDARD_IO
     result = NK_VSNPRINTF(buf, (nk_size)buf_size, fmt, args);
@@ -7324,102 +7302,81 @@ nk_strfmt(char *buf, int buf_size, const char *fmt, va_list args)
     return result;
 }
 #endif
-
-#define get16bits(d) (*((const uint16_t *) (d)))
 NK_API nk_hash
 nk_murmur_hash(const void * key, int len, nk_hash seed)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void / nk_murmur_hash");
-    const nk_byte *s = key;
-    nk_hash hash = 0;
+    /* 32-Bit MurmurHash3: https://code.google.com/p/smhasher/wiki/MurmurHash3*/
+    #define NK_ROTL(x,r) ((x) << (r) | ((x) >> (32 - r)))
 
-    for(; *s; ++s)
-    {
-        hash += *s;
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
+    nk_uint h1 = seed;
+    nk_uint k1;
+    const nk_byte *data = (const nk_byte*)key;
+    const nk_byte *keyptr = data;
+    nk_byte *k1ptr;
+    const int bsize = sizeof(k1);
+    const int nblocks = len/4;
+
+    const nk_uint c1 = 0xcc9e2d51;
+    const nk_uint c2 = 0x1b873593;
+    const nk_byte *tail;
+    int i;
+
+    /* body */
+    if (!key) return 0;
+    for (i = 0; i < nblocks; ++i, keyptr += bsize) {
+        k1ptr = (nk_byte*)&k1;
+        k1ptr[0] = keyptr[0];
+        k1ptr[1] = keyptr[1];
+        k1ptr[2] = keyptr[2];
+        k1ptr[3] = keyptr[3];
+
+        k1 *= c1;
+        k1 = NK_ROTL(k1,15);
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = NK_ROTL(h1,13);
+        h1 = h1*5+0xe6546b64;
     }
 
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
+    /* tail */
+    tail = (const nk_byte*)(data + nblocks*4);
+    k1 = 0;
+    switch (len & 3) {
+        case 3: k1 ^= (nk_uint)(tail[2] << 16); /* fallthrough */
+        case 2: k1 ^= (nk_uint)(tail[1] << 8u); /* fallthrough */
+        case 1: k1 ^= tail[0];
+            k1 *= c1;
+            k1 = NK_ROTL(k1,15);
+            k1 *= c2;
+            h1 ^= k1;
+            break;
+        default: break;
+    }
 
-    return hash;
-    /* 32-Bit MurmurHash3: https://code.google.com/p/smhasher/wiki/MurmurHash3*/
-    // #define NK_ROTL(x,r) ((x) << (r) | ((x) >> (32 - r)))
+    /* finalization */
+    h1 ^= (nk_uint)len;
+    /* fmix32 */
+    h1 ^= h1 >> 16;
+    h1 *= 0x85ebca6b;
+    h1 ^= h1 >> 13;
+    h1 *= 0xc2b2ae35;
+    h1 ^= h1 >> 16;
 
-    // nk_uint h1 = seed;
-    // nk_uint k1;
-    // const nk_byte *data = (const nk_byte*)key;
-    // const nk_byte *keyptr = data;
-    // nk_byte *k1ptr;
-    // const int bsize = sizeof(k1);
-    // const int nblocks = len/4;
-
-    // const nk_uint c1 = 0xcc9e2d51;
-    // const nk_uint c2 = 0x1b873593;
-    // const nk_byte *tail;
-    // int i;
-
-    // /* body */
-    // if (!key) return 0;
-    // for (i = 0; i < nblocks; ++i, keyptr += bsize) {
-    //     k1ptr = (nk_byte*)&k1;
-    //     k1ptr[0] = keyptr[0];
-    //     k1ptr[1] = keyptr[1];
-    //     k1ptr[2] = keyptr[2];
-    //     k1ptr[3] = keyptr[3];
-
-    //     k1 *= c1;
-    //     k1 = NK_ROTL(k1,15);
-    //     k1 *= c2;
-
-    //     h1 ^= k1;
-    //     h1 = NK_ROTL(h1,13);
-    //     h1 = h1*5+0xe6546b64;
-    // }
-
-    // /* tail */
-    // tail = (const nk_byte*)(data + nblocks*4);
-    // k1 = 0;
-    // switch (len & 3) {
-    //     case 3: k1 ^= (nk_uint)(tail[2] << 16); /* fallthrough */
-    //     case 2: k1 ^= (nk_uint)(tail[1] << 8u); /* fallthrough */
-    //     case 1: k1 ^= tail[0];
-    //         k1 *= c1;
-    //         k1 = NK_ROTL(k1,15);
-    //         k1 *= c2;
-    //         h1 ^= k1;
-    //         break;
-    //     default: break;
-    // }
-
-    // /* finalization */
-    // h1 ^= (nk_uint)len;
-    // /* fmix32 */
-    // h1 ^= h1 >> 16;
-    // h1 *= 0x85ebca6b;
-    // h1 ^= h1 >> 13;
-    // h1 *= 0xc2b2ae35;
-    // h1 ^= h1 >> 16;
-
-    // #undef NK_ROTL
-    // return h1;
+    #undef NK_ROTL
+    return h1;
 }
-
-
 #ifdef NK_INCLUDE_STANDARD_IO
 NK_LIB char*
 nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_file_load");
     char *buf;
     FILE *fd;
     long ret;
 
-    // NK_ASSERT(path);
-    // NK_ASSERT(siz);
-    // NK_ASSERT(alloc);
+    NK_ASSERT(path);
+    NK_ASSERT(siz);
+    NK_ASSERT(alloc);
     if (!path || !siz || !alloc)
         return 0;
 
@@ -7434,7 +7391,7 @@ nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc)
     *siz = (nk_size)ret;
     fseek(fd, 0, SEEK_SET);
     buf = (char*)alloc->alloc(alloc->userdata,0, *siz);
-    // NK_ASSERT(buf);
+    NK_ASSERT(buf);
     if (!buf) {
         fclose(fd);
         return 0;
@@ -7446,40 +7403,27 @@ nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc)
 #endif
 NK_LIB int
 nk_text_clamp(const struct nk_user_font *font, const char *text,
-    int text_len, int space, int *glyphs, int *text_width,
+    int text_len, float space, int *glyphs, float *text_width,
     nk_rune *sep_list, int sep_count)
 {
-
-
-      long start;
-      long end;
-      long total;
-      long eventTime0;
-
-      start = TickCount();
-
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - sep_list, /     nk_rune");
-    //writeSerialPort(boutRefNum, "nk_text_clamp");
-    // TODO:: pretty sure this function is slow, figure out what is up
-    // we at least need to figure out how to cache the return value
     int i = 0;
-    int last_width = 0;
+    int glyph_len = 0;
+    float last_width = 0;
     nk_rune unicode = 0;
-    int width = 0;
+    float width = 0;
     int len = 0;
     int g = 0;
-    int s;
+    float s;
 
     int sep_len = 0;
     int sep_g = 0;
-    int sep_width = 0;
+    float sep_width = 0;
     sep_count = NK_MAX(sep_count,0);
 
-    unicode = text[0];
-
-    while ((width < space) && (len < text_len)) {
-        len += 1;
-        s = font->width(font->userdata, font->height, text, len); // has to get cached quickdraw width values
+    glyph_len = nk_utf_decode(text, &unicode, text_len);
+    while (glyph_len && (width < space) && (len < text_len)) {
+        len += glyph_len;
+        s = font->width(font->userdata, font->height, text, len);
         for (i = 0; i < sep_count; ++i) {
             if (unicode != sep_list[i]) continue;
             sep_width = last_width = width;
@@ -7492,7 +7436,7 @@ nk_text_clamp(const struct nk_user_font *font, const char *text,
             sep_g = g+1;
         }
         width = s;
-        unicode = text[len];
+        glyph_len = nk_utf_decode(&text[len], &unicode, text_len - len);
         g++;
     }
     if (len >= text_len) {
@@ -7504,27 +7448,17 @@ nk_text_clamp(const struct nk_user_font *font, const char *text,
         *text_width = sep_width;
         return (!sep_len) ? len: sep_len;
     }
-      end = TickCount();
-
-    total = end - start;
-      eventTime0 = total;// / 60.0;
-
-        //char logx[255];
-        //sprintf(logx, "text clamp time() eventTime0 (clamp text) %ld\n", eventTime0);
-        //writeSerialPort(boutRefNum, logx);
 }
 NK_LIB struct nk_vec2
 nk_text_calculate_text_bounds(const struct nk_user_font *font,
-    const char *begin, int byte_len, int row_height, const char **remaining,
+    const char *begin, int byte_len, float row_height, const char **remaining,
     struct nk_vec2 *out_offset, int *glyphs, int op)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_offset /     struct");
-    //writeSerialPort(boutRefNum, "nk_text_calculate_text_bounds");
-    int line_height = row_height;
+    float line_height = row_height;
     struct nk_vec2 text_size = nk_vec2(0,0);
-    int line_width = 0.0f;
+    float line_width = 0.0f;
 
-    int glyph_width;
+    float glyph_width;
     int glyph_len = 0;
     nk_rune unicode = 0;
     int text_len = 0;
@@ -7559,7 +7493,7 @@ nk_text_calculate_text_bounds(const struct nk_user_font *font,
 
         *glyphs = *glyphs + 1;
         text_len += glyph_len;
-        line_width += (int)glyph_width;
+        line_width += (float)glyph_width;
         glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
         glyph_width = font->width(font->userdata, font->height, begin+text_len, glyph_len);
         continue;
@@ -7588,8 +7522,6 @@ nk_text_calculate_text_bounds(const struct nk_user_font *font,
 NK_INTERN int
 nk_parse_hex(const char *p, int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_parse_hex");
-    //writeSerialPort(boutRefNum, "nk_parse_hex");
     int i = 0;
     int len = 0;
     while (len < length) {
@@ -7606,7 +7538,6 @@ nk_parse_hex(const char *p, int length)
 NK_API struct nk_color
 nk_rgba(int r, int g, int b, int a)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_rgba");
     struct nk_color ret;
     ret.r = (nk_byte)NK_CLAMP(0, r, 255);
     ret.g = (nk_byte)NK_CLAMP(0, g, 255);
@@ -7617,7 +7548,6 @@ nk_rgba(int r, int g, int b, int a)
 NK_API struct nk_color
 nk_rgb_hex(const char *rgb)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_rgb_hex");
     struct nk_color col;
     const char *c = rgb;
     if (*c == '#') c++;
@@ -7630,7 +7560,6 @@ nk_rgb_hex(const char *rgb)
 NK_API struct nk_color
 nk_rgba_hex(const char *rgb)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_rgba_hex");
     struct nk_color col;
     const char *c = rgb;
     if (*c == '#') c++;
@@ -7643,7 +7572,6 @@ nk_rgba_hex(const char *rgb)
 NK_API void
 nk_color_hex_rgba(char *output, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - output / nk_color_hex_rgba");
     #define NK_TO_HEX(i) ((i) <= 9 ? '0' + (i): 'A' - 10 + (i))
     output[0] = (char)NK_TO_HEX((col.r & 0xF0) >> 4);
     output[1] = (char)NK_TO_HEX((col.r & 0x0F));
@@ -7659,7 +7587,6 @@ nk_color_hex_rgba(char *output, struct nk_color col)
 NK_API void
 nk_color_hex_rgb(char *output, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - output / nk_color_hex_rgb");
     #define NK_TO_HEX(i) ((i) <= 9 ? '0' + (i): 'A' - 10 + (i))
     output[0] = (char)NK_TO_HEX((col.r & 0xF0) >> 4);
     output[1] = (char)NK_TO_HEX((col.r & 0x0F));
@@ -7673,19 +7600,16 @@ nk_color_hex_rgb(char *output, struct nk_color col)
 NK_API struct nk_color
 nk_rgba_iv(const int *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rgba_iv");
     return nk_rgba(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_color
 nk_rgba_bv(const nk_byte *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_byte / nk_rgba_bv");
     return nk_rgba(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_color
 nk_rgb(int r, int g, int b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_rgb");
     struct nk_color ret;
     ret.r = (nk_byte)NK_CLAMP(0, r, 255);
     ret.g = (nk_byte)NK_CLAMP(0, g, 255);
@@ -7696,19 +7620,16 @@ nk_rgb(int r, int g, int b)
 NK_API struct nk_color
 nk_rgb_iv(const int *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rgb_iv");
     return nk_rgb(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
 nk_rgb_bv(const nk_byte* c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_byte / nk_rgb_bv");
     return nk_rgb(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
 nk_rgba_u32(nk_uint in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - in / nk_rgba_u32");
     struct nk_color ret;
     ret.r = (in & 0xFF);
     ret.g = ((in >> 8) & 0xFF);
@@ -7717,9 +7638,8 @@ nk_rgba_u32(nk_uint in)
     return ret;
 }
 NK_API struct nk_color
-nk_rgba_f(int r, int g, int b, int a)
+nk_rgba_f(float r, float g, float b, float a)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_rgba_f");
     struct nk_color ret;
     ret.r = (nk_byte)(NK_SATURATE(r) * 255.0f);
     ret.g = (nk_byte)(NK_SATURATE(g) * 255.0f);
@@ -7728,21 +7648,18 @@ nk_rgba_f(int r, int g, int b, int a)
     return ret;
 }
 NK_API struct nk_color
-nk_rgba_fv(const int *c)
+nk_rgba_fv(const float *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rgba_fv");
     return nk_rgba_f(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_color
 nk_rgba_cf(struct nk_colorf c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_colorf / nk_rgba_cf");
     return nk_rgba_f(c.r, c.g, c.b, c.a);
 }
 NK_API struct nk_color
-nk_rgb_f(int r, int g, int b)
+nk_rgb_f(float r, float g, float b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_rgb_f");
     struct nk_color ret;
     ret.r = (nk_byte)(NK_SATURATE(r) * 255.0f);
     ret.g = (nk_byte)(NK_SATURATE(g) * 255.0f);
@@ -7751,75 +7668,64 @@ nk_rgb_f(int r, int g, int b)
     return ret;
 }
 NK_API struct nk_color
-nk_rgb_fv(const int *c)
+nk_rgb_fv(const float *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_rgb_fv");
     return nk_rgb_f(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
 nk_rgb_cf(struct nk_colorf c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_colorf / nk_rgb_cf");
     return nk_rgb_f(c.r, c.g, c.b);
 }
 NK_API struct nk_color
 nk_hsv(int h, int s, int v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_hsv");
     return nk_hsva(h, s, v, 255);
 }
 NK_API struct nk_color
 nk_hsv_iv(const int *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_hsv_iv");
     return nk_hsv(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
 nk_hsv_bv(const nk_byte *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_byte / nk_hsv_bv");
     return nk_hsv(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
-nk_hsv_f(int h, int s, int v)
+nk_hsv_f(float h, float s, float v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_hsv_f");
     return nk_hsva_f(h, s, v, 1.0f);
 }
 NK_API struct nk_color
-nk_hsv_fv(const int *c)
+nk_hsv_fv(const float *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_hsv_fv");
     return nk_hsv_f(c[0], c[1], c[2]);
 }
 NK_API struct nk_color
 nk_hsva(int h, int s, int v, int a)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_hsva");
-    int hf = ((int)NK_CLAMP(0, h, 255)) / 255.0f;
-    int sf = ((int)NK_CLAMP(0, s, 255)) / 255.0f;
-    int vf = ((int)NK_CLAMP(0, v, 255)) / 255.0f;
-    int af = ((int)NK_CLAMP(0, a, 255)) / 255.0f;
+    float hf = ((float)NK_CLAMP(0, h, 255)) / 255.0f;
+    float sf = ((float)NK_CLAMP(0, s, 255)) / 255.0f;
+    float vf = ((float)NK_CLAMP(0, v, 255)) / 255.0f;
+    float af = ((float)NK_CLAMP(0, a, 255)) / 255.0f;
     return nk_hsva_f(hf, sf, vf, af);
 }
 NK_API struct nk_color
 nk_hsva_iv(const int *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_hsva_iv");
     return nk_hsva(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_color
 nk_hsva_bv(const nk_byte *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_byte / nk_hsva_bv");
     return nk_hsva(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_colorf
-nk_hsva_colorf(int h, int s, int v, int a)
+nk_hsva_colorf(float h, float s, float v, float a)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_hsva_colorf");
     int i;
-    int p, q, t, f;
+    float p, q, t, f;
     struct nk_colorf out = {0,0,0,0};
     if (s <= 0.0f) {
         out.r = v; out.g = v; out.b = v; out.a = a;
@@ -7827,7 +7733,7 @@ nk_hsva_colorf(int h, int s, int v, int a)
     }
     h = h / (60.0f/360.0f);
     i = (int)h;
-    f = h - (int)i;
+    f = h - (float)i;
     p = v * (1.0f - s);
     q = v * (1.0f - (s * f));
     t = v * (1.0f - s * (1.0f - f));
@@ -7843,28 +7749,24 @@ nk_hsva_colorf(int h, int s, int v, int a)
     return out;
 }
 NK_API struct nk_colorf
-nk_hsva_colorfv(int *c)
+nk_hsva_colorfv(float *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_hsva_colorfv");
     return nk_hsva_colorf(c[0], c[1], c[2], c[3]);
 }
 NK_API struct nk_color
-nk_hsva_f(int h, int s, int v, int a)
+nk_hsva_f(float h, float s, float v, float a)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_hsva_f");
     struct nk_colorf c = nk_hsva_colorf(h, s, v, a);
     return nk_rgba_f(c.r, c.g, c.b, c.a);
 }
 NK_API struct nk_color
-nk_hsva_fv(const int *c)
+nk_hsva_fv(const float *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_hsva_fv");
     return nk_hsva_f(c[0], c[1], c[2], c[3]);
 }
 NK_API nk_uint
 nk_color_u32(struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_color / nk_color_u32");
     nk_uint out = (nk_uint)in.r;
     out |= ((nk_uint)in.g << 8);
     out |= ((nk_uint)in.b << 16);
@@ -7872,25 +7774,22 @@ nk_color_u32(struct nk_color in)
     return out;
 }
 NK_API void
-nk_color_f(int *r, int *g, int *b, int *a, struct nk_color in)
+nk_color_f(float *r, float *g, float *b, float *a, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_color_f");
-    NK_STORAGE const int s = 1.0f/255.0f;
-    *r = (int)in.r * s;
-    *g = (int)in.g * s;
-    *b = (int)in.b * s;
-    *a = (int)in.a * s;
+    NK_STORAGE const float s = 1.0f/255.0f;
+    *r = (float)in.r * s;
+    *g = (float)in.g * s;
+    *b = (float)in.b * s;
+    *a = (float)in.a * s;
 }
 NK_API void
-nk_color_fv(int *c, struct nk_color in)
+nk_color_fv(float *c, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_color_fv");
     nk_color_f(&c[0], &c[1], &c[2], &c[3], in);
 }
 NK_API struct nk_colorf
 nk_color_cf(struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_color / nk_color_cf");
     struct nk_colorf o;
     nk_color_f(&o.r, &o.g, &o.b, &o.a, in);
     return o;
@@ -7898,7 +7797,6 @@ nk_color_cf(struct nk_color in)
 NK_API void
 nk_color_d(double *r, double *g, double *b, double *a, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r / nk_color_d");
     NK_STORAGE const double s = 1.0/255.0;
     *r = (double)in.r * s;
     *g = (double)in.g * s;
@@ -7908,36 +7806,32 @@ nk_color_d(double *r, double *g, double *b, double *a, struct nk_color in)
 NK_API void
 nk_color_dv(double *c, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_color_dv");
     nk_color_d(&c[0], &c[1], &c[2], &c[3], in);
 }
 NK_API void
-nk_color_hsv_f(int *out_h, int *out_s, int *out_v, struct nk_color in)
+nk_color_hsv_f(float *out_h, float *out_s, float *out_v, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_h / nk_color_hsv_f");
-    int a;
+    float a;
     nk_color_hsva_f(out_h, out_s, out_v, &a, in);
 }
 NK_API void
-nk_color_hsv_fv(int *out, struct nk_color in)
+nk_color_hsv_fv(float *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsv_fv");
-    int a;
+    float a;
     nk_color_hsva_f(&out[0], &out[1], &out[2], &a, in);
 }
 NK_API void
-nk_colorf_hsva_f(int *out_h, int *out_s,
-    int *out_v, int *out_a, struct nk_colorf in)
+nk_colorf_hsva_f(float *out_h, float *out_s,
+    float *out_v, float *out_a, struct nk_colorf in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_v, /     int");
-    int chroma;
-    int K = 0.0f;
+    float chroma;
+    float K = 0.0f;
     if (in.g < in.b) {
-        const int t = in.g; in.g = in.b; in.b = t;
+        const float t = in.g; in.g = in.b; in.b = t;
         K = -1.f;
     }
     if (in.r < in.g) {
-        const int t = in.r; in.r = in.g; in.g = t;
+        const float t = in.r; in.r = in.g; in.g = t;
         K = -2.f/6.0f - K;
     }
     chroma = in.r - ((in.g < in.b) ? in.g: in.b);
@@ -7948,32 +7842,28 @@ nk_colorf_hsva_f(int *out_h, int *out_s,
 
 }
 NK_API void
-nk_colorf_hsva_fv(int *hsva, struct nk_colorf in)
+nk_colorf_hsva_fv(float *hsva, struct nk_colorf in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - hsva / nk_colorf_hsva_fv");
     nk_colorf_hsva_f(&hsva[0], &hsva[1], &hsva[2], &hsva[3], in);
 }
 NK_API void
-nk_color_hsva_f(int *out_h, int *out_s,
-    int *out_v, int *out_a, struct nk_color in)
+nk_color_hsva_f(float *out_h, float *out_s,
+    float *out_v, float *out_a, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_v, /     int");
     struct nk_colorf col;
     nk_color_f(&col.r,&col.g,&col.b,&col.a, in);
     nk_colorf_hsva_f(out_h, out_s, out_v, out_a, col);
 }
 NK_API void
-nk_color_hsva_fv(int *out, struct nk_color in)
+nk_color_hsva_fv(float *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsva_fv");
     nk_color_hsva_f(&out[0], &out[1], &out[2], &out[3], in);
 }
 NK_API void
 nk_color_hsva_i(int *out_h, int *out_s, int *out_v,
                 int *out_a, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_a, /                 int");
-    int h,s,v,a;
+    float h,s,v,a;
     nk_color_hsva_f(&h, &s, &v, &a, in);
     *out_h = (nk_byte)(h * 255.0f);
     *out_s = (nk_byte)(s * 255.0f);
@@ -7983,13 +7873,11 @@ nk_color_hsva_i(int *out_h, int *out_s, int *out_v,
 NK_API void
 nk_color_hsva_iv(int *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsva_iv");
     nk_color_hsva_i(&out[0], &out[1], &out[2], &out[3], in);
 }
 NK_API void
 nk_color_hsva_bv(nk_byte *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsva_bv");
     int tmp[4];
     nk_color_hsva_i(&tmp[0], &tmp[1], &tmp[2], &tmp[3], in);
     out[0] = (nk_byte)tmp[0];
@@ -8000,7 +7888,6 @@ nk_color_hsva_bv(nk_byte *out, struct nk_color in)
 NK_API void
 nk_color_hsva_b(nk_byte *h, nk_byte *s, nk_byte *v, nk_byte *a, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - h / nk_color_hsva_b");
     int tmp[4];
     nk_color_hsva_i(&tmp[0], &tmp[1], &tmp[2], &tmp[3], in);
     *h = (nk_byte)tmp[0];
@@ -8011,14 +7898,12 @@ nk_color_hsva_b(nk_byte *h, nk_byte *s, nk_byte *v, nk_byte *a, struct nk_color 
 NK_API void
 nk_color_hsv_i(int *out_h, int *out_s, int *out_v, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_h / nk_color_hsv_i");
     int a;
     nk_color_hsva_i(out_h, out_s, out_v, &a, in);
 }
 NK_API void
 nk_color_hsv_b(nk_byte *out_h, nk_byte *out_s, nk_byte *out_v, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out_h / nk_color_hsv_b");
     int tmp[4];
     nk_color_hsva_i(&tmp[0], &tmp[1], &tmp[2], &tmp[3], in);
     *out_h = (nk_byte)tmp[0];
@@ -8028,13 +7913,11 @@ nk_color_hsv_b(nk_byte *out_h, nk_byte *out_s, nk_byte *out_v, struct nk_color i
 NK_API void
 nk_color_hsv_iv(int *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsv_iv");
     nk_color_hsv_i(&out[0], &out[1], &out[2], in);
 }
 NK_API void
 nk_color_hsv_bv(nk_byte *out, struct nk_color in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - out / nk_color_hsv_bv");
     int tmp[4];
     nk_color_hsv_i(&tmp[0], &tmp[1], &tmp[2], in);
     out[0] = (nk_byte)tmp[0];
@@ -8059,8 +7942,7 @@ NK_GLOBAL const nk_uint nk_utfmax[NK_UTF_SIZE+1] = {0x10FFFF, 0x7F, 0x7FF, 0xFFF
 NK_INTERN int
 nk_utf_validate(nk_rune *u, int i)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - u / nk_utf_validate");
-    // NK_ASSERT(u);
+    NK_ASSERT(u);
     if (!u) return 0;
     if (!NK_BETWEEN(*u, nk_utfmin[i], nk_utfmax[i]) ||
          NK_BETWEEN(*u, 0xD800, 0xDFFF))
@@ -8071,8 +7953,7 @@ nk_utf_validate(nk_rune *u, int i)
 NK_INTERN nk_rune
 nk_utf_decode_byte(char c, int *i)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_utf_decode_byte");
-    // NK_ASSERT(i);
+    NK_ASSERT(i);
     if (!i) return 0;
     for(*i = 0; *i < (int)NK_LEN(nk_utfmask); ++(*i)) {
         if (((nk_byte)c & nk_utfmask[*i]) == nk_utfbyte[*i])
@@ -8083,56 +7964,87 @@ nk_utf_decode_byte(char c, int *i)
 NK_API int
 nk_utf_decode(const char *c, nk_rune *u, int clen)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_utf_decode");
+    int i, j, len, type=0;
+    nk_rune udecoded;
 
-    if (!c || !u) {
+    NK_ASSERT(c);
+    NK_ASSERT(u);
 
-      return 0;
+    if (!c || !u) return 0;
+    if (!clen) return 0;
+    *u = NK_UTF_INVALID;
+
+    udecoded = nk_utf_decode_byte(c[0], &len);
+    if (!NK_BETWEEN(len, 1, NK_UTF_SIZE))
+        return 1;
+
+    for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
+        udecoded = (udecoded << 6) | nk_utf_decode_byte(c[i], &type);
+        if (type != 0)
+            return j;
     }
-    if (!clen) {
-
-      return 0;
-    }
-    
-    *u = c[0];
-
-    return 1;
+    if (j < len)
+        return 0;
+    *u = udecoded;
+    nk_utf_validate(u, len);
+    return len;
 }
 NK_INTERN char
 nk_utf_encode_byte(nk_rune u, int i)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - u / nk_utf_encode_byte");
     return (char)((nk_utfbyte[i]) | ((nk_byte)u & ~nk_utfmask[i]));
 }
 NK_API int
 nk_utf_encode(nk_rune u, char *c, int clen)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - u / nk_utf_encode");
-    c[0] = u;
-    return 1;
+    int len, i;
+    len = nk_utf_validate(&u, 0);
+    if (clen < len || !len || len > NK_UTF_SIZE)
+        return 0;
+
+    for (i = len - 1; i != 0; --i) {
+        c[i] = nk_utf_encode_byte(u, 0);
+        u >>= 6;
+    }
+    c[0] = nk_utf_encode_byte(u, len);
+    return len;
 }
 NK_API int
 nk_utf_len(const char *str, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_utf_len");
-    return len;
+    const char *text;
+    int glyphs = 0;
+    int text_len;
+    int glyph_len;
+    int src_len = 0;
+    nk_rune unicode;
+
+    NK_ASSERT(str);
+    if (!str || !len) return 0;
+
+    text = str;
+    text_len = len;
+    glyph_len = nk_utf_decode(text, &unicode, text_len);
+    while (glyph_len && src_len < len) {
+        glyphs++;
+        src_len = src_len + glyph_len;
+        glyph_len = nk_utf_decode(text + src_len, &unicode, text_len - src_len);
+    }
+    return glyphs;
 }
 NK_API const char*
 nk_utf_at(const char *buffer, int length, int index,
     nk_rune *unicode, int *len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - unicode, /     nk_rune");
-
-    //writeSerialPort(boutRefNum, "nk_utf_at");
     int i = 0;
     int src_len = 0;
     int glyph_len = 0;
     const char *text;
     int text_len;
 
-    // NK_ASSERT(buffer);
-    // NK_ASSERT(unicode);
-    // NK_ASSERT(len);
+    NK_ASSERT(buffer);
+    NK_ASSERT(unicode);
+    NK_ASSERT(len);
 
     if (!buffer || !unicode || !len) return 0;
     if (index < 0) {
@@ -8171,7 +8083,6 @@ nk_utf_at(const char *buffer, int length, int index,
 NK_LIB void*
 nk_malloc(nk_handle unused, void *old,nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - unused / nk_malloc");
     NK_UNUSED(unused);
     NK_UNUSED(old);
     return malloc(size);
@@ -8179,14 +8090,12 @@ nk_malloc(nk_handle unused, void *old,nk_size size)
 NK_LIB void
 nk_mfree(nk_handle unused, void *ptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - unused / nk_mfree");
     NK_UNUSED(unused);
     free(ptr);
 }
 NK_API void
 nk_buffer_init_default(struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_init_default");
     struct nk_allocator alloc;
     alloc.userdata.ptr = 0;
     alloc.alloc = nk_malloc;
@@ -8199,10 +8108,9 @@ NK_API void
 nk_buffer_init(struct nk_buffer *b, const struct nk_allocator *a,
     nk_size initial_size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - initial_size) /     nk_size");
-    // NK_ASSERT(b);
-    // NK_ASSERT(a);
-    // NK_ASSERT(initial_size);
+    NK_ASSERT(b);
+    NK_ASSERT(a);
+    NK_ASSERT(initial_size);
     if (!b || !a || !initial_size) return;
 
     nk_zero(b, sizeof(*b));
@@ -8216,10 +8124,9 @@ nk_buffer_init(struct nk_buffer *b, const struct nk_allocator *a,
 NK_API void
 nk_buffer_init_fixed(struct nk_buffer *b, void *m, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_init_fixed");
-    // NK_ASSERT(b);
-    // NK_ASSERT(m);
-    // NK_ASSERT(size);
+    NK_ASSERT(b);
+    NK_ASSERT(m);
+    NK_ASSERT(size);
     if (!b || !m || !size) return;
 
     nk_zero(b, sizeof(*b));
@@ -8233,7 +8140,6 @@ nk_buffer_align(void *unaligned,
     nk_size align, nk_size *alignment,
     enum nk_buffer_allocation_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer_align");
     void *memory = 0;
     switch (type) {
     default:
@@ -8262,18 +8168,17 @@ nk_buffer_align(void *unaligned,
 NK_LIB void*
 nk_buffer_realloc(struct nk_buffer *b, nk_size capacity, nk_size *size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_realloc");
     void *temp;
     nk_size buffer_size;
 
-    // NK_ASSERT(b);
-    // NK_ASSERT(size);
+    NK_ASSERT(b);
+    NK_ASSERT(size);
     if (!b || !size || !b->pool.alloc || !b->pool.free)
         return 0;
 
     buffer_size = b->memory.size;
     temp = b->pool.alloc(b->pool.userdata, b->memory.ptr, capacity);
-    // NK_ASSERT(temp);
+    NK_ASSERT(temp);
     if (!temp) return 0;
 
     *size = capacity;
@@ -8302,14 +8207,13 @@ NK_LIB void*
 nk_buffer_alloc(struct nk_buffer *b, enum nk_buffer_allocation_type type,
     nk_size size, nk_size align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer_alloc");
     int full;
     nk_size alignment;
     void *unaligned;
     void *memory;
 
-    // NK_ASSERT(b);
-    // NK_ASSERT(size);
+    NK_ASSERT(b);
+    NK_ASSERT(size);
     if (!b || !size) return 0;
     b->needed += size;
 
@@ -8328,12 +8232,12 @@ nk_buffer_alloc(struct nk_buffer *b, enum nk_buffer_allocation_type type,
         nk_size capacity;
         if (b->type != NK_BUFFER_DYNAMIC)
             return 0;
-        // NK_ASSERT(b->pool.alloc && b->pool.free);
+        NK_ASSERT(b->pool.alloc && b->pool.free);
         if (b->type != NK_BUFFER_DYNAMIC || !b->pool.alloc || !b->pool.free)
             return 0;
 
         /* buffer is full so allocate bigger buffer if dynamic */
-        capacity = (nk_size)((int)b->memory.size * b->grow_factor);
+        capacity = (nk_size)((float)b->memory.size * b->grow_factor);
         capacity = NK_MAX(capacity, nk_round_up_pow2((nk_uint)(b->allocated + size)));
         b->memory.ptr = nk_buffer_realloc(b, capacity, &b->memory.size);
         if (!b->memory.ptr) return 0;
@@ -8355,7 +8259,6 @@ NK_API void
 nk_buffer_push(struct nk_buffer *b, enum nk_buffer_allocation_type type,
     const void *memory, nk_size size, nk_size align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer_push");
     void *mem = nk_buffer_alloc(b, type, size, align);
     if (!mem) return;
     NK_MEMCPY(mem, memory, size);
@@ -8363,8 +8266,7 @@ nk_buffer_push(struct nk_buffer *b, enum nk_buffer_allocation_type type,
 NK_API void
 nk_buffer_mark(struct nk_buffer *buffer, enum nk_buffer_allocation_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_mark");
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer) return;
     buffer->marker[type].active = nk_true;
     if (type == NK_BUFFER_BACK)
@@ -8374,8 +8276,7 @@ nk_buffer_mark(struct nk_buffer *buffer, enum nk_buffer_allocation_type type)
 NK_API void
 nk_buffer_reset(struct nk_buffer *buffer, enum nk_buffer_allocation_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_reset");
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer) return;
     if (type == NK_BUFFER_BACK) {
         /* reset back buffer either back to marker or empty */
@@ -8396,8 +8297,7 @@ nk_buffer_reset(struct nk_buffer *buffer, enum nk_buffer_allocation_type type)
 NK_API void
 nk_buffer_clear(struct nk_buffer *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_clear");
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b) return;
     b->allocated = 0;
     b->size = b->memory.size;
@@ -8407,20 +8307,18 @@ nk_buffer_clear(struct nk_buffer *b)
 NK_API void
 nk_buffer_free(struct nk_buffer *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_free");
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || !b->memory.ptr) return;
     if (b->type == NK_BUFFER_FIXED) return;
     if (!b->pool.free) return;
-    // NK_ASSERT(b->pool.free);
+    NK_ASSERT(b->pool.free);
     b->pool.free(b->pool.userdata, b->memory.ptr);
 }
 NK_API void
 nk_buffer_info(struct nk_memory_status *s, struct nk_buffer *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_memory_status / nk_buffer_info");
-    // NK_ASSERT(b);
-    // NK_ASSERT(s);
+    NK_ASSERT(b);
+    NK_ASSERT(s);
     if (!s || !b) return;
     s->allocated = b->allocated;
     s->size =  b->memory.size;
@@ -8431,24 +8329,21 @@ nk_buffer_info(struct nk_memory_status *s, struct nk_buffer *b)
 NK_API void*
 nk_buffer_memory(struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_memory");
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer) return 0;
     return buffer->memory.ptr;
 }
 NK_API const void*
 nk_buffer_memory_const(const struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_buffer_memory_const");
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer) return 0;
     return buffer->memory.ptr;
 }
 NK_API nk_size
 nk_buffer_total(struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer / nk_buffer_total");
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer) return 0;
     return buffer->memory.size;
 }
@@ -8466,7 +8361,6 @@ nk_buffer_total(struct nk_buffer *buffer)
 NK_API void
 nk_str_init_default(struct nk_str *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_init_default");
     struct nk_allocator alloc;
     alloc.userdata.ptr = 0;
     alloc.alloc = nk_malloc;
@@ -8479,24 +8373,21 @@ nk_str_init_default(struct nk_str *str)
 NK_API void
 nk_str_init(struct nk_str *str, const struct nk_allocator *alloc, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_init");
     nk_buffer_init(&str->buffer, alloc, size);
     str->len = 0;
 }
 NK_API void
 nk_str_init_fixed(struct nk_str *str, void *memory, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_init_fixed");
     nk_buffer_init_fixed(&str->buffer, memory, size);
     str->len = 0;
 }
 NK_API int
 nk_str_append_text_char(struct nk_str *s, const char *str, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_text_char");
     char *mem;
-    // NK_ASSERT(s);
-    // NK_ASSERT(str);
+    NK_ASSERT(s);
+    NK_ASSERT(str);
     if (!s || !str || !len) return 0;
     mem = (char*)nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * sizeof(char), 0);
     if (!mem) return 0;
@@ -8507,13 +8398,11 @@ nk_str_append_text_char(struct nk_str *s, const char *str, int len)
 NK_API int
 nk_str_append_str_char(struct nk_str *s, const char *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_str_char");
-    return nk_str_append_text_char(s, str, strlen(str));
+    return nk_str_append_text_char(s, str, nk_strlen(str));
 }
 NK_API int
 nk_str_append_text_utf8(struct nk_str *str, const char *text, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_text_utf8");
     int i = 0;
     int byte_len = 0;
     nk_rune unicode;
@@ -8526,8 +8415,6 @@ nk_str_append_text_utf8(struct nk_str *str, const char *text, int len)
 NK_API int
 nk_str_append_str_utf8(struct nk_str *str, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_str_utf8");
-    //writeSerialPort(boutRefNum, "nk_str_append_str_utf8");
     int runes = 0;
     int byte_len = 0;
     int num_runes = 0;
@@ -8547,12 +8434,11 @@ nk_str_append_str_utf8(struct nk_str *str, const char *text)
 NK_API int
 nk_str_append_text_runes(struct nk_str *str, const nk_rune *text, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_text_runes");
     int i = 0;
     int byte_len = 0;
     nk_glyph glyph;
 
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str || !text || !len) return 0;
     for (i = 0; i < len; ++i) {
         byte_len = nk_utf_encode(text[i], glyph, NK_UTF_SIZE);
@@ -8564,12 +8450,10 @@ nk_str_append_text_runes(struct nk_str *str, const nk_rune *text, int len)
 NK_API int
 nk_str_append_str_runes(struct nk_str *str, const nk_rune *runes)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_append_str_runes");
-    //writeSerialPort(boutRefNum, "nk_str_append_str_runes");
     int i = 0;
     nk_glyph glyph;
     int byte_len;
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str || !runes) return 0;
     while (runes[i] != '\0') {
         byte_len = nk_utf_encode(runes[i], glyph, NK_UTF_SIZE);
@@ -8581,18 +8465,18 @@ nk_str_append_str_runes(struct nk_str *str, const nk_rune *runes)
 NK_API int
 nk_str_insert_at_char(struct nk_str *s, int pos, const char *str, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_at_char");
     int i;
     void *mem;
     char *src;
     char *dst;
 
     int copylen;
-    // NK_ASSERT(s);
-    // NK_ASSERT(str);
-    // NK_ASSERT(len >= 0);
+    NK_ASSERT(s);
+    NK_ASSERT(str);
+    NK_ASSERT(len >= 0);
     if (!s || !str || !len || (nk_size)pos > s->buffer.allocated) return 0;
-    if ((s->buffer.allocated + (nk_size)len >= s->buffer.memory.size) &&        (s->buffer.type == NK_BUFFER_FIXED)) return 0;
+    if ((s->buffer.allocated + (nk_size)len >= s->buffer.memory.size) &&
+        (s->buffer.type == NK_BUFFER_FIXED)) return 0;
 
     copylen = (int)s->buffer.allocated - pos;
     if (!copylen) {
@@ -8603,8 +8487,8 @@ nk_str_insert_at_char(struct nk_str *s, int pos, const char *str, int len)
     if (!mem) return 0;
 
     /* memmove */
-    // NK_ASSERT(((int)pos + (int)len + ((int)copylen - 1)) >= 0);
-    // NK_ASSERT(((int)pos + ((int)copylen - 1)) >= 0);
+    NK_ASSERT(((int)pos + (int)len + ((int)copylen - 1)) >= 0);
+    NK_ASSERT(((int)pos + ((int)copylen - 1)) >= 0);
     dst = nk_ptr_add(char, s->buffer.memory.ptr, pos + len + (copylen - 1));
     src = nk_ptr_add(char, s->buffer.memory.ptr, pos + (copylen-1));
     for (i = 0; i < copylen; ++i) *dst-- = *src--;
@@ -8616,15 +8500,14 @@ nk_str_insert_at_char(struct nk_str *s, int pos, const char *str, int len)
 NK_API int
 nk_str_insert_at_rune(struct nk_str *str, int pos, const char *cstr, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_at_rune");
     int glyph_len;
     nk_rune unicode;
     const char *begin;
     const char *buffer;
 
-    // NK_ASSERT(str);
-    // NK_ASSERT(cstr);
-    // NK_ASSERT(len);
+    NK_ASSERT(str);
+    NK_ASSERT(cstr);
+    NK_ASSERT(len);
     if (!str || !cstr || !len) return 0;
     begin = nk_str_at_rune(str, pos, &unicode, &glyph_len);
     if (!str->len)
@@ -8636,25 +8519,22 @@ nk_str_insert_at_rune(struct nk_str *str, int pos, const char *cstr, int len)
 NK_API int
 nk_str_insert_text_char(struct nk_str *str, int pos, const char *text, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_text_char");
     return nk_str_insert_text_utf8(str, pos, text, len);
 }
 NK_API int
 nk_str_insert_str_char(struct nk_str *str, int pos, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_str_char");
-    return nk_str_insert_text_utf8(str, pos, text, strlen(text));
+    return nk_str_insert_text_utf8(str, pos, text, nk_strlen(text));
 }
 NK_API int
 nk_str_insert_text_utf8(struct nk_str *str, int pos, const char *text, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_text_utf8");
     int i = 0;
     int byte_len = 0;
     nk_rune unicode;
 
-    // NK_ASSERT(str);
-    // NK_ASSERT(text);
+    NK_ASSERT(str);
+    NK_ASSERT(text);
     if (!str || !text || !len) return 0;
     for (i = 0; i < len; ++i)
         byte_len += nk_utf_decode(text+byte_len, &unicode, 4);
@@ -8664,7 +8544,6 @@ nk_str_insert_text_utf8(struct nk_str *str, int pos, const char *text, int len)
 NK_API int
 nk_str_insert_str_utf8(struct nk_str *str, int pos, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_str_utf8");
     int runes = 0;
     int byte_len = 0;
     int num_runes = 0;
@@ -8673,7 +8552,6 @@ nk_str_insert_str_utf8(struct nk_str *str, int pos, const char *text)
     if (!str || !text) return 0;
 
     glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
-    //writeSerialPort(boutRefNum, "nk_str_insert_str_utf8");
     while (unicode != '\0' && glyph_len) {
         glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
         byte_len += glyph_len;
@@ -8685,12 +8563,11 @@ nk_str_insert_str_utf8(struct nk_str *str, int pos, const char *text)
 NK_API int
 nk_str_insert_text_runes(struct nk_str *str, int pos, const nk_rune *runes, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_text_runes");
     int i = 0;
     int byte_len = 0;
     nk_glyph glyph;
 
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str || !runes || !len) return 0;
     for (i = 0; i < len; ++i) {
         byte_len = nk_utf_encode(runes[i], glyph, NK_UTF_SIZE);
@@ -8702,13 +8579,11 @@ nk_str_insert_text_runes(struct nk_str *str, int pos, const nk_rune *runes, int 
 NK_API int
 nk_str_insert_str_runes(struct nk_str *str, int pos, const nk_rune *runes)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_insert_str_runes");
     int i = 0;
     nk_glyph glyph;
     int byte_len;
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     if (!str || !runes) return 0;
-    //writeSerialPort(boutRefNum, "nk_str_insert_str_runes");
     while (runes[i] != '\0') {
         byte_len = nk_utf_encode(runes[i], glyph, NK_UTF_SIZE);
         nk_str_insert_at_rune(str, pos+i, glyph, byte_len);
@@ -8719,25 +8594,23 @@ nk_str_insert_str_runes(struct nk_str *str, int pos, const nk_rune *runes)
 NK_API void
 nk_str_remove_chars(struct nk_str *s, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_remove_chars");
-    // NK_ASSERT(s);
-    // NK_ASSERT(len >= 0);
+    NK_ASSERT(s);
+    NK_ASSERT(len >= 0);
     if (!s || len < 0 || (nk_size)len > s->buffer.allocated) return;
-    // NK_ASSERT(((int)s->buffer.allocated - (int)len) >= 0);
+    NK_ASSERT(((int)s->buffer.allocated - (int)len) >= 0);
     s->buffer.allocated -= (nk_size)len;
     s->len = nk_utf_len((char *)s->buffer.memory.ptr, (int)s->buffer.allocated);
 }
 NK_API void
 nk_str_remove_runes(struct nk_str *str, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_remove_runes");
     int index;
     const char *begin;
     const char *end;
     nk_rune unicode;
 
-    // NK_ASSERT(str);
-    // NK_ASSERT(len >= 0);
+    NK_ASSERT(str);
+    NK_ASSERT(len >= 0);
     if (!str || len < 0) return;
     if (len >= str->len) {
         str->len = 0;
@@ -8752,8 +8625,7 @@ nk_str_remove_runes(struct nk_str *str, int len)
 NK_API void
 nk_str_delete_chars(struct nk_str *s, int pos, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_delete_chars");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || !len || (nk_size)pos > s->buffer.allocated ||
         (nk_size)(pos + len) > s->buffer.allocated) return;
 
@@ -8762,7 +8634,7 @@ nk_str_delete_chars(struct nk_str *s, int pos, int len)
         char *dst = nk_ptr_add(char, s->buffer.memory.ptr, pos);
         char *src = nk_ptr_add(char, s->buffer.memory.ptr, pos + len);
         NK_MEMCPY(dst, src, s->buffer.allocated - (nk_size)(pos + len));
-        // NK_ASSERT(((int)s->buffer.allocated - (int)len) >= 0);
+        NK_ASSERT(((int)s->buffer.allocated - (int)len) >= 0);
         s->buffer.allocated -= (nk_size)len;
     } else nk_str_remove_chars(s, len);
     s->len = nk_utf_len((char *)s->buffer.memory.ptr, (int)s->buffer.allocated);
@@ -8770,15 +8642,14 @@ nk_str_delete_chars(struct nk_str *s, int pos, int len)
 NK_API void
 nk_str_delete_runes(struct nk_str *s, int pos, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_delete_runes");
     char *temp;
     nk_rune unicode;
     char *begin;
     char *end;
     int unused;
 
-    // NK_ASSERT(s);
-    // NK_ASSERT(s->len >= pos + len);
+    NK_ASSERT(s);
+    NK_ASSERT(s->len >= pos + len);
     if (s->len < pos + len)
         len = NK_CLAMP(0, (s->len - pos), s->len);
     if (!len) return;
@@ -8795,38 +8666,22 @@ nk_str_delete_runes(struct nk_str *s, int pos, int len)
 NK_API char*
 nk_str_at_char(struct nk_str *s, int pos)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_at_char");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || pos > (int)s->buffer.allocated) return 0;
     return nk_ptr_add(char, s->buffer.memory.ptr, pos);
 }
 NK_API char*
 nk_str_at_rune(struct nk_str *str, int pos, nk_rune *unicode, int *len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_at_rune");
-    return (char*)str->buffer.memory.ptr + strlen((char*)str->buffer.memory.ptr);
-}
-NK_API const char*
-nk_str_at_char_const(const struct nk_str *s, int pos)
-{
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_str_at_char_const");
-    // NK_ASSERT(s);
-    if (!s || pos > (int)s->buffer.allocated) return 0;
-    return nk_ptr_add(char, s->buffer.memory.ptr, pos);
-}
-NK_API const char*
-nk_str_at_const(const struct nk_str *str, int pos, nk_rune *unicode, int *len)
-{
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_str_at_const");
     int i = 0;
     int src_len = 0;
     int glyph_len = 0;
     char *text;
     int text_len;
 
-    // NK_ASSERT(str);
-    // NK_ASSERT(unicode);
-    // NK_ASSERT(len);
+    NK_ASSERT(str);
+    NK_ASSERT(unicode);
+    NK_ASSERT(len);
 
     if (!str || !unicode || !len) return 0;
     if (pos < 0) {
@@ -8838,7 +8693,49 @@ nk_str_at_const(const struct nk_str *str, int pos, nk_rune *unicode, int *len)
     text = (char*)str->buffer.memory.ptr;
     text_len = (int)str->buffer.allocated;
     glyph_len = nk_utf_decode(text, unicode, text_len);
-    //writeSerialPort(boutRefNum, "nk_str_at_const");
+    while (glyph_len) {
+        if (i == pos) {
+            *len = glyph_len;
+            break;
+        }
+
+        i++;
+        src_len = src_len + glyph_len;
+        glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+    }
+    if (i != pos) return 0;
+    return text + src_len;
+}
+NK_API const char*
+nk_str_at_char_const(const struct nk_str *s, int pos)
+{
+    NK_ASSERT(s);
+    if (!s || pos > (int)s->buffer.allocated) return 0;
+    return nk_ptr_add(char, s->buffer.memory.ptr, pos);
+}
+NK_API const char*
+nk_str_at_const(const struct nk_str *str, int pos, nk_rune *unicode, int *len)
+{
+    int i = 0;
+    int src_len = 0;
+    int glyph_len = 0;
+    char *text;
+    int text_len;
+
+    NK_ASSERT(str);
+    NK_ASSERT(unicode);
+    NK_ASSERT(len);
+
+    if (!str || !unicode || !len) return 0;
+    if (pos < 0) {
+        *unicode = 0;
+        *len = 0;
+        return 0;
+    }
+
+    text = (char*)str->buffer.memory.ptr;
+    text_len = (int)str->buffer.allocated;
+    glyph_len = nk_utf_decode(text, unicode, text_len);
     while (glyph_len) {
         if (i == pos) {
             *len = glyph_len;
@@ -8855,7 +8752,6 @@ nk_str_at_const(const struct nk_str *str, int pos, nk_rune *unicode, int *len)
 NK_API nk_rune
 nk_str_rune_at(const struct nk_str *str, int pos)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_str_rune_at");
     int len;
     nk_rune unicode = 0;
     nk_str_at_const(str, pos, &unicode, &len);
@@ -8864,48 +8760,42 @@ nk_str_rune_at(const struct nk_str *str, int pos)
 NK_API char*
 nk_str_get(struct nk_str *s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_get");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || !s->len || !s->buffer.allocated) return 0;
     return (char*)s->buffer.memory.ptr;
 }
 NK_API const char*
 nk_str_get_const(const struct nk_str *s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_str_get_const");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || !s->len || !s->buffer.allocated) return 0;
     return (const char*)s->buffer.memory.ptr;
 }
 NK_API int
 nk_str_len(struct nk_str *s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_len");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || !s->len || !s->buffer.allocated) return 0;
     return s->len;
 }
 NK_API int
 nk_str_len_char(struct nk_str *s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_len_char");
-    // NK_ASSERT(s);
+    NK_ASSERT(s);
     if (!s || !s->len || !s->buffer.allocated) return 0;
     return (int)s->buffer.allocated;
 }
 NK_API void
 nk_str_clear(struct nk_str *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_clear");
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     nk_buffer_clear(&str->buffer);
     str->len = 0;
 }
 NK_API void
 nk_str_free(struct nk_str *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_str / nk_str_free");
-    // NK_ASSERT(str);
+    NK_ASSERT(str);
     nk_buffer_free(&str->buffer);
     str->len = 0;
 }
@@ -8923,9 +8813,8 @@ NK_LIB void
 nk_command_buffer_init(struct nk_command_buffer *cb,
     struct nk_buffer *b, enum nk_command_clipping clip)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_command_buffer_init");
-    // NK_ASSERT(cb);
-    // NK_ASSERT(b);
+    NK_ASSERT(cb);
+    NK_ASSERT(b);
     if (!cb || !b) return;
     cb->base = b;
     cb->use_clipping = (int)clip;
@@ -8936,8 +8825,7 @@ nk_command_buffer_init(struct nk_command_buffer *cb,
 NK_LIB void
 nk_command_buffer_reset(struct nk_command_buffer *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_command_buffer / nk_command_buffer_reset");
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b) return;
     b->begin = 0;
     b->end = 0;
@@ -8951,13 +8839,14 @@ NK_LIB void*
 nk_command_buffer_push(struct nk_command_buffer* b,
     enum nk_command_type t, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_command_buffer_push");
     NK_STORAGE const nk_size align = NK_ALIGNOF(struct nk_command);
     struct nk_command *cmd;
     nk_size alignment;
     void *unaligned;
     void *memory;
 
+    NK_ASSERT(b);
+    NK_ASSERT(b->base);
     if (!b) return 0;
     cmd = (struct nk_command*)nk_buffer_alloc(b->base,NK_BUFFER_FRONT,size,align);
     if (!cmd) return 0;
@@ -8982,9 +8871,8 @@ nk_command_buffer_push(struct nk_command_buffer* b,
 NK_API void
 nk_push_scissor(struct nk_command_buffer *b, struct nk_rect r)
 {
-  // //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_command_buffer / nk_push_scissor");
     struct nk_command_scissor *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b) return;
 
     b->clip.x = r.x;
@@ -9001,12 +8889,11 @@ nk_push_scissor(struct nk_command_buffer *b, struct nk_rect r)
     cmd->h = (unsigned short)NK_MAX(0, r.h);
 }
 NK_API void
-nk_stroke_line(struct nk_command_buffer *b, int x0, int y0,
-    int x1, int y1, int line_thickness, struct nk_color c)
+nk_stroke_line(struct nk_command_buffer *b, float x0, float y0,
+    float x1, float y1, float line_thickness, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_line");
     struct nk_command_line *cmd;
-
+    NK_ASSERT(b);
     if (!b || line_thickness <= 0) return;
     cmd = (struct nk_command_line*)
         nk_command_buffer_push(b, NK_COMMAND_LINE, sizeof(*cmd));
@@ -9019,13 +8906,12 @@ nk_stroke_line(struct nk_command_buffer *b, int x0, int y0,
     cmd->color = c;
 }
 NK_API void
-nk_stroke_curve(struct nk_command_buffer *b, int ax, int ay,
-    int ctrl0x, int ctrl0y, int ctrl1x, int ctrl1y,
-    int bx, int by, int line_thickness, struct nk_color col)
+nk_stroke_curve(struct nk_command_buffer *b, float ax, float ay,
+    float ctrl0x, float ctrl0y, float ctrl1x, float ctrl1y,
+    float bx, float by, float line_thickness, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - bx, /     int");
     struct nk_command_curve *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || col.a == 0 || line_thickness <= 0) return;
 
     cmd = (struct nk_command_curve*)
@@ -9044,11 +8930,10 @@ nk_stroke_curve(struct nk_command_buffer *b, int ax, int ay,
 }
 NK_API void
 nk_stroke_rect(struct nk_command_buffer *b, struct nk_rect rect,
-    int rounding, int line_thickness, struct nk_color c)
+    float rounding, float line_thickness, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_rect");
     struct nk_command_rect *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0 || rect.w == 0 || rect.h == 0 || line_thickness <= 0) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
@@ -9058,6 +8943,7 @@ nk_stroke_rect(struct nk_command_buffer *b, struct nk_rect rect,
     cmd = (struct nk_command_rect*)
         nk_command_buffer_push(b, NK_COMMAND_RECT, sizeof(*cmd));
     if (!cmd) return;
+    cmd->rounding = (unsigned short)rounding;
     cmd->line_thickness = (unsigned short)line_thickness;
     cmd->x = (short)rect.x;
     cmd->y = (short)rect.y;
@@ -9067,11 +8953,10 @@ nk_stroke_rect(struct nk_command_buffer *b, struct nk_rect rect,
 }
 NK_API void
 nk_fill_rect(struct nk_command_buffer *b, struct nk_rect rect,
-    int rounding, struct nk_color c)
+    float rounding, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_fill_rect");
     struct nk_command_rect_filled *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0 || rect.w == 0 || rect.h == 0) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
@@ -9082,6 +8967,7 @@ nk_fill_rect(struct nk_command_buffer *b, struct nk_rect rect,
     cmd = (struct nk_command_rect_filled*)
         nk_command_buffer_push(b, NK_COMMAND_RECT_FILLED, sizeof(*cmd));
     if (!cmd) return;
+    cmd->rounding = (unsigned short)rounding;
     cmd->x = (short)rect.x;
     cmd->y = (short)rect.y;
     cmd->w = (unsigned short)NK_MAX(0, rect.w);
@@ -9093,9 +8979,8 @@ nk_fill_rect_multi_color(struct nk_command_buffer *b, struct nk_rect rect,
     struct nk_color left, struct nk_color top, struct nk_color right,
     struct nk_color bottom)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_fill_rect_multi_color");
     struct nk_command_rect_multi_color *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || rect.w == 0 || rect.h == 0) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
@@ -9117,9 +9002,8 @@ nk_fill_rect_multi_color(struct nk_command_buffer *b, struct nk_rect rect,
 }
 NK_API void
 nk_stroke_circle(struct nk_command_buffer *b, struct nk_rect r,
-    int line_thickness, struct nk_color c)
+    float line_thickness, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_circle");
     struct nk_command_circle *cmd;
     if (!b || r.w == 0 || r.h == 0 || line_thickness <= 0) return;
     if (b->use_clipping) {
@@ -9141,9 +9025,8 @@ nk_stroke_circle(struct nk_command_buffer *b, struct nk_rect r,
 NK_API void
 nk_fill_circle(struct nk_command_buffer *b, struct nk_rect r, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL -nk_fill_circlee");
     struct nk_command_circle_filled *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0 || r.w == 0 || r.h == 0) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
@@ -9161,10 +9044,9 @@ nk_fill_circle(struct nk_command_buffer *b, struct nk_rect r, struct nk_color c)
     cmd->color = c;
 }
 NK_API void
-nk_stroke_arc(struct nk_command_buffer *b, int cx, int cy, int radius,
-    int a_min, int a_max, int line_thickness, struct nk_color c)
+nk_stroke_arc(struct nk_command_buffer *b, float cx, float cy, float radius,
+    float a_min, float a_max, float line_thickness, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_arc");
     struct nk_command_arc *cmd;
     if (!b || c.a == 0 || line_thickness <= 0) return;
     cmd = (struct nk_command_arc*)
@@ -9179,12 +9061,11 @@ nk_stroke_arc(struct nk_command_buffer *b, int cx, int cy, int radius,
     cmd->color = c;
 }
 NK_API void
-nk_fill_arc(struct nk_command_buffer *b, int cx, int cy, int radius,
-    int a_min, int a_max, struct nk_color c)
+nk_fill_arc(struct nk_command_buffer *b, float cx, float cy, float radius,
+    float a_min, float a_max, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_fill_arc");
     struct nk_command_arc_filled *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0) return;
     cmd = (struct nk_command_arc_filled*)
         nk_command_buffer_push(b, NK_COMMAND_ARC_FILLED, sizeof(*cmd));
@@ -9197,16 +9078,17 @@ nk_fill_arc(struct nk_command_buffer *b, int cx, int cy, int radius,
     cmd->color = c;
 }
 NK_API void
-nk_stroke_triangle(struct nk_command_buffer *b, int x0, int y0, int x1,
-    int y1, int x2, int y2, int line_thickness, struct nk_color c)
+nk_stroke_triangle(struct nk_command_buffer *b, float x0, float y0, float x1,
+    float y1, float x2, float y2, float line_thickness, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_triangle");
     struct nk_command_triangle *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0 || line_thickness <= 0) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
-        if (!NK_INBOX(x0, y0, clip->x, clip->y, clip->w, clip->h) &&            !NK_INBOX(x1, y1, clip->x, clip->y, clip->w, clip->h) &&            !NK_INBOX(x2, y2, clip->x, clip->y, clip->w, clip->h))
+        if (!NK_INBOX(x0, y0, clip->x, clip->y, clip->w, clip->h) &&
+            !NK_INBOX(x1, y1, clip->x, clip->y, clip->w, clip->h) &&
+            !NK_INBOX(x2, y2, clip->x, clip->y, clip->w, clip->h))
             return;
     }
 
@@ -9223,17 +9105,18 @@ nk_stroke_triangle(struct nk_command_buffer *b, int x0, int y0, int x1,
     cmd->color = c;
 }
 NK_API void
-nk_fill_triangle(struct nk_command_buffer *b, int x0, int y0, int x1,
-    int y1, int x2, int y2, struct nk_color c)
+nk_fill_triangle(struct nk_command_buffer *b, float x0, float y0, float x1,
+    float y1, float x2, float y2, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_fill_triangle");
     struct nk_command_triangle_filled *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || c.a == 0) return;
     if (!b) return;
     if (b->use_clipping) {
         const struct nk_rect *clip = &b->clip;
-        if (!NK_INBOX(x0, y0, clip->x, clip->y, clip->w, clip->h) &&            !NK_INBOX(x1, y1, clip->x, clip->y, clip->w, clip->h) &&            !NK_INBOX(x2, y2, clip->x, clip->y, clip->w, clip->h))
+        if (!NK_INBOX(x0, y0, clip->x, clip->y, clip->w, clip->h) &&
+            !NK_INBOX(x1, y1, clip->x, clip->y, clip->w, clip->h) &&
+            !NK_INBOX(x2, y2, clip->x, clip->y, clip->w, clip->h))
             return;
     }
 
@@ -9249,15 +9132,14 @@ nk_fill_triangle(struct nk_command_buffer *b, int x0, int y0, int x1,
     cmd->color = c;
 }
 NK_API void
-nk_stroke_polygon(struct nk_command_buffer *b,  int *points, int point_count,
-    int line_thickness, struct nk_color col)
+nk_stroke_polygon(struct nk_command_buffer *b,  float *points, int point_count,
+    float line_thickness, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - line_thickness, /     int");
     int i;
     nk_size size = 0;
     struct nk_command_polygon *cmd;
 
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || col.a == 0 || line_thickness <= 0) return;
     size = sizeof(*cmd) + sizeof(short) * 2 * (nk_size)point_count;
     cmd = (struct nk_command_polygon*) nk_command_buffer_push(b, NK_COMMAND_POLYGON, size);
@@ -9271,15 +9153,14 @@ nk_stroke_polygon(struct nk_command_buffer *b,  int *points, int point_count,
     }
 }
 NK_API void
-nk_fill_polygon(struct nk_command_buffer *b, int *points, int point_count,
+nk_fill_polygon(struct nk_command_buffer *b, float *points, int point_count,
     struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_fill_polygon");
     int i;
     nk_size size = 0;
     struct nk_command_polygon_filled *cmd;
 
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || col.a == 0) return;
     size = sizeof(*cmd) + sizeof(short) * 2 * (nk_size)point_count;
     cmd = (struct nk_command_polygon_filled*)
@@ -9293,15 +9174,14 @@ nk_fill_polygon(struct nk_command_buffer *b, int *points, int point_count,
     }
 }
 NK_API void
-nk_stroke_polyline(struct nk_command_buffer *b, int *points, int point_count,
-    int line_thickness, struct nk_color col)
+nk_stroke_polyline(struct nk_command_buffer *b, float *points, int point_count,
+    float line_thickness, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_stroke_polyline");
     int i;
     nk_size size = 0;
     struct nk_command_polyline *cmd;
 
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b || col.a == 0 || line_thickness <= 0) return;
     size = sizeof(*cmd) + sizeof(short) * 2 * (nk_size)point_count;
     cmd = (struct nk_command_polyline*) nk_command_buffer_push(b, NK_COMMAND_POLYLINE, size);
@@ -9318,9 +9198,8 @@ NK_API void
 nk_draw_image(struct nk_command_buffer *b, struct nk_rect r,
     const struct nk_image *img, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_image");
     struct nk_command_image *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b) return;
     if (b->use_clipping) {
         const struct nk_rect *c = &b->clip;
@@ -9339,12 +9218,88 @@ nk_draw_image(struct nk_command_buffer *b, struct nk_rect r,
     cmd->col = col;
 }
 NK_API void
+nk_draw_nine_slice(struct nk_command_buffer *b, struct nk_rect r,
+    const struct nk_nine_slice *slc, struct nk_color col)
+{
+    struct nk_image img;
+    const struct nk_image *slcimg = (const struct nk_image*)slc;
+    nk_ushort rgnX, rgnY, rgnW, rgnH;
+    rgnX = slcimg->region[0];
+    rgnY = slcimg->region[1];
+    rgnW = slcimg->region[2];
+    rgnH = slcimg->region[3];
+
+    /* top-left */
+    img.handle = slcimg->handle;
+    img.w = slcimg->w;
+    img.h = slcimg->h;
+    img.region[0] = rgnX;
+    img.region[1] = rgnY;
+    img.region[2] = slc->l;
+    img.region[3] = slc->t;
+
+    nk_draw_image(b,
+        nk_rect(r.x, r.y, (float)slc->l, (float)slc->t),
+        &img, col);
+
+#define IMG_RGN(x, y, w, h) img.region[0] = (nk_ushort)(x); img.region[1] = (nk_ushort)(y); img.region[2] = (nk_ushort)(w); img.region[3] = (nk_ushort)(h);
+
+    /* top-center */
+    IMG_RGN(rgnX + slc->l, rgnY, rgnW - slc->l - slc->r, slc->t);
+    nk_draw_image(b,
+        nk_rect(r.x + (float)slc->l, r.y, (float)(r.w - slc->l - slc->r), (float)slc->t),
+        &img, col);
+
+    /* top-right */
+    IMG_RGN(rgnX + rgnW - slc->r, rgnY, slc->r, slc->t);
+    nk_draw_image(b,
+        nk_rect(r.x + r.w - (float)slc->r, r.y, (float)slc->r, (float)slc->t),
+        &img, col);
+
+    /* center-left */
+    IMG_RGN(rgnX, rgnY + slc->t, slc->l, rgnH - slc->t - slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x, r.y + (float)slc->t, (float)slc->l, (float)(r.h - slc->t - slc->b)),
+        &img, col);
+
+    /* center */
+    IMG_RGN(rgnX + slc->l, rgnY + slc->t, rgnW - slc->l - slc->r, rgnH - slc->t - slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x + (float)slc->l, r.y + (float)slc->t, (float)(r.w - slc->l - slc->r), (float)(r.h - slc->t - slc->b)),
+        &img, col);
+
+    /* center-right */
+    IMG_RGN(rgnX + rgnW - slc->r, rgnY + slc->t, slc->r, rgnH - slc->t - slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x + r.w - (float)slc->r, r.y + (float)slc->t, (float)slc->r, (float)(r.h - slc->t - slc->b)),
+        &img, col);
+
+    /* bottom-left */
+    IMG_RGN(rgnX, rgnY + rgnH - slc->b, slc->l, slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x, r.y + r.h - (float)slc->b, (float)slc->l, (float)slc->b),
+        &img, col);
+
+    /* bottom-center */
+    IMG_RGN(rgnX + slc->l, rgnY + rgnH - slc->b, rgnW - slc->l - slc->r, slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x + (float)slc->l, r.y + r.h - (float)slc->b, (float)(r.w - slc->l - slc->r), (float)slc->b),
+        &img, col);
+
+    /* bottom-right */
+    IMG_RGN(rgnX + rgnW - slc->r, rgnY + rgnH - slc->b, slc->r, slc->b);
+    nk_draw_image(b,
+        nk_rect(r.x + r.w - (float)slc->r, r.y + r.h - (float)slc->b, (float)slc->r, (float)slc->b),
+        &img, col);
+
+#undef IMG_RGN
+}
+NK_API void
 nk_push_custom(struct nk_command_buffer *b, struct nk_rect r,
     nk_command_custom_callback cb, nk_handle usr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_push_custom");
     struct nk_command_custom *cmd;
-    // NK_ASSERT(b);
+    NK_ASSERT(b);
     if (!b) return;
     if (b->use_clipping) {
         const struct nk_rect *c = &b->clip;
@@ -9367,21 +9322,11 @@ nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
     const char *string, int length, const struct nk_user_font *font,
     struct nk_color bg, struct nk_color fg)
 {
-
-
-      // long start;
-      // long end;
-      // long total;
-      // long eventTime0;
-
-      // start = TickCount();
-
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_text");
-    int text_width = 0;
+    float text_width = 0;
     struct nk_command_text *cmd;
 
-    // NK_ASSERT(b);
-    // NK_ASSERT(font);
+    NK_ASSERT(b);
+    NK_ASSERT(font);
     if (!b || !string || !length || (bg.a == 0 && fg.a == 0)) return;
     if (b->use_clipping) {
         const struct nk_rect *c = &b->clip;
@@ -9393,7 +9338,7 @@ nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
     text_width = font->width(font->userdata, font->height, string, length);
     if (text_width > r.w){
         int glyphs = 0;
-        int txt_width = (int)text_width;
+        float txt_width = (float)text_width;
         length = nk_text_clamp(font, string, length, r.w, &glyphs, &txt_width, 0,0);
     }
 
@@ -9412,14 +9357,6 @@ nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
     cmd->height = font->height;
     NK_MEMCPY(cmd->string, string, (nk_size)length);
     cmd->string[length] = '\0';
-    //   end = TickCount();
-
-    // total = end - start;
-    //   eventTime0 = total;// / 60.0;
-
-    ////     char logx[255];
-    ////     sprintf(logx, "text draw time() eventTime0 (draw text) %ld\n", eventTime0);
-    //    // writeSerialPort(boutRefNum, logx);
 }
 
 
@@ -9435,15 +9372,14 @@ nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
 NK_API void
 nk_draw_list_init(struct nk_draw_list *list)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_init");
     nk_size i = 0;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     nk_zero(list, sizeof(*list));
     for (i = 0; i < NK_LEN(list->circle_vtx); ++i) {
-        const int a = ((int)i / (int)NK_LEN(list->circle_vtx)) * 2 * NK_PI;
-        list->circle_vtx[i].x = (int)NK_COS(a);
-        list->circle_vtx[i].y = (int)NK_SIN(a);
+        const float a = ((float)i / (float)NK_LEN(list->circle_vtx)) * 2 * NK_PI;
+        list->circle_vtx[i].x = (float)NK_COS(a);
+        list->circle_vtx[i].y = (float)NK_SIN(a);
     }
 }
 NK_API void
@@ -9451,12 +9387,11 @@ nk_draw_list_setup(struct nk_draw_list *canvas, const struct nk_convert_config *
     struct nk_buffer *cmds, struct nk_buffer *vertices, struct nk_buffer *elements,
     enum nk_anti_aliasing line_aa, enum nk_anti_aliasing shape_aa)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list_setup");
-    // NK_ASSERT(canvas);
-    // NK_ASSERT(config);
-    // NK_ASSERT(cmds);
-    // NK_ASSERT(vertices);
-    // NK_ASSERT(elements);
+    NK_ASSERT(canvas);
+    NK_ASSERT(config);
+    NK_ASSERT(cmds);
+    NK_ASSERT(vertices);
+    NK_ASSERT(elements);
     if (!canvas || !config || !cmds || !vertices || !elements)
         return;
 
@@ -9478,12 +9413,11 @@ nk_draw_list_setup(struct nk_draw_list *canvas, const struct nk_convert_config *
 NK_API const struct nk_draw_command*
 nk__draw_list_begin(const struct nk_draw_list *canvas, const struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk__draw_list_begin");
     nk_byte *memory;
     nk_size offset;
     const struct nk_draw_command *cmd;
 
-    // NK_ASSERT(buffer);
+    NK_ASSERT(buffer);
     if (!buffer || !buffer->size || !canvas->cmd_count)
         return 0;
 
@@ -9495,14 +9429,13 @@ nk__draw_list_begin(const struct nk_draw_list *canvas, const struct nk_buffer *b
 NK_API const struct nk_draw_command*
 nk__draw_list_end(const struct nk_draw_list *canvas, const struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk__draw_list_end");
     nk_size size;
     nk_size offset;
     nk_byte *memory;
     const struct nk_draw_command *end;
 
-    // NK_ASSERT(buffer);
-    // NK_ASSERT(canvas);
+    NK_ASSERT(buffer);
+    NK_ASSERT(canvas);
     if (!buffer || !canvas)
         return 0;
 
@@ -9517,10 +9450,9 @@ NK_API const struct nk_draw_command*
 nk__draw_list_next(const struct nk_draw_command *cmd,
     const struct nk_buffer *buffer, const struct nk_draw_list *canvas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer /     const");
     const struct nk_draw_command *end;
-    // NK_ASSERT(buffer);
-    // NK_ASSERT(canvas);
+    NK_ASSERT(buffer);
+    NK_ASSERT(canvas);
     if (!cmd || !buffer || !canvas)
         return 0;
 
@@ -9531,7 +9463,6 @@ nk__draw_list_next(const struct nk_draw_command *cmd,
 NK_INTERN struct nk_vec2*
 nk_draw_list_alloc_path(struct nk_draw_list *list, int count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_alloc_path");
     struct nk_vec2 *points;
     NK_STORAGE const nk_size point_align = NK_ALIGNOF(struct nk_vec2);
     NK_STORAGE const nk_size point_size = sizeof(struct nk_vec2);
@@ -9550,10 +9481,9 @@ nk_draw_list_alloc_path(struct nk_draw_list *list, int count)
 NK_INTERN struct nk_vec2
 nk_draw_list_path_last(struct nk_draw_list *list)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_path_last");
     void *memory;
     struct nk_vec2 *point;
-    // NK_ASSERT(list->path_count);
+    NK_ASSERT(list->path_count);
     memory = nk_buffer_memory(list->buffer);
     point = nk_ptr_add(struct nk_vec2, memory, list->path_offset);
     point += (list->path_count-1);
@@ -9563,12 +9493,11 @@ NK_INTERN struct nk_draw_command*
 nk_draw_list_push_command(struct nk_draw_list *list, struct nk_rect clip,
     nk_handle texture)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - texture) /     nk_handle");
     NK_STORAGE const nk_size cmd_align = NK_ALIGNOF(struct nk_draw_command);
     NK_STORAGE const nk_size cmd_size = sizeof(struct nk_draw_command);
     struct nk_draw_command *cmd;
 
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     cmd = (struct nk_draw_command*)
         nk_buffer_alloc(list->buffer, NK_BUFFER_BACK, cmd_size, cmd_align);
 
@@ -9594,11 +9523,10 @@ nk_draw_list_push_command(struct nk_draw_list *list, struct nk_rect clip,
 NK_INTERN struct nk_draw_command*
 nk_draw_list_command_last(struct nk_draw_list *list)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_command_last");
     void *memory;
     nk_size size;
     struct nk_draw_command *cmd;
-    // NK_ASSERT(list->cmd_count);
+    NK_ASSERT(list->cmd_count);
 
     memory = nk_buffer_memory(list->buffer);
     size = nk_buffer_total(list->buffer);
@@ -9608,8 +9536,7 @@ nk_draw_list_command_last(struct nk_draw_list *list)
 NK_INTERN void
 nk_draw_list_add_clip(struct nk_draw_list *list, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_add_clip");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     if (!list->cmd_count) {
         nk_draw_list_push_command(list, rect, list->config.null.texture);
@@ -9623,8 +9550,7 @@ nk_draw_list_add_clip(struct nk_draw_list *list, struct nk_rect rect)
 NK_INTERN void
 nk_draw_list_push_image(struct nk_draw_list *list, nk_handle texture)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_push_image");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     if (!list->cmd_count) {
         nk_draw_list_push_command(list, nk_null_rect, texture);
@@ -9646,16 +9572,14 @@ nk_draw_list_push_image(struct nk_draw_list *list, nk_handle texture)
 NK_API void
 nk_draw_list_push_userdata(struct nk_draw_list *list, nk_handle userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_push_userdata");
     list->userdata = userdata;
 }
 #endif
 NK_INTERN void*
 nk_draw_list_alloc_vertices(struct nk_draw_list *list, nk_size count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_alloc_vertices");
     void *vtx;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return 0;
     vtx = nk_buffer_alloc(list->vertices, NK_BUFFER_FRONT,
         list->config.vertex_size*count, list->config.vertex_alignment);
@@ -9671,18 +9595,18 @@ nk_draw_list_alloc_vertices(struct nk_draw_list *list, nk_size count)
      * backend (OpenGL, DirectX, ...). For example in OpenGL for `glDrawElements`
      * instead of specifing `GL_UNSIGNED_SHORT` you have to define `GL_UNSIGNED_INT`.
      * Sorry for the inconvenience. */
-    if(sizeof(nk_draw_index)==2) // NK_ASSERT((list->vertex_count < NK_USHORT_MAX &&        "To many verticies for 16-bit vertex indicies. Please read comment above on how to solve this problem"));
+    if(sizeof(nk_draw_index)==2) NK_ASSERT((list->vertex_count < NK_USHORT_MAX &&
+        "To many verticies for 16-bit vertex indicies. Please read comment above on how to solve this problem"));
     return vtx;
 }
 NK_INTERN nk_draw_index*
 nk_draw_list_alloc_elements(struct nk_draw_list *list, nk_size count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_alloc_elements");
     nk_draw_index *ids;
     struct nk_draw_command *cmd;
     NK_STORAGE const nk_size elem_align = NK_ALIGNOF(nk_draw_index);
     NK_STORAGE const nk_size elem_size = sizeof(nk_draw_index);
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return 0;
 
     ids = (nk_draw_index*)
@@ -9697,19 +9621,17 @@ NK_INTERN int
 nk_draw_vertex_layout_element_is_end_of_layout(
     const struct nk_draw_vertex_layout_element *element)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_vertex_layout_element /     const");
     return (element->attribute == NK_VERTEX_ATTRIBUTE_COUNT ||
             element->format == NK_FORMAT_COUNT);
 }
 NK_INTERN void
-nk_draw_vertex_color(void *attr, const int *vals,
+nk_draw_vertex_color(void *attr, const float *vals,
     enum nk_draw_vertex_layout_format format)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - format /     enum");
     /* if this triggers you tried to provide a value format for a color */
-    int val[4];
-    // NK_ASSERT(format >= NK_FORMAT_COLOR_BEGIN);
-    // NK_ASSERT(format <= NK_FORMAT_COLOR_END);
+    float val[4];
+    NK_ASSERT(format >= NK_FORMAT_COLOR_BEGIN);
+    NK_ASSERT(format <= NK_FORMAT_COLOR_END);
     if (format < NK_FORMAT_COLOR_BEGIN || format > NK_FORMAT_COLOR_END) return;
 
     val[0] = NK_SATURATE(vals[0]);
@@ -9718,7 +9640,7 @@ nk_draw_vertex_color(void *attr, const int *vals,
     val[3] = NK_SATURATE(vals[3]);
 
     switch (format) {
-    default: break;// NK_ASSERT(0 && "Invalid vertex layout color format"); break;
+    default: NK_ASSERT(0 && "Invalid vertex layout color format"); break;
     case NK_FORMAT_R8G8B8A8:
     case NK_FORMAT_R8G8B8: {
         struct nk_color col = nk_rgba_fv(val);
@@ -9731,36 +9653,36 @@ nk_draw_vertex_color(void *attr, const int *vals,
     } break;
     case NK_FORMAT_R16G15B16: {
         nk_ushort col[3];
-        col[0] = (nk_ushort)(val[0]*(int)NK_USHORT_MAX);
-        col[1] = (nk_ushort)(val[1]*(int)NK_USHORT_MAX);
-        col[2] = (nk_ushort)(val[2]*(int)NK_USHORT_MAX);
+        col[0] = (nk_ushort)(val[0]*(float)NK_USHORT_MAX);
+        col[1] = (nk_ushort)(val[1]*(float)NK_USHORT_MAX);
+        col[2] = (nk_ushort)(val[2]*(float)NK_USHORT_MAX);
         NK_MEMCPY(attr, col, sizeof(col));
     } break;
     case NK_FORMAT_R16G15B16A16: {
         nk_ushort col[4];
-        col[0] = (nk_ushort)(val[0]*(int)NK_USHORT_MAX);
-        col[1] = (nk_ushort)(val[1]*(int)NK_USHORT_MAX);
-        col[2] = (nk_ushort)(val[2]*(int)NK_USHORT_MAX);
-        col[3] = (nk_ushort)(val[3]*(int)NK_USHORT_MAX);
+        col[0] = (nk_ushort)(val[0]*(float)NK_USHORT_MAX);
+        col[1] = (nk_ushort)(val[1]*(float)NK_USHORT_MAX);
+        col[2] = (nk_ushort)(val[2]*(float)NK_USHORT_MAX);
+        col[3] = (nk_ushort)(val[3]*(float)NK_USHORT_MAX);
         NK_MEMCPY(attr, col, sizeof(col));
     } break;
     case NK_FORMAT_R32G32B32: {
         nk_uint col[3];
-        col[0] = (nk_uint)(val[0]*(int)NK_UINT_MAX);
-        col[1] = (nk_uint)(val[1]*(int)NK_UINT_MAX);
-        col[2] = (nk_uint)(val[2]*(int)NK_UINT_MAX);
+        col[0] = (nk_uint)(val[0]*(float)NK_UINT_MAX);
+        col[1] = (nk_uint)(val[1]*(float)NK_UINT_MAX);
+        col[2] = (nk_uint)(val[2]*(float)NK_UINT_MAX);
         NK_MEMCPY(attr, col, sizeof(col));
     } break;
     case NK_FORMAT_R32G32B32A32: {
         nk_uint col[4];
-        col[0] = (nk_uint)(val[0]*(int)NK_UINT_MAX);
-        col[1] = (nk_uint)(val[1]*(int)NK_UINT_MAX);
-        col[2] = (nk_uint)(val[2]*(int)NK_UINT_MAX);
-        col[3] = (nk_uint)(val[3]*(int)NK_UINT_MAX);
+        col[0] = (nk_uint)(val[0]*(float)NK_UINT_MAX);
+        col[1] = (nk_uint)(val[1]*(float)NK_UINT_MAX);
+        col[2] = (nk_uint)(val[2]*(float)NK_UINT_MAX);
+        col[3] = (nk_uint)(val[3]*(float)NK_UINT_MAX);
         NK_MEMCPY(attr, col, sizeof(col));
     } break;
-    case NK_FORMAT_R32G32B32A32_int:
-        NK_MEMCPY(attr, val, sizeof(int)*4);
+    case NK_FORMAT_R32G32B32A32_FLOAT:
+        NK_MEMCPY(attr, val, sizeof(float)*4);
         break;
     case NK_FORMAT_R32G32B32A32_DOUBLE: {
         double col[4];
@@ -9778,51 +9700,50 @@ nk_draw_vertex_color(void *attr, const int *vals,
     } break; }
 }
 NK_INTERN void
-nk_draw_vertex_element(void *dst, const int *values, int value_count,
+nk_draw_vertex_element(void *dst, const float *values, int value_count,
     enum nk_draw_vertex_layout_format format)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - format /     enum");
     int value_index;
     void *attribute = dst;
     /* if this triggers you tried to provide a color format for a value */
-    // NK_ASSERT(format < NK_FORMAT_COLOR_BEGIN);
+    NK_ASSERT(format < NK_FORMAT_COLOR_BEGIN);
     if (format >= NK_FORMAT_COLOR_BEGIN && format <= NK_FORMAT_COLOR_END) return;
     for (value_index = 0; value_index < value_count; ++value_index) {
         switch (format) {
-        default: // NK_ASSERT(0 && "invalid vertex layout format"); break;
+        default: NK_ASSERT(0 && "invalid vertex layout format"); break;
         case NK_FORMAT_SCHAR: {
-            char value = (char)NK_CLAMP((int)NK_SCHAR_MIN, values[value_index], (int)NK_SCHAR_MAX);
+            char value = (char)NK_CLAMP((float)NK_SCHAR_MIN, values[value_index], (float)NK_SCHAR_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(char));
         } break;
         case NK_FORMAT_SSHORT: {
-            nk_short value = (nk_short)NK_CLAMP((int)NK_SSHORT_MIN, values[value_index], (int)NK_SSHORT_MAX);
+            nk_short value = (nk_short)NK_CLAMP((float)NK_SSHORT_MIN, values[value_index], (float)NK_SSHORT_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(value));
         } break;
         case NK_FORMAT_SINT: {
-            nk_int value = (nk_int)NK_CLAMP((int)NK_SINT_MIN, values[value_index], (int)NK_SINT_MAX);
+            nk_int value = (nk_int)NK_CLAMP((float)NK_SINT_MIN, values[value_index], (float)NK_SINT_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(nk_int));
         } break;
         case NK_FORMAT_UCHAR: {
-            unsigned char value = (unsigned char)NK_CLAMP((int)NK_UCHAR_MIN, values[value_index], (int)NK_UCHAR_MAX);
+            unsigned char value = (unsigned char)NK_CLAMP((float)NK_UCHAR_MIN, values[value_index], (float)NK_UCHAR_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(unsigned char));
         } break;
         case NK_FORMAT_USHORT: {
-            nk_ushort value = (nk_ushort)NK_CLAMP((int)NK_USHORT_MIN, values[value_index], (int)NK_USHORT_MAX);
+            nk_ushort value = (nk_ushort)NK_CLAMP((float)NK_USHORT_MIN, values[value_index], (float)NK_USHORT_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(value));
             } break;
         case NK_FORMAT_UINT: {
-            nk_uint value = (nk_uint)NK_CLAMP((int)NK_UINT_MIN, values[value_index], (int)NK_UINT_MAX);
+            nk_uint value = (nk_uint)NK_CLAMP((float)NK_UINT_MIN, values[value_index], (float)NK_UINT_MAX);
             NK_MEMCPY(attribute, &value, sizeof(value));
             attribute = (void*)((char*)attribute + sizeof(nk_uint));
         } break;
-        case NK_FORMAT_int:
+        case NK_FORMAT_FLOAT:
             NK_MEMCPY(attribute, &values[value_index], sizeof(values[value_index]));
-            attribute = (void*)((char*)attribute + sizeof(int));
+            attribute = (void*)((char*)attribute + sizeof(float));
             break;
         case NK_FORMAT_DOUBLE: {
             double value = (double)values[value_index];
@@ -9836,15 +9757,13 @@ NK_INTERN void*
 nk_draw_vertex(void *dst, const struct nk_convert_config *config,
     struct nk_vec2 pos, struct nk_vec2 uv, struct nk_colorf color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pos /     struct");
     void *result = (void*)((char*)dst + config->vertex_size);
     const struct nk_draw_vertex_layout_element *elem_iter = config->vertex_layout;
-    //writeSerialPort(boutRefNum, "nk_draw_vertex");
     while (!nk_draw_vertex_layout_element_is_end_of_layout(elem_iter)) {
         void *address = (void*)((char*)dst + elem_iter->offset);
         switch (elem_iter->attribute) {
         case NK_VERTEX_ATTRIBUTE_COUNT:
-        default: // NK_ASSERT(0 && "wrong element attribute"); break;
+        default: NK_ASSERT(0 && "wrong element attribute"); break;
         case NK_VERTEX_POSITION: nk_draw_vertex_element(address, &pos.x, 2, elem_iter->format); break;
         case NK_VERTEX_TEXCOORD: nk_draw_vertex_element(address, &uv.x, 2, elem_iter->format); break;
         case NK_VERTEX_COLOR: nk_draw_vertex_color(address, &color.r, elem_iter->format); break;
@@ -9856,17 +9775,16 @@ nk_draw_vertex(void *dst, const struct nk_convert_config *config,
 NK_API void
 nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *points,
     const unsigned int points_count, struct nk_color color, enum nk_draw_list_stroke closed,
-    int thickness, enum nk_anti_aliasing aliasing)
+    float thickness, enum nk_anti_aliasing aliasing)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - thickness, /     int");
     nk_size count;
     int thick_line;
     struct nk_colorf col;
     struct nk_colorf col_trans;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || points_count < 2) return;
 
-    color.a = (nk_byte)((int)color.a * list->config.global_alpha);
+    color.a = (nk_byte)((float)color.a * list->config.global_alpha);
     count = points_count;
     if (!closed) count = points_count-1;
     thick_line = thickness > 1.0f;
@@ -9875,14 +9793,14 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
     nk_draw_list_push_userdata(list, list->userdata);
 #endif
 
-    color.a = (nk_byte)((int)color.a * list->config.global_alpha);
+    color.a = (nk_byte)((float)color.a * list->config.global_alpha);
     nk_color_fv(&col.r, color);
     col_trans = col;
     col_trans.a = 0;
 
     if (aliasing == NK_ANTI_ALIASING_ON) {
         /* ANTI-ALIASED STROKE */
-        const int AA_SIZE = 1.0f;
+        const float AA_SIZE = 1.0f;
         NK_STORAGE const nk_size pnt_align = NK_ALIGNOF(struct nk_vec2);
         NK_STORAGE const nk_size pnt_size = sizeof(struct nk_vec2);
 
@@ -9916,7 +9834,7 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
         for (i1 = 0; i1 < count; ++i1) {
             const nk_size i2 = ((i1 + 1) == points_count) ? 0 : (i1 + 1);
             struct nk_vec2 diff = nk_vec2_sub(points[i2], points[i1]);
-            int len;
+            float len;
 
             /* vec2 inverted length  */
             len = nk_vec2_len_sqr(diff);
@@ -9947,7 +9865,7 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
             idx1 = index;
             for (i1 = 0; i1 < count; i1++) {
                 struct nk_vec2 dm;
-                int dmr2;
+                float dmr2;
                 nk_size i2 = ((i1 + 1) == points_count) ? 0 : (i1 + 1);
                 nk_size idx2 = ((i1+1) == points_count) ? index: (idx1 + 3);
 
@@ -9955,7 +9873,7 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
                 dm = nk_vec2_muls(nk_vec2_add(normals[i1], normals[i2]), 0.5f);
                 dmr2 = dm.x * dm.x + dm.y* dm.y;
                 if (dmr2 > 0.000001f) {
-                    int scale = 1.0f/dmr2;
+                    float scale = 1.0f/dmr2;
                     scale = NK_MIN(100.0f, scale);
                     dm = nk_vec2_muls(dm, scale);
                 }
@@ -9983,7 +9901,7 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
             }
         } else {
             nk_size idx1, i;
-            const int half_inner_thickness = (thickness - AA_SIZE) * 0.5f;
+            const float half_inner_thickness = (thickness - AA_SIZE) * 0.5f;
             if (!closed) {
                 struct nk_vec2 d1 = nk_vec2_muls(normals[0], half_inner_thickness + AA_SIZE);
                 struct nk_vec2 d2 = nk_vec2_muls(normals[0], half_inner_thickness);
@@ -10011,9 +9929,9 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
 
                 /* average normals */
                 struct nk_vec2 dm = nk_vec2_muls(nk_vec2_add(normals[i1], normals[i2]), 0.5f);
-                int dmr2 = dm.x * dm.x + dm.y* dm.y;
+                float dmr2 = dm.x * dm.x + dm.y* dm.y;
                 if (dmr2 > 0.000001f) {
-                    int scale = 1.0f/dmr2;
+                    float scale = 1.0f/dmr2;
                     scale = NK_MIN(100.0f, scale);
                     dm = nk_vec2_muls(dm, scale);
                 }
@@ -10061,13 +9979,13 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
         if (!vtx || !ids) return;
 
         for (i1 = 0; i1 < count; ++i1) {
-            int dx, dy;
+            float dx, dy;
             const struct nk_vec2 uv = list->config.null.uv;
             const nk_size i2 = ((i1+1) == points_count) ? 0 : i1 + 1;
             const struct nk_vec2 p1 = points[i1];
             const struct nk_vec2 p2 = points[i2];
             struct nk_vec2 diff = nk_vec2_sub(p2, p1);
-            int len;
+            float len;
 
             /* vec2 inverted length  */
             len = nk_vec2_len_sqr(diff);
@@ -10099,20 +10017,19 @@ nk_draw_list_fill_poly_convex(struct nk_draw_list *list,
     const struct nk_vec2 *points, const unsigned int points_count,
     struct nk_color color, enum nk_anti_aliasing aliasing)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
     struct nk_colorf col;
     struct nk_colorf col_trans;
 
     NK_STORAGE const nk_size pnt_align = NK_ALIGNOF(struct nk_vec2);
     NK_STORAGE const nk_size pnt_size = sizeof(struct nk_vec2);
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || points_count < 3) return;
 
 #ifdef NK_INCLUDE_COMMAND_USERDATA
     nk_draw_list_push_userdata(list, list->userdata);
 #endif
 
-    color.a = (nk_byte)((int)color.a * list->config.global_alpha);
+    color.a = (nk_byte)((float)color.a * list->config.global_alpha);
     nk_color_fv(&col.r, color);
     col_trans = col;
     col_trans.a = 0;
@@ -10122,7 +10039,7 @@ nk_draw_list_fill_poly_convex(struct nk_draw_list *list,
         nk_size i0 = 0;
         nk_size i1 = 0;
 
-        const int AA_SIZE = 1.0f;
+        const float AA_SIZE = 1.0f;
         nk_size vertex_offset = 0;
         nk_size index = list->vertex_count;
 
@@ -10161,7 +10078,7 @@ nk_draw_list_fill_poly_convex(struct nk_draw_list *list,
             struct nk_vec2 diff = nk_vec2_sub(p1, p0);
 
             /* vec2 inverted length  */
-            int len = nk_vec2_len_sqr(diff);
+            float len = nk_vec2_len_sqr(diff);
             if (len != 0.0f)
                 len = nk_inv_sqrt(len);
             else len = 1.0f;
@@ -10177,9 +10094,9 @@ nk_draw_list_fill_poly_convex(struct nk_draw_list *list,
             struct nk_vec2 n0 = normals[i0];
             struct nk_vec2 n1 = normals[i1];
             struct nk_vec2 dm = nk_vec2_muls(nk_vec2_add(n0, n1), 0.5f);
-            int dmr2 = dm.x*dm.x + dm.y*dm.y;
+            float dmr2 = dm.x*dm.x + dm.y*dm.y;
             if (dmr2 > 0.000001f) {
-                int scale = 1.0f / dmr2;
+                float scale = 1.0f / dmr2;
                 scale = NK_MIN(scale, 100.0f);
                 dm = nk_vec2_muls(dm, scale);
             }
@@ -10222,8 +10139,7 @@ nk_draw_list_fill_poly_convex(struct nk_draw_list *list,
 NK_API void
 nk_draw_list_path_clear(struct nk_draw_list *list)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_path_clear");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     nk_buffer_reset(list->buffer, NK_BUFFER_FRONT);
     list->path_count = 0;
@@ -10232,10 +10148,9 @@ nk_draw_list_path_clear(struct nk_draw_list *list)
 NK_API void
 nk_draw_list_path_line_to(struct nk_draw_list *list, struct nk_vec2 pos)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_path_line_to");
     struct nk_vec2 *points = 0;
     struct nk_draw_command *cmd = 0;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     if (!list->cmd_count)
         nk_draw_list_add_clip(list, nk_null_rect);
@@ -10250,28 +10165,26 @@ nk_draw_list_path_line_to(struct nk_draw_list *list, struct nk_vec2 pos)
 }
 NK_API void
 nk_draw_list_path_arc_to_fast(struct nk_draw_list *list, struct nk_vec2 center,
-    int radius, int a_min, int a_max)
+    float radius, int a_min, int a_max)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - radius, /     int");
     int a = 0;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     if (a_min <= a_max) {
         for (a = a_min; a <= a_max; a++) {
             const struct nk_vec2 c = list->circle_vtx[(nk_size)a % NK_LEN(list->circle_vtx)];
-            const int x = center.x + c.x * radius;
-            const int y = center.y + c.y * radius;
+            const float x = center.x + c.x * radius;
+            const float y = center.y + c.y * radius;
             nk_draw_list_path_line_to(list, nk_vec2(x, y));
         }
     }
 }
 NK_API void
 nk_draw_list_path_arc_to(struct nk_draw_list *list, struct nk_vec2 center,
-    int radius, int a_min, int a_max, unsigned int segments)
+    float radius, float a_min, float a_max, unsigned int segments)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - radius, /     int");
     unsigned int i = 0;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     if (radius == 0.0f) return;
 
@@ -10293,16 +10206,16 @@ nk_draw_list_path_arc_to(struct nk_draw_list *list, struct nk_vec2 center,
 
         [1] https://en.wikipedia.org/wiki/List_of_trigonometric_identities#Angle_sum_and_difference_identities
     */
-    {const int d_angle = (a_max - a_min) / (int)segments;
-    const int sin_d = (int)NK_SIN(d_angle);
-    const int cos_d = (int)NK_COS(d_angle);
+    {const float d_angle = (a_max - a_min) / (float)segments;
+    const float sin_d = (float)NK_SIN(d_angle);
+    const float cos_d = (float)NK_COS(d_angle);
 
-    int cx = (int)NK_COS(a_min) * radius;
-    int cy = (int)NK_SIN(a_min) * radius;
+    float cx = (float)NK_COS(a_min) * radius;
+    float cy = (float)NK_SIN(a_min) * radius;
     for(i = 0; i <= segments; ++i) {
-        int new_cx, new_cy;
-        const int x = center.x + cx;
-        const int y = center.y + cy;
+        float new_cx, new_cy;
+        const float x = center.x + cx;
+        const float y = center.y + cy;
         nk_draw_list_path_line_to(list, nk_vec2(x, y));
 
         new_cx = cx * cos_d - cy * sin_d;
@@ -10313,11 +10226,10 @@ nk_draw_list_path_arc_to(struct nk_draw_list *list, struct nk_vec2 center,
 }
 NK_API void
 nk_draw_list_path_rect_to(struct nk_draw_list *list, struct nk_vec2 a,
-    struct nk_vec2 b, int rounding)
+    struct nk_vec2 b, float rounding)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list_path_rect_to");
-    int r;
-    // NK_ASSERT(list);
+    float r;
+    NK_ASSERT(list);
     if (!list) return;
     r = rounding;
     r = NK_MIN(r, ((b.x-a.x) < 0) ? -(b.x-a.x): (b.x-a.x));
@@ -10339,36 +10251,34 @@ NK_API void
 nk_draw_list_path_curve_to(struct nk_draw_list *list, struct nk_vec2 p2,
     struct nk_vec2 p3, struct nk_vec2 p4, unsigned int num_segments)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - p3 /     struct");
-    int t_step;
+    float t_step;
     unsigned int i_step;
     struct nk_vec2 p1;
 
-    // NK_ASSERT(list);
-    // NK_ASSERT(list->path_count);
+    NK_ASSERT(list);
+    NK_ASSERT(list->path_count);
     if (!list || !list->path_count) return;
     num_segments = NK_MAX(num_segments, 1);
 
     p1 = nk_draw_list_path_last(list);
-    t_step = 1.0f/(int)num_segments;
+    t_step = 1.0f/(float)num_segments;
     for (i_step = 1; i_step <= num_segments; ++i_step) {
-        int t = t_step * (int)i_step;
-        int u = 1.0f - t;
-        int w1 = u*u*u;
-        int w2 = 3*u*u*t;
-        int w3 = 3*u*t*t;
-        int w4 = t * t *t;
-        int x = w1 * p1.x + w2 * p2.x + w3 * p3.x + w4 * p4.x;
-        int y = w1 * p1.y + w2 * p2.y + w3 * p3.y + w4 * p4.y;
+        float t = t_step * (float)i_step;
+        float u = 1.0f - t;
+        float w1 = u*u*u;
+        float w2 = 3*u*u*t;
+        float w3 = 3*u*t*t;
+        float w4 = t * t *t;
+        float x = w1 * p1.x + w2 * p2.x + w3 * p3.x + w4 * p4.x;
+        float y = w1 * p1.y + w2 * p2.y + w3 * p3.y + w4 * p4.y;
         nk_draw_list_path_line_to(list, nk_vec2(x,y));
     }
 }
 NK_API void
 nk_draw_list_path_fill(struct nk_draw_list *list, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list / nk_draw_list_path_fill");
     struct nk_vec2 *points;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     points = (struct nk_vec2*)nk_buffer_memory(list->buffer);
     nk_draw_list_fill_poly_convex(list, points, list->path_count, color, list->config.shape_AA);
@@ -10376,11 +10286,10 @@ nk_draw_list_path_fill(struct nk_draw_list *list, struct nk_color color)
 }
 NK_API void
 nk_draw_list_path_stroke(struct nk_draw_list *list, struct nk_color color,
-    enum nk_draw_list_stroke closed, int thickness)
+    enum nk_draw_list_stroke closed, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - closed /     enum");
     struct nk_vec2 *points;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     points = (struct nk_vec2*)nk_buffer_memory(list->buffer);
     nk_draw_list_stroke_poly_line(list, points, list->path_count, color,
@@ -10389,10 +10298,9 @@ nk_draw_list_path_stroke(struct nk_draw_list *list, struct nk_color color,
 }
 NK_API void
 nk_draw_list_stroke_line(struct nk_draw_list *list, struct nk_vec2 a,
-    struct nk_vec2 b, struct nk_color col, int thickness)
+    struct nk_vec2 b, struct nk_color col, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list_stroke_line");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
     if (list->line_AA == NK_ANTI_ALIASING_ON) {
         nk_draw_list_path_line_to(list, a);
@@ -10405,10 +10313,9 @@ nk_draw_list_stroke_line(struct nk_draw_list *list, struct nk_vec2 a,
 }
 NK_API void
 nk_draw_list_fill_rect(struct nk_draw_list *list, struct nk_rect rect,
-    struct nk_color col, int rounding)
+    struct nk_color col, float rounding)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - col /     struct");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
 
     if (list->line_AA == NK_ANTI_ALIASING_ON) {
@@ -10421,10 +10328,9 @@ nk_draw_list_fill_rect(struct nk_draw_list *list, struct nk_rect rect,
 }
 NK_API void
 nk_draw_list_stroke_rect(struct nk_draw_list *list, struct nk_rect rect,
-    struct nk_color col, int rounding, int thickness)
+    struct nk_color col, float rounding, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - col /     struct");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
     if (list->line_AA == NK_ANTI_ALIASING_ON) {
         nk_draw_list_path_rect_to(list, nk_vec2(rect.x, rect.y),
@@ -10439,7 +10345,6 @@ nk_draw_list_fill_rect_multi_color(struct nk_draw_list *list, struct nk_rect rec
     struct nk_color left, struct nk_color top, struct nk_color right,
     struct nk_color bottom)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - bottom /     struct");
     void *vtx;
     struct nk_colorf col_left, col_top;
     struct nk_colorf col_right, col_bottom;
@@ -10451,7 +10356,7 @@ nk_draw_list_fill_rect_multi_color(struct nk_draw_list *list, struct nk_rect rec
     nk_color_fv(&col_top.r, top);
     nk_color_fv(&col_bottom.r, bottom);
 
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
 
     nk_draw_list_push_image(list, list->config.null.texture);
@@ -10473,8 +10378,7 @@ NK_API void
 nk_draw_list_fill_triangle(struct nk_draw_list *list, struct nk_vec2 a,
     struct nk_vec2 b, struct nk_vec2 c, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list_fill_triangle");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
     nk_draw_list_path_line_to(list, a);
     nk_draw_list_path_line_to(list, b);
@@ -10483,10 +10387,9 @@ nk_draw_list_fill_triangle(struct nk_draw_list *list, struct nk_vec2 a,
 }
 NK_API void
 nk_draw_list_stroke_triangle(struct nk_draw_list *list, struct nk_vec2 a,
-    struct nk_vec2 b, struct nk_vec2 c, struct nk_color col, int thickness)
+    struct nk_vec2 b, struct nk_vec2 c, struct nk_color col, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_list_stroke_triangle");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
     nk_draw_list_path_line_to(list, a);
     nk_draw_list_path_line_to(list, b);
@@ -10495,35 +10398,32 @@ nk_draw_list_stroke_triangle(struct nk_draw_list *list, struct nk_vec2 a,
 }
 NK_API void
 nk_draw_list_fill_circle(struct nk_draw_list *list, struct nk_vec2 center,
-    int radius, struct nk_color col, unsigned int segs)
+    float radius, struct nk_color col, unsigned int segs)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - radius, /     int");
-    int a_max;
-    // NK_ASSERT(list);
+    float a_max;
+    NK_ASSERT(list);
     if (!list || !col.a) return;
-    a_max = NK_PI * 2.0f * ((int)segs - 1.0f) / (int)segs;
+    a_max = NK_PI * 2.0f * ((float)segs - 1.0f) / (float)segs;
     nk_draw_list_path_arc_to(list, center, radius, 0.0f, a_max, segs);
     nk_draw_list_path_fill(list, col);
 }
 NK_API void
 nk_draw_list_stroke_circle(struct nk_draw_list *list, struct nk_vec2 center,
-    int radius, struct nk_color col, unsigned int segs, int thickness)
+    float radius, struct nk_color col, unsigned int segs, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - radius, /     int");
-    int a_max;
-    // NK_ASSERT(list);
+    float a_max;
+    NK_ASSERT(list);
     if (!list || !col.a) return;
-    a_max = NK_PI * 2.0f * ((int)segs - 1.0f) / (int)segs;
+    a_max = NK_PI * 2.0f * ((float)segs - 1.0f) / (float)segs;
     nk_draw_list_path_arc_to(list, center, radius, 0.0f, a_max, segs);
     nk_draw_list_path_stroke(list, col, NK_STROKE_CLOSED, thickness);
 }
 NK_API void
 nk_draw_list_stroke_curve(struct nk_draw_list *list, struct nk_vec2 p0,
     struct nk_vec2 cp0, struct nk_vec2 cp1, struct nk_vec2 p1,
-    struct nk_color col, unsigned int segments, int thickness)
+    struct nk_color col, unsigned int segments, float thickness)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - col /     struct");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !col.a) return;
     nk_draw_list_path_line_to(list, p0);
     nk_draw_list_path_curve_to(list, cp0, cp1, p1, segments);
@@ -10534,7 +10434,6 @@ nk_draw_list_push_rect_uv(struct nk_draw_list *list, struct nk_vec2 a,
     struct nk_vec2 c, struct nk_vec2 uva, struct nk_vec2 uvc,
     struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
     void *vtx;
     struct nk_vec2 uvb;
     struct nk_vec2 uvd;
@@ -10544,7 +10443,7 @@ nk_draw_list_push_rect_uv(struct nk_draw_list *list, struct nk_vec2 a,
     struct nk_colorf col;
     nk_draw_index *idx;
     nk_draw_index index;
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
 
     nk_color_fv(&col.r, color);
@@ -10571,18 +10470,17 @@ NK_API void
 nk_draw_list_add_image(struct nk_draw_list *list, struct nk_image texture,
     struct nk_rect rect, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - rect /     struct");
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list) return;
     /* push new command with given texture */
     nk_draw_list_push_image(list, texture.handle);
     if (nk_image_is_subimage(&texture)) {
         /* add region inside of the texture  */
         struct nk_vec2 uv[2];
-        uv[0].x = (int)texture.region[0]/(int)texture.w;
-        uv[0].y = (int)texture.region[1]/(int)texture.h;
-        uv[1].x = (int)(texture.region[0] + texture.region[2])/(int)texture.w;
-        uv[1].y = (int)(texture.region[1] + texture.region[3])/(int)texture.h;
+        uv[0].x = (float)texture.region[0]/(float)texture.w;
+        uv[0].y = (float)texture.region[1]/(float)texture.h;
+        uv[1].x = (float)(texture.region[0] + texture.region[2])/(float)texture.w;
+        uv[1].y = (float)(texture.region[1] + texture.region[3])/(float)texture.h;
         nk_draw_list_push_rect_uv(list, nk_vec2(rect.x, rect.y),
             nk_vec2(rect.x + rect.w, rect.y + rect.h),  uv[0], uv[1], color);
     } else nk_draw_list_push_rect_uv(list, nk_vec2(rect.x, rect.y),
@@ -10591,11 +10489,10 @@ nk_draw_list_add_image(struct nk_draw_list *list, struct nk_image texture,
 }
 NK_API void
 nk_draw_list_add_text(struct nk_draw_list *list, const struct nk_user_font *font,
-    struct nk_rect rect, const char *text, int len, int font_height,
+    struct nk_rect rect, const char *text, int len, float font_height,
     struct nk_color fg)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fg /     struct");
-    int x = 0;
+    float x = 0;
     int text_len = 0;
     nk_rune unicode = 0;
     nk_rune next = 0;
@@ -10603,7 +10500,7 @@ nk_draw_list_add_text(struct nk_draw_list *list, const struct nk_user_font *font
     int next_glyph_len = 0;
     struct nk_user_font_glyph g;
 
-    // NK_ASSERT(list);
+    NK_ASSERT(list);
     if (!list || !len || !text) return;
     if (!NK_INTERSECT(rect.x, rect.y, rect.w, rect.h,
         list->clip_rect.x, list->clip_rect.y, list->clip_rect.w, list->clip_rect.h)) return;
@@ -10614,11 +10511,10 @@ nk_draw_list_add_text(struct nk_draw_list *list, const struct nk_user_font *font
     if (!glyph_len) return;
 
     /* draw every glyph image */
-    fg.a = (nk_byte)((int)fg.a * list->config.global_alpha);
-    //writeSerialPort(boutRefNum, "nk_draw_list_add_text");
+    fg.a = (nk_byte)((float)fg.a * list->config.global_alpha);
     while (text_len < len && glyph_len) {
-        int gx, gy, gh, gw;
-        int char_width = 0;
+        float gx, gy, gh, gw;
+        float char_width = 0;
         if (unicode == NK_UTF_INVALID) break;
 
         /* query currently drawn glyph information */
@@ -10646,16 +10542,15 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
     struct nk_buffer *vertices, struct nk_buffer *elements,
     const struct nk_convert_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_convert_config /     const");
     nk_flags res = NK_CONVERT_SUCCESS;
     const struct nk_command *cmd;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(cmds);
-    // NK_ASSERT(vertices);
-    // NK_ASSERT(elements);
-    // NK_ASSERT(config);
-    // NK_ASSERT(config->vertex_layout);
-    // NK_ASSERT(config->vertex_size);
+    NK_ASSERT(ctx);
+    NK_ASSERT(cmds);
+    NK_ASSERT(vertices);
+    NK_ASSERT(elements);
+    NK_ASSERT(config);
+    NK_ASSERT(config->vertex_layout);
+    NK_ASSERT(config->vertex_size);
     if (!ctx || !cmds || !vertices || !elements || !config || !config->vertex_layout)
         return NK_CONVERT_INVALID_PARAM;
 
@@ -10687,12 +10582,12 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
         case NK_COMMAND_RECT: {
             const struct nk_command_rect *r = (const struct nk_command_rect*)cmd;
             nk_draw_list_stroke_rect(&ctx->draw_list, nk_rect(r->x, r->y, r->w, r->h),
-                r->color, (int)r->rounding, r->line_thickness);
+                r->color, (float)r->rounding, r->line_thickness);
         } break;
         case NK_COMMAND_RECT_FILLED: {
             const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled*)cmd;
             nk_draw_list_fill_rect(&ctx->draw_list, nk_rect(r->x, r->y, r->w, r->h),
-                r->color, (int)r->rounding);
+                r->color, (float)r->rounding);
         } break;
         case NK_COMMAND_RECT_MULTI_COLOR: {
             const struct nk_command_rect_multi_color *r = (const struct nk_command_rect_multi_color*)cmd;
@@ -10701,14 +10596,14 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
         } break;
         case NK_COMMAND_CIRCLE: {
             const struct nk_command_circle *c = (const struct nk_command_circle*)cmd;
-            nk_draw_list_stroke_circle(&ctx->draw_list, nk_vec2((int)c->x + (int)c->w/2,
-                (int)c->y + (int)c->h/2), (int)c->w/2, c->color,
+            nk_draw_list_stroke_circle(&ctx->draw_list, nk_vec2((float)c->x + (float)c->w/2,
+                (float)c->y + (float)c->h/2), (float)c->w/2, c->color,
                 config->circle_segment_count, c->line_thickness);
         } break;
         case NK_COMMAND_CIRCLE_FILLED: {
             const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
-            nk_draw_list_fill_circle(&ctx->draw_list, nk_vec2((int)c->x + (int)c->w/2,
-                (int)c->y + (int)c->h/2), (int)c->w/2, c->color,
+            nk_draw_list_fill_circle(&ctx->draw_list, nk_vec2((float)c->x + (float)c->w/2,
+                (float)c->y + (float)c->h/2), (float)c->w/2, c->color,
                 config->circle_segment_count);
         } break;
         case NK_COMMAND_ARC: {
@@ -10740,7 +10635,7 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
             int i;
             const struct nk_command_polygon*p = (const struct nk_command_polygon*)cmd;
             for (i = 0; i < p->point_count; ++i) {
-                struct nk_vec2 pnt = nk_vec2((int)p->points[i].x, (int)p->points[i].y);
+                struct nk_vec2 pnt = nk_vec2((float)p->points[i].x, (float)p->points[i].y);
                 nk_draw_list_path_line_to(&ctx->draw_list, pnt);
             }
             nk_draw_list_path_stroke(&ctx->draw_list, p->color, NK_STROKE_CLOSED, p->line_thickness);
@@ -10749,7 +10644,7 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
             int i;
             const struct nk_command_polygon_filled *p = (const struct nk_command_polygon_filled*)cmd;
             for (i = 0; i < p->point_count; ++i) {
-                struct nk_vec2 pnt = nk_vec2((int)p->points[i].x, (int)p->points[i].y);
+                struct nk_vec2 pnt = nk_vec2((float)p->points[i].x, (float)p->points[i].y);
                 nk_draw_list_path_line_to(&ctx->draw_list, pnt);
             }
             nk_draw_list_path_fill(&ctx->draw_list, p->color);
@@ -10758,7 +10653,7 @@ nk_convert(struct nk_context *ctx, struct nk_buffer *cmds,
             int i;
             const struct nk_command_polyline *p = (const struct nk_command_polyline*)cmd;
             for (i = 0; i < p->point_count; ++i) {
-                struct nk_vec2 pnt = nk_vec2((int)p->points[i].x, (int)p->points[i].y);
+                struct nk_vec2 pnt = nk_vec2((float)p->points[i].x, (float)p->points[i].y);
                 nk_draw_list_path_line_to(&ctx->draw_list, pnt);
             }
             nk_draw_list_path_stroke(&ctx->draw_list, p->color, NK_STROKE_OPEN, p->line_thickness);
@@ -10788,20 +10683,17 @@ NK_API const struct nk_draw_command*
 nk__draw_begin(const struct nk_context *ctx,
     const struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer /     const");
     return nk__draw_list_begin(&ctx->draw_list, buffer);
 }
 NK_API const struct nk_draw_command*
 nk__draw_end(const struct nk_context *ctx, const struct nk_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk__draw_end");
     return nk__draw_list_end(&ctx->draw_list, buffer);
 }
 NK_API const struct nk_draw_command*
 nk__draw_next(const struct nk_draw_command *cmd,
     const struct nk_buffer *buffer, const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_buffer /     const");
     return nk__draw_list_next(cmd, buffer, &ctx->draw_list);
 }
 #endif
@@ -11029,7 +10921,6 @@ enum
 
 STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, int heuristic)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_setup_heuristic / STBRP_DEF");
    switch (context->init_mode) {
       case STBRP__INIT_skyline:
          STBRP_ASSERT(heuristic == STBRP_HEURISTIC_Skyline_BL_sortHeight || heuristic == STBRP_HEURISTIC_Skyline_BF_sortHeight);
@@ -11042,7 +10933,6 @@ STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, int heuristic)
 
 STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, int allow_out_of_mem)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_setup_allow_out_of_mem / STBRP_DEF");
    if (allow_out_of_mem)
       /*  if it's ok to run out of memory, then don't bother aligning them; */
       /*  this gives better packing, but may fail due to OOM (even though */
@@ -11063,7 +10953,6 @@ STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, int allow_ou
 
 STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, stbrp_node *nodes, int num_nodes)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_init_target / STBRP_DEF");
    int i;
 #ifndef STBRP_LARGE_RECTS
    STBRP_ASSERT(width <= 0xffff && height <= 0xffff);
@@ -11097,7 +10986,6 @@ STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, 
 /*  find minimum y position if it starts at x1 */
 static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0, int width, int *pwaste)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp__skyline_find_min_y / static");
    stbrp_node *node = first;
    int x1 = x0 + width;
    int min_y, visited_width, waste_area;
@@ -11119,7 +11007,6 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
    min_y = 0;
    waste_area = 0;
    visited_width = 0;
-    //writeSerialPort(boutRefNum, "stbrp__skyline_find_min_y");
    while (node->x < x1) {
       if (node->y > min_y) {
          /*  raise min_y higher. */
@@ -11155,8 +11042,6 @@ typedef struct
 
 static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int width, int height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp__skyline_find_best_pos / static");
-    //writeSerialPort(boutRefNum, "stbrp__skyline_find_best_pos");
    int best_waste = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
    stbrp_node **prev, *node, *tail, **best = NULL;
@@ -11175,8 +11060,6 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
 
    node = c->active_head;
    prev = &c->active_head;
-
-    //writeSerialPort(boutRefNum, "stbrp__skyline_find_best_pos");
    while (node->x + width <= c->width) {
       int y,waste;
       y = stbrp__skyline_find_min_y(c, node, node->x, width, &waste);
@@ -11261,7 +11144,6 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
 
 static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, int width, int height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp__skyline_pack_rectangle / static");
    /*  find best position according to heuristic */
    stbrp__findresult res = stbrp__skyline_find_best_pos(context, width, height);
    stbrp_node *node, *cur;
@@ -11296,7 +11178,6 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
       *res.prev_link = node;
    }
 
-    //writeSerialPort(boutRefNum, "stbrp__skyline_pack_rectangle");
    /*  from here, traverse cur and free the nodes, until we get to one */
    /*  that shouldn't be freed */
    while (cur->next && cur->next->x <= res.x + width) {
@@ -11342,7 +11223,6 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
 
 static int rect_height_compare(const void *a, const void *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - rect_height_compare / static");
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
    if (p->h > q->h)
@@ -11354,7 +11234,6 @@ static int rect_height_compare(const void *a, const void *b)
 
 static int rect_original_order(const void *a, const void *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - rect_original_order / static");
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
    return (p->was_packed < q->was_packed) ? -1 : (p->was_packed > q->was_packed);
@@ -11368,7 +11247,6 @@ static int rect_original_order(const void *a, const void *b)
 
 STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int num_rects)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_pack_rects / STBRP_DEF");
    int i, all_rects_packed = 1;
 
    /*  we use the 'was_packed' field internally to allow sorting/unsorting */
@@ -11736,7 +11614,6 @@ GLuint ftex;
 
 void my_stbtt_initfont(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void / void");
    fread(ttf_buffer, 1, 1<<20, fopen("c:/windows/fonts/times.ttf", "rb"));
    stbtt_BakeFontBitmap(ttf_buffer,0, 32.0, temp_bitmap,512,512, 32,96, cdata); /*  no guarantee this fits! */
    /*  can free ttf_buffer at this point */
@@ -11747,9 +11624,8 @@ void my_stbtt_initfont(void)
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
-void my_stbtt_print(int x, int y, char *text)
+void my_stbtt_print(float x, float y, char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / void");
    /*  assume orthographic projection with units = screen pixels, origin at top left */
    glEnable(GL_TEXTURE_2D);
    glBindTexture(GL_TEXTURE_2D, ftex);
@@ -11783,7 +11659,6 @@ char ttf_buffer[1<<25];
 
 int main(int argc, char **argv)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / int");
    stbtt_fontinfo font;
    unsigned char *bitmap;
    int w,h,i,j,c = (argc > 1 ? atoi(argv[1]) : 'a'), s = (argc > 2 ? atoi(argv[2]) : 20);
@@ -11825,10 +11700,9 @@ unsigned char screen[20][79];
 
 int main(int arg, char **argv)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / int");
    stbtt_fontinfo font;
    int i,j,ascent,baseline,ch=0;
-   int scale, xpos=2; /*  leave a little padding in case the character extends left */
+   float scale, xpos=2; /*  leave a little padding in case the character extends left */
    char *text = "Heljo World!"; /*  intentionally misspelled to show 'lj' brokenness */
 
    fread(buffer, 1, 1000000, fopen("c:/windows/fonts/arialbd.ttf", "rb"));
@@ -11840,7 +11714,7 @@ int main(int arg, char **argv)
 
    while (text[ch]) {
       int advance,lsb,x0,y0,x1,y1;
-      int x_shift = xpos - (int) floor(xpos);
+      float x_shift = xpos - (float) floor(xpos);
       stbtt_GetCodepointHMetrics(&font, text[ch], &advance, &lsb);
       stbtt_GetCodepointBitmapBoxSubpixel(&font, text[ch], scale,scale,x_shift,0, &x0,&y0,&x1,&y1);
       stbtt_MakeCodepointBitmapSubpixel(&font, &screen[baseline + y0][(int) xpos + x0], x1-x0,y1-y0, 79, scale,scale,x_shift,0, text[ch]);
@@ -11979,11 +11853,11 @@ typedef struct
 typedef struct
 {
    unsigned short x0,y0,x1,y1; /*  coordinates of bbox in bitmap */
-   int xoff,yoff,xadvance;
+   float xoff,yoff,xadvance;
 } stbtt_bakedchar;
 
 STBTT_DEF int stbtt_BakeFontBitmap(const unsigned char *data, int offset,  /*  font location (use offset=0 for plain .ttf) */
-                                int pixel_height,                     /*  height of font in pixels */
+                                float pixel_height,                     /*  height of font in pixels */
                                 unsigned char *pixels, int pw, int ph,  /*  bitmap to be filled in */
                                 int first_char, int num_chars,          /*  characters to bake */
                                 stbtt_bakedchar *chardata);             /*  you allocate this, it's num_chars long */
@@ -11994,13 +11868,13 @@ STBTT_DEF int stbtt_BakeFontBitmap(const unsigned char *data, int offset,  /*  f
 
 typedef struct
 {
-   int x0,y0,s0,t0; /*  top-left */
-   int x1,y1,s1,t1; /*  bottom-right */
+   float x0,y0,s0,t0; /*  top-left */
+   float x1,y1,s1,t1; /*  bottom-right */
 } stbtt_aligned_quad;
 
 STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph,  /*  same data as above */
                                int char_index,             /*  character to display */
-                               int *xpos, int *ypos,   /*  pointers to current position in screen pixel space */
+                               float *xpos, float *ypos,   /*  pointers to current position in screen pixel space */
                                stbtt_aligned_quad *q,      /*  output: quad to draw */
                                int opengl_fillrule);       /*  true if opengl fill rule; false if DX9 or earlier */
 /*  Call GetBakedQuad with char_index = 'character - first_char', and it */
@@ -12013,7 +11887,7 @@ STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int p
 /*  */
 /*  It's inefficient; you might want to c&p it and optimize it. */
 
-STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int index, int size, int *ascent, int *descent, int *lineGap);
+STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int index, float size, float *ascent, float *descent, float *lineGap);
 /*  Query the font vertical metrics without having to create a font first. */
 
 
@@ -12027,8 +11901,8 @@ STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int in
 typedef struct
 {
    unsigned short x0,y0,x1,y1; /*  coordinates of bbox in bitmap */
-   int xoff,yoff,xadvance;
-   int xoff2,yoff2;
+   float xoff,yoff,xadvance;
+   float xoff2,yoff2;
 } stbtt_packedchar;
 
 typedef struct stbtt_pack_context stbtt_pack_context;
@@ -12053,7 +11927,7 @@ STBTT_DEF void stbtt_PackEnd  (stbtt_pack_context *spc);
 
 #define STBTT_POINT_SIZE(x)   (-(x))
 
-STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, int font_size,
+STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, float font_size,
                                 int first_unicode_char_in_range, int num_chars_in_range, stbtt_packedchar *chardata_for_range);
 /*  Creates character bitmaps from the font_index'th font found in fontdata (use */
 /*  font_index=0 if you don't know what that is). It creates num_chars_in_range */
@@ -12070,7 +11944,7 @@ STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char 
 
 typedef struct
 {
-   int font_size;
+   float font_size;
    int first_unicode_codepoint_in_range;  /*  if non-zero, then the chars are continuous, and this is the first codepoint */
    int *array_of_unicode_codepoints;       /*  if non-zero, then this is an array of unicode codepoints */
    int num_chars;
@@ -12108,7 +11982,7 @@ STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, int s
 
 STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph,  /*  same data as above */
                                int char_index,             /*  character to display */
-                               int *xpos, int *ypos,   /*  pointers to current position in screen pixel space */
+                               float *xpos, float *ypos,   /*  pointers to current position in screen pixel space */
                                stbtt_aligned_quad *q,      /*  output: quad to draw */
                                int align_to_integer);
 
@@ -12207,7 +12081,7 @@ STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codep
 /*  CHARACTER PROPERTIES */
 /*  */
 
-STBTT_DEF int stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, int pixels);
+STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, float pixels);
 /*  computes a scale factor to produce a font whose "height" is 'pixels' tall. */
 /*  Height is measured as the distance from the highest ascender to the lowest */
 /*  descender; in other words, it's equivalent to calling stbtt_GetFontVMetrics */
@@ -12215,7 +12089,7 @@ STBTT_DEF int stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, int pixels);
 /*        scale = pixels / (ascent - descent) */
 /*  so if you prefer to measure height by the ascent only, use a similar calculation. */
 
-STBTT_DEF int stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, int pixels);
+STBTT_DEF float stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, float pixels);
 /*  computes a scale factor to produce a font whose EM size is mapped to */
 /*  'pixels' tall. This is probably what traditional APIs compute, but */
 /*  I'm not positive. */
@@ -12322,7 +12196,7 @@ STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, int gl, const char *
 STBTT_DEF void stbtt_FreeBitmap(unsigned char *bitmap, void *userdata);
 /*  frees the bitmap allocated below */
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, int scale_x, int scale_y, int codepoint, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y, int codepoint, int *width, int *height, int *xoff, int *yoff);
 /*  allocates a large-enough single-channel 8bpp bitmap and renders the */
 /*  specified character/glyph at the specified scale into it, with */
 /*  antialiasing. 0 is no coverage (transparent), 255 is fully covered (opaque). */
@@ -12331,44 +12205,44 @@ STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, in
 /*  */
 /*  xoff/yoff are the offset it pixel space from the glyph origin to the top-left of the bitmap */
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, int scale_x, int scale_y, int shift_x, int shift_y, int codepoint, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y, float shift_x, float shift_y, int codepoint, int *width, int *height, int *xoff, int *yoff);
 /*  the same as stbtt_GetCodepoitnBitmap, but you can specify a subpixel */
 /*  shift for the character */
 
-STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int codepoint);
+STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, int codepoint);
 /*  the same as stbtt_GetCodepointBitmap, but you pass in storage for the bitmap */
 /*  in the form of 'output', with row spacing of 'out_stride' bytes. the bitmap */
 /*  is clipped to out_w/out_h bytes. Call stbtt_GetCodepointBitmapBox to get the */
 /*  width and height and positioning info for it first. */
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int codepoint);
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int codepoint);
 /*  same as stbtt_MakeCodepointBitmap, but you can specify a subpixel */
 /*  shift for the character */
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int oversample_x, int oversample_y, int *sub_x, int *sub_y, int codepoint);
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int oversample_x, int oversample_y, float *sub_x, float *sub_y, int codepoint);
 /*  same as stbtt_MakeCodepointBitmapSubpixel, but prefiltering */
 /*  is performed (see stbtt_PackSetOversampling) */
 
-STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codepoint, int scale_x, int scale_y, int *ix0, int *iy0, int *ix1, int *iy1);
+STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y, int *ix0, int *iy0, int *ix1, int *iy1);
 /*  get the bbox of the bitmap centered around the glyph origin; so the */
 /*  bitmap width is ix1-ix0, height is iy1-iy0, and location to place */
 /*  the bitmap top left is (leftSideBearing*scale,iy0). */
 /*  (Note that the bitmap uses y-increases-down, but the shape uses */
 /*  y-increases-up, so CodepointBitmapBox and CodepointBox are inverted.) */
 
-STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, int scale_x, int scale_y, int shift_x, int shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
+STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y, float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
 /*  same as stbtt_GetCodepointBitmapBox, but you can specify a subpixel */
 /*  shift for the character */
 
 /*  the following functions are equivalent to the above functions, but operate */
 /*  on glyph indices instead of Unicode codepoints (for efficiency) */
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, int scale_x, int scale_y, int glyph, int *width, int *height, int *xoff, int *yoff);
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, int scale_x, int scale_y, int shift_x, int shift_y, int glyph, int *width, int *height, int *xoff, int *yoff);
-STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int glyph);
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int glyph);
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int oversample_x, int oversample_y, int *sub_x, int *sub_y, int glyph);
-STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, int glyph, int scale_x, int scale_y, int *ix0, int *iy0, int *ix1, int *iy1);
-STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int glyph, int scale_x, int scale_y,int shift_x, int shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y, int glyph, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y, float shift_x, float shift_y, int glyph, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, int glyph);
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int glyph);
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int oversample_x, int oversample_y, float *sub_x, float *sub_y, int glyph);
+STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y, int *ix0, int *iy0, int *ix1, int *iy1);
+STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y,float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
 
 
 /*  @TODO: don't expose this structure */
@@ -12380,11 +12254,11 @@ typedef struct
 
 /*  rasterize a shape with quadratic beziers into a bitmap */
 STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result,        /*  1-channel bitmap to draw into */
-                               int flatness_in_pixels,     /*  allowable error of curve in pixels */
+                               float flatness_in_pixels,     /*  allowable error of curve in pixels */
                                stbtt_vertex *vertices,       /*  array of vertices defining shape */
                                int num_verts,                /*  number of vertices in above array */
-                               int scale_x, int scale_y, /*  scale applied to input vertices */
-                               int shift_x, int shift_y, /*  translation applied to input vertices */
+                               float scale_x, float scale_y, /*  scale applied to input vertices */
+                               float shift_x, float shift_y, /*  translation applied to input vertices */
                                int x_off, int y_off,         /*  another translation applied to input */
                                int invert,                   /*  if non-zero, vertically flip shape */
                                void *userdata);              /*  context for to STBTT_MALLOC */
@@ -12396,8 +12270,8 @@ STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result,        /*  1-channel bitma
 STBTT_DEF void stbtt_FreeSDF(unsigned char *bitmap, void *userdata);
 /*  frees the SDF bitmap allocated below */
 
-STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scale, int glyph, int padding, unsigned char onedge_value, int pixel_dist_scale, int *width, int *height, int *xoff, int *yoff);
-STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, int scale, int codepoint, int padding, unsigned char onedge_value, int pixel_dist_scale, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float scale, int glyph, int padding, unsigned char onedge_value, float pixel_dist_scale, int *width, int *height, int *xoff, int *yoff);
+STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, float scale, int codepoint, int padding, unsigned char onedge_value, float pixel_dist_scale, int *width, int *height, int *xoff, int *yoff);
 /*  These functions compute a discretized SDF field for a single character, suitable for storing */
 /*  in a single-channel texture, sampling with bilinear filtering, and testing against */
 /*  larger than some threshold to produce scalable fonts. */
@@ -12583,7 +12457,6 @@ typedef int stbtt__test_oversample_pow2[(STBTT_MAX_OVERSAMPLE & (STBTT_MAX_OVERS
 
 static stbtt_uint8 stbtt__buf_get8(stbtt__buf *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_get8 / static");
    if (b->cursor >= b->size)
       return 0;
    return b->data[b->cursor++];
@@ -12591,7 +12464,6 @@ static stbtt_uint8 stbtt__buf_get8(stbtt__buf *b)
 
 static stbtt_uint8 stbtt__buf_peek8(stbtt__buf *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_peek8 / static");
    if (b->cursor >= b->size)
       return 0;
    return b->data[b->cursor];
@@ -12599,20 +12471,17 @@ static stbtt_uint8 stbtt__buf_peek8(stbtt__buf *b)
 
 static void stbtt__buf_seek(stbtt__buf *b, int o)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_seek / static");
    STBTT_assert(!(o > b->size || o < 0));
    b->cursor = (o > b->size || o < 0) ? b->size : o;
 }
 
 static void stbtt__buf_skip(stbtt__buf *b, int o)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_skip / static");
    stbtt__buf_seek(b, b->cursor + o);
 }
 
 static stbtt_uint32 stbtt__buf_get(stbtt__buf *b, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_get / static");
    stbtt_uint32 v = 0;
    int i;
    STBTT_assert(n >= 1 && n <= 4);
@@ -12623,7 +12492,6 @@ static stbtt_uint32 stbtt__buf_get(stbtt__buf *b, int n)
 
 static stbtt__buf stbtt__new_buf(const void *p, size_t size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__new_buf / static");
    stbtt__buf r;
    STBTT_assert(size < 0x40000000);
    r.data = (stbtt_uint8*) p;
@@ -12637,7 +12505,6 @@ static stbtt__buf stbtt__new_buf(const void *p, size_t size)
 
 static stbtt__buf stbtt__buf_range(const stbtt__buf *b, int o, int s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__buf_range / static");
    stbtt__buf r = stbtt__new_buf(NULL, 0);
    if (o < 0 || s < 0 || o > b->size || s > b->size - o) return r;
    r.data = b->data + o;
@@ -12647,7 +12514,6 @@ static stbtt__buf stbtt__buf_range(const stbtt__buf *b, int o, int s)
 
 static stbtt__buf stbtt__cff_get_index(stbtt__buf *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cff_get_index / static");
    int count, start, offsize;
    start = b->cursor;
    count = stbtt__buf_get16(b);
@@ -12662,7 +12528,6 @@ static stbtt__buf stbtt__cff_get_index(stbtt__buf *b)
 
 static stbtt_uint32 stbtt__cff_int(stbtt__buf *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cff_int / static");
    int b0 = stbtt__buf_get8(b);
    if (b0 >= 32 && b0 <= 246)       return b0 - 139;
    else if (b0 >= 247 && b0 <= 250) return (b0 - 247)*256 + stbtt__buf_get8(b) + 108;
@@ -12674,7 +12539,6 @@ static stbtt_uint32 stbtt__cff_int(stbtt__buf *b)
 }
 
 static void stbtt__cff_skip_operand(stbtt__buf *b) {
-    //writeSerialPort(boutRefNum, "stbtt__cff_skip_operand");
    int v, b0 = stbtt__buf_peek8(b);
    STBTT_assert(b0 >= 28);
    if (b0 == 30) {
@@ -12691,8 +12555,6 @@ static void stbtt__cff_skip_operand(stbtt__buf *b) {
 
 static stbtt__buf stbtt__dict_get(stbtt__buf *b, int key)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__dict_get / static");
-    //writeSerialPort(boutRefNum, "stbtt__dict_get");
    stbtt__buf_seek(b, 0);
    while (b->cursor < b->size) {
       int start = b->cursor, end, op;
@@ -12708,7 +12570,6 @@ static stbtt__buf stbtt__dict_get(stbtt__buf *b, int key)
 
 static void stbtt__dict_get_ints(stbtt__buf *b, int key, int outcount, stbtt_uint32 *out)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__dict_get_ints / static");
    int i;
    stbtt__buf operands = stbtt__dict_get(b, key);
    for (i = 0; i < outcount && operands.cursor < operands.size; i++)
@@ -12717,14 +12578,12 @@ static void stbtt__dict_get_ints(stbtt__buf *b, int key, int outcount, stbtt_uin
 
 static int stbtt__cff_index_count(stbtt__buf *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cff_index_count / static");
    stbtt__buf_seek(b, 0);
    return stbtt__buf_get16(b);
 }
 
 static stbtt__buf stbtt__cff_index_get(stbtt__buf b, int i)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cff_index_get / static");
    int count, offsize, start, end;
    stbtt__buf_seek(&b, 0);
    count = stbtt__buf_get16(&b);
@@ -12759,7 +12618,6 @@ static stbtt_int32 ttLONG(stbtt_uint8 *p)    { return (p[0]<<24) + (p[1]<<16) + 
 
 static int stbtt__isfont(stbtt_uint8 *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__isfont / static");
    /*  check the version number */
    if (stbtt_tag4(font, '1',0,0,0))  return 1; /*  TrueType 1 */
    if (stbtt_tag(font, "typ1"))   return 1; /*  TrueType with type 1 font -- we don't support this! */
@@ -12772,7 +12630,6 @@ static int stbtt__isfont(stbtt_uint8 *font)
 /*  @OPTIMIZE: binary search */
 static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart, const char *tag)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__find_table / static");
    stbtt_int32 num_tables = ttUSHORT(data+fontstart+4);
    stbtt_uint32 tabledir = fontstart + 12;
    stbtt_int32 i;
@@ -12786,7 +12643,6 @@ static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart,
 
 static int stbtt_GetFontOffsetForIndex_internal(unsigned char *font_collection, int index)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetFontOffsetForIndex_internal / static");
    /*  if it's just a font, there's only one valid index */
    if (stbtt__isfont(font_collection))
       return index == 0 ? 0 : -1;
@@ -12806,7 +12662,6 @@ static int stbtt_GetFontOffsetForIndex_internal(unsigned char *font_collection, 
 
 static int stbtt_GetNumberOfFonts_internal(unsigned char *font_collection)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetNumberOfFonts_internal / static");
    /*  if it's just a font, there's only one valid font */
    if (stbtt__isfont(font_collection))
       return 1;
@@ -12823,7 +12678,6 @@ static int stbtt_GetNumberOfFonts_internal(unsigned char *font_collection)
 
 static stbtt__buf stbtt__get_subrs(stbtt__buf cff, stbtt__buf fontdict)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__get_subrs / static");
    stbtt_uint32 subrsoff = 0, private_loc[2] = { 0, 0 };
    stbtt__buf pdict;
    stbtt__dict_get_ints(&fontdict, 18, 2, private_loc);
@@ -12838,7 +12692,6 @@ static stbtt__buf stbtt__get_subrs(stbtt__buf cff, stbtt__buf fontdict)
 /*  since most people won't use this, find this table the first time it's needed */
 static int stbtt__get_svg(stbtt_fontinfo *info)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__get_svg / static");
    stbtt_uint32 t;
    if (info->svg < 0) {
       t = stbtt__find_table(info->data, info->fontstart, "SVG ");
@@ -12854,7 +12707,6 @@ static int stbtt__get_svg(stbtt_fontinfo *info)
 
 static int stbtt_InitFont_internal(stbtt_fontinfo *info, unsigned char *data, int fontstart)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_InitFont_internal / static");
    stbtt_uint32 cmap, t;
    stbtt_int32 i,numTables;
 
@@ -12968,9 +12820,6 @@ static int stbtt_InitFont_internal(stbtt_fontinfo *info, unsigned char *data, in
 
 STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codepoint)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FindGlyphIndex / STBTT_DEF");
-
-    //writeSerialPort(boutRefNum, "stbtt_FindGlyphIndex");
    stbtt_uint8 *data = info->data;
    stbtt_uint32 index_map = info->index_map;
 
@@ -13064,13 +12913,11 @@ STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codep
 
 STBTT_DEF int stbtt_GetCodepointShape(const stbtt_fontinfo *info, int unicode_codepoint, stbtt_vertex **vertices)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointShape / STBTT_DEF");
    return stbtt_GetGlyphShape(info, stbtt_FindGlyphIndex(info, unicode_codepoint), vertices);
 }
 
 static void stbtt_setvertex(stbtt_vertex *v, stbtt_uint8 type, stbtt_int32 x, stbtt_int32 y, stbtt_int32 cx, stbtt_int32 cy)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_setvertex / static");
    v->type = type;
    v->x = (stbtt_int16) x;
    v->y = (stbtt_int16) y;
@@ -13080,7 +12927,6 @@ static void stbtt_setvertex(stbtt_vertex *v, stbtt_uint8 type, stbtt_int32 x, st
 
 static int stbtt__GetGlyfOffset(const stbtt_fontinfo *info, int glyph_index)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyfOffset / static");
    int g1,g2;
 
    STBTT_assert(!info->cff.size);
@@ -13103,7 +12949,6 @@ static int stbtt__GetGlyphInfoT2(const stbtt_fontinfo *info, int glyph_index, in
 
 STBTT_DEF int stbtt_GetGlyphBox(const stbtt_fontinfo *info, int glyph_index, int *x0, int *y0, int *x1, int *y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphBox / STBTT_DEF");
    if (info->cff.size) {
       stbtt__GetGlyphInfoT2(info, glyph_index, x0, y0, x1, y1);
    } else {
@@ -13120,13 +12965,11 @@ STBTT_DEF int stbtt_GetGlyphBox(const stbtt_fontinfo *info, int glyph_index, int
 
 STBTT_DEF int stbtt_GetCodepointBox(const stbtt_fontinfo *info, int codepoint, int *x0, int *y0, int *x1, int *y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointBox / STBTT_DEF");
    return stbtt_GetGlyphBox(info, stbtt_FindGlyphIndex(info,codepoint), x0,y0,x1,y1);
 }
 
 STBTT_DEF int stbtt_IsGlyphEmpty(const stbtt_fontinfo *info, int glyph_index)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_IsGlyphEmpty / STBTT_DEF");
    stbtt_int16 numberOfContours;
    int g;
    if (info->cff.size)
@@ -13140,7 +12983,6 @@ STBTT_DEF int stbtt_IsGlyphEmpty(const stbtt_fontinfo *info, int glyph_index)
 static int stbtt__close_shape(stbtt_vertex *vertices, int num_vertices, int was_off, int start_off,
     stbtt_int32 sx, stbtt_int32 sy, stbtt_int32 scx, stbtt_int32 scy, stbtt_int32 cx, stbtt_int32 cy)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - sx, /     stbtt_int32");
    if (start_off) {
       if (was_off)
          stbtt_setvertex(&vertices[num_vertices++], STBTT_vcurve, (cx+scx)>>1, (cy+scy)>>1, cx,cy);
@@ -13156,7 +12998,6 @@ static int stbtt__close_shape(stbtt_vertex *vertices, int num_vertices, int was_
 
 static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, stbtt_vertex **pvertices)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphShapeTT / static");
    stbtt_int16 numberOfContours;
    stbtt_uint8 *endPtsOfContours;
    stbtt_uint8 *data = info->data;
@@ -13303,7 +13144,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
          stbtt_uint16 flags, gidx;
          int comp_num_verts = 0, i;
          stbtt_vertex *comp_verts = 0, *tmp = 0;
-         int mtx[6] = {1,0,0,1,0,0}, m, n;
+         float mtx[6] = {1,0,0,1,0,0}, m, n;
 
          flags = ttSHORT(comp); comp+=2;
          gidx = ttSHORT(comp); comp+=2;
@@ -13336,8 +13177,8 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
          }
 
          /*  Find transformation scales. */
-         m = (int) STBTT_sqrt(mtx[0]*mtx[0] + mtx[1]*mtx[1]);
-         n = (int) STBTT_sqrt(mtx[2]*mtx[2] + mtx[3]*mtx[3]);
+         m = (float) STBTT_sqrt(mtx[0]*mtx[0] + mtx[1]*mtx[1]);
+         n = (float) STBTT_sqrt(mtx[2]*mtx[2] + mtx[3]*mtx[3]);
 
          /*  Get indexed glyph. */
          comp_num_verts = stbtt_GetGlyphShape(info, gidx, &comp_verts);
@@ -13382,8 +13223,8 @@ typedef struct
 {
    int bounds;
    int started;
-   int first_x, first_y;
-   int x, y;
+   float first_x, first_y;
+   float x, y;
    stbtt_int32 min_x, max_x, min_y, max_y;
 
    stbtt_vertex *pvertices;
@@ -13394,7 +13235,6 @@ typedef struct
 
 static void stbtt__track_vertex(stbtt__csctx *c, stbtt_int32 x, stbtt_int32 y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__track_vertex / static");
    if (x > c->max_x || !c->started) c->max_x = x;
    if (y > c->max_y || !c->started) c->max_y = y;
    if (x < c->min_x || !c->started) c->min_x = x;
@@ -13404,7 +13244,6 @@ static void stbtt__track_vertex(stbtt__csctx *c, stbtt_int32 x, stbtt_int32 y)
 
 static void stbtt__csctx_v(stbtt__csctx *c, stbtt_uint8 type, stbtt_int32 x, stbtt_int32 y, stbtt_int32 cx, stbtt_int32 cy, stbtt_int32 cx1, stbtt_int32 cy1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__csctx_v / static");
    if (c->bounds) {
       stbtt__track_vertex(c, x, y);
       if (type == STBTT_vcubic) {
@@ -13421,35 +13260,31 @@ static void stbtt__csctx_v(stbtt__csctx *c, stbtt_uint8 type, stbtt_int32 x, stb
 
 static void stbtt__csctx_close_shape(stbtt__csctx *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__csctx_close_shape / static");
    if (ctx->first_x != ctx->x || ctx->first_y != ctx->y)
       stbtt__csctx_v(ctx, STBTT_vline, (int)ctx->first_x, (int)ctx->first_y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rmove_to(stbtt__csctx *ctx, int dx, int dy)
+static void stbtt__csctx_rmove_to(stbtt__csctx *ctx, float dx, float dy)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__csctx_rmove_to / static");
    stbtt__csctx_close_shape(ctx);
    ctx->first_x = ctx->x = ctx->x + dx;
    ctx->first_y = ctx->y = ctx->y + dy;
    stbtt__csctx_v(ctx, STBTT_vmove, (int)ctx->x, (int)ctx->y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rline_to(stbtt__csctx *ctx, int dx, int dy)
+static void stbtt__csctx_rline_to(stbtt__csctx *ctx, float dx, float dy)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__csctx_rline_to / static");
    ctx->x += dx;
    ctx->y += dy;
    stbtt__csctx_v(ctx, STBTT_vline, (int)ctx->x, (int)ctx->y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rccurve_to(stbtt__csctx *ctx, int dx1, int dy1, int dx2, int dy2, int dx3, int dy3)
+static void stbtt__csctx_rccurve_to(stbtt__csctx *ctx, float dx1, float dy1, float dx2, float dy2, float dx3, float dy3)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__csctx_rccurve_to / static");
-   int cx1 = ctx->x + dx1;
-   int cy1 = ctx->y + dy1;
-   int cx2 = cx1 + dx2;
-   int cy2 = cy1 + dy2;
+   float cx1 = ctx->x + dx1;
+   float cy1 = ctx->y + dy1;
+   float cx2 = cx1 + dx2;
+   float cy2 = cy1 + dy2;
    ctx->x = cx2 + dx3;
    ctx->y = cy2 + dy3;
    stbtt__csctx_v(ctx, STBTT_vcubic, (int)ctx->x, (int)ctx->y, (int)cx1, (int)cy1, (int)cx2, (int)cy2);
@@ -13457,7 +13292,6 @@ static void stbtt__csctx_rccurve_to(stbtt__csctx *ctx, int dx1, int dy1, int dx2
 
 static stbtt__buf stbtt__get_subr(stbtt__buf idx, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__get_subr / static");
    int count = stbtt__cff_index_count(&idx);
    int bias = 107;
    if (count >= 33900)
@@ -13472,7 +13306,6 @@ static stbtt__buf stbtt__get_subr(stbtt__buf idx, int n)
 
 static stbtt__buf stbtt__cid_get_glyph_subrs(const stbtt_fontinfo *info, int glyph_index)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cid_get_glyph_subrs / static");
    stbtt__buf fdselect = info->fdselect;
    int nranges, start, end, v, fmt, fdselector = -1, i;
 
@@ -13501,14 +13334,12 @@ static stbtt__buf stbtt__cid_get_glyph_subrs(const stbtt_fontinfo *info, int gly
 
 static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, stbtt__csctx *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__run_charstring / static");
    int in_header = 1, maskbits = 0, subr_stack_height = 0, sp = 0, v, i, b0;
    int has_subrs = 0, clear_stack;
-   int s[48];
+   float s[48];
    stbtt__buf subr_stack[10], subrs = info->subrs, b;
-   int f;
+   float f;
 
-    //writeSerialPort(boutRefNum, "stbtt__run_charstring");
 #define STBTT__CSERR(s) (0)
 
    /*  this currently ignores the initial width value, which isn't needed if we have hmtx */
@@ -13656,8 +13487,8 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
          return 1;
 
       case 0x0C: { /*  two-byte escape */
-         int dx1, dx2, dx3, dx4, dx5, dx6, dy1, dy2, dy3, dy4, dy5, dy6;
-         int dx, dy;
+         float dx1, dx2, dx3, dx4, dx5, dx6, dy1, dy2, dy3, dy4, dy5, dy6;
+         float dx, dy;
          int b1 = stbtt__buf_get8(&b);
          switch (b1) {
          /*  @TODO These "flex" implementations ignore the flex-depth and resolution, */
@@ -13743,10 +13574,10 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
 
          /*  push immediate */
          if (b0 == 255) {
-            f = (int)(stbtt_int32)stbtt__buf_get32(&b) / 0x10000;
+            f = (float)(stbtt_int32)stbtt__buf_get32(&b) / 0x10000;
          } else {
             stbtt__buf_skip(&b, -1);
-            f = (int)(stbtt_int16)stbtt__cff_int(&b);
+            f = (float)(stbtt_int16)stbtt__cff_int(&b);
          }
          if (sp >= 48) return STBTT__CSERR("push stack overflow");
          s[sp++] = f;
@@ -13762,7 +13593,6 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
 
 static int stbtt__GetGlyphShapeT2(const stbtt_fontinfo *info, int glyph_index, stbtt_vertex **pvertices)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphShapeT2 / static");
    /*  runs the charstring twice, once to count and once to output (to avoid realloc) */
    stbtt__csctx count_ctx = STBTT__CSCTX_INIT(1);
    stbtt__csctx output_ctx = STBTT__CSCTX_INIT(0);
@@ -13780,7 +13610,6 @@ static int stbtt__GetGlyphShapeT2(const stbtt_fontinfo *info, int glyph_index, s
 
 static int stbtt__GetGlyphInfoT2(const stbtt_fontinfo *info, int glyph_index, int *x0, int *y0, int *x1, int *y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphInfoT2 / static");
    stbtt__csctx c = STBTT__CSCTX_INIT(1);
    int r = stbtt__run_charstring(info, glyph_index, &c);
    if (x0)  *x0 = r ? c.min_x : 0;
@@ -13792,7 +13621,6 @@ static int stbtt__GetGlyphInfoT2(const stbtt_fontinfo *info, int glyph_index, in
 
 STBTT_DEF int stbtt_GetGlyphShape(const stbtt_fontinfo *info, int glyph_index, stbtt_vertex **pvertices)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphShape / STBTT_DEF");
    if (!info->cff.size)
       return stbtt__GetGlyphShapeTT(info, glyph_index, pvertices);
    else
@@ -13801,7 +13629,6 @@ STBTT_DEF int stbtt_GetGlyphShape(const stbtt_fontinfo *info, int glyph_index, s
 
 STBTT_DEF void stbtt_GetGlyphHMetrics(const stbtt_fontinfo *info, int glyph_index, int *advanceWidth, int *leftSideBearing)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphHMetrics / STBTT_DEF");
    stbtt_uint16 numOfLongHorMetrics = ttUSHORT(info->data+info->hhea + 34);
    if (glyph_index < numOfLongHorMetrics) {
       if (advanceWidth)     *advanceWidth    = ttSHORT(info->data + info->hmtx + 4*glyph_index);
@@ -13814,7 +13641,6 @@ STBTT_DEF void stbtt_GetGlyphHMetrics(const stbtt_fontinfo *info, int glyph_inde
 
 STBTT_DEF int  stbtt_GetKerningTableLength(const stbtt_fontinfo *info)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetKerningTableLength / STBTT_DEF");
    stbtt_uint8 *data = info->data + info->kern;
 
    /*  we only look at the first table. it must be 'horizontal' and format 0. */
@@ -13830,7 +13656,6 @@ STBTT_DEF int  stbtt_GetKerningTableLength(const stbtt_fontinfo *info)
 
 STBTT_DEF int stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningentry* table, int table_length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetKerningTable / STBTT_DEF");
    stbtt_uint8 *data = info->data + info->kern;
    int k, length;
 
@@ -13858,7 +13683,6 @@ STBTT_DEF int stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningent
 
 static int  stbtt__GetGlyphKernInfoAdvance(const stbtt_fontinfo *info, int glyph1, int glyph2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphKernInfoAdvance / static");
    stbtt_uint8 *data = info->data + info->kern;
    stbtt_uint32 needle, straw;
    int l, r, m;
@@ -13889,7 +13713,6 @@ static int  stbtt__GetGlyphKernInfoAdvance(const stbtt_fontinfo *info, int glyph
 
 static stbtt_int32  stbtt__GetCoverageIndex(stbtt_uint8 *coverageTable, int glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetCoverageIndex / static");
     stbtt_uint16 coverageFormat = ttUSHORT(coverageTable);
     switch(coverageFormat) {
         case 1: {
@@ -13949,7 +13772,6 @@ static stbtt_int32  stbtt__GetCoverageIndex(stbtt_uint8 *coverageTable, int glyp
 
 static stbtt_int32  stbtt__GetGlyphClass(stbtt_uint8 *classDefTable, int glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphClass / static");
     stbtt_uint16 classDefFormat = ttUSHORT(classDefTable);
     switch(classDefFormat)
     {
@@ -14002,7 +13824,6 @@ static stbtt_int32  stbtt__GetGlyphClass(stbtt_uint8 *classDefTable, int glyph)
 
 static stbtt_int32  stbtt__GetGlyphGPOSInfoAdvance(const stbtt_fontinfo *info, int glyph1, int glyph2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__GetGlyphGPOSInfoAdvance / static");
     stbtt_uint16 lookupListOffset;
     stbtt_uint8 *lookupList;
     stbtt_uint16 lookupCount;
@@ -14131,7 +13952,6 @@ static stbtt_int32  stbtt__GetGlyphGPOSInfoAdvance(const stbtt_fontinfo *info, i
 
 STBTT_DEF int  stbtt_GetGlyphKernAdvance(const stbtt_fontinfo *info, int g1, int g2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphKernAdvance / STBTT_DEF");
    int xAdvance = 0;
 
    if (info->gpos)
@@ -14144,7 +13964,6 @@ STBTT_DEF int  stbtt_GetGlyphKernAdvance(const stbtt_fontinfo *info, int g1, int
 
 STBTT_DEF int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, int ch1, int ch2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointKernAdvance / STBTT_DEF");
    if (!info->kern && !info->gpos) /*  if no kerning table, don't waste time looking up both codepoint->glyphs */
       return 0;
    return stbtt_GetGlyphKernAdvance(info, stbtt_FindGlyphIndex(info,ch1), stbtt_FindGlyphIndex(info,ch2));
@@ -14152,13 +13971,11 @@ STBTT_DEF int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, int ch1
 
 STBTT_DEF void stbtt_GetCodepointHMetrics(const stbtt_fontinfo *info, int codepoint, int *advanceWidth, int *leftSideBearing)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointHMetrics / STBTT_DEF");
    stbtt_GetGlyphHMetrics(info, stbtt_FindGlyphIndex(info,codepoint), advanceWidth, leftSideBearing);
 }
 
 STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo *info, int *ascent, int *descent, int *lineGap)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetFontVMetrics / STBTT_DEF");
    if (ascent ) *ascent  = ttSHORT(info->data+info->hhea + 4);
    if (descent) *descent = ttSHORT(info->data+info->hhea + 6);
    if (lineGap) *lineGap = ttSHORT(info->data+info->hhea + 8);
@@ -14166,7 +13983,6 @@ STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo *info, int *ascent, in
 
 STBTT_DEF int  stbtt_GetFontVMetricsOS2(const stbtt_fontinfo *info, int *typoAscent, int *typoDescent, int *typoLineGap)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetFontVMetricsOS2 / STBTT_DEF");
    int tab = stbtt__find_table(info->data, info->fontstart, "OS/2");
    if (!tab)
       return 0;
@@ -14178,36 +13994,31 @@ STBTT_DEF int  stbtt_GetFontVMetricsOS2(const stbtt_fontinfo *info, int *typoAsc
 
 STBTT_DEF void stbtt_GetFontBoundingBox(const stbtt_fontinfo *info, int *x0, int *y0, int *x1, int *y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetFontBoundingBox / STBTT_DEF");
    *x0 = ttSHORT(info->data + info->head + 36);
    *y0 = ttSHORT(info->data + info->head + 38);
    *x1 = ttSHORT(info->data + info->head + 40);
    *y1 = ttSHORT(info->data + info->head + 42);
 }
 
-STBTT_DEF int stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, int height)
+STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, float height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_ScaleForPixelHeight / STBTT_DEF");
    int fheight = ttSHORT(info->data + info->hhea + 4) - ttSHORT(info->data + info->hhea + 6);
-   return (int) height / fheight;
+   return (float) height / fheight;
 }
 
-STBTT_DEF int stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, int pixels)
+STBTT_DEF float stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, float pixels)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_ScaleForMappingEmToPixels / STBTT_DEF");
    int unitsPerEm = ttUSHORT(info->data + info->head + 18);
    return pixels / unitsPerEm;
 }
 
 STBTT_DEF void stbtt_FreeShape(const stbtt_fontinfo *info, stbtt_vertex *v)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FreeShape / STBTT_DEF");
    STBTT_free(v, info->userdata);
 }
 
 STBTT_DEF stbtt_uint8 *stbtt_FindSVGDoc(const stbtt_fontinfo *info, int gl)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FindSVGDoc / STBTT_DEF");
    int i;
    stbtt_uint8 *data = info->data;
    stbtt_uint8 *svg_doc_list = data + stbtt__get_svg((stbtt_fontinfo *) info);
@@ -14225,7 +14036,6 @@ STBTT_DEF stbtt_uint8 *stbtt_FindSVGDoc(const stbtt_fontinfo *info, int gl)
 
 STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, int gl, const char **svg)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphSVG / STBTT_DEF");
    stbtt_uint8 *data = info->data;
    stbtt_uint8 *svg_doc;
 
@@ -14243,7 +14053,6 @@ STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, int gl, const char *
 
 STBTT_DEF int stbtt_GetCodepointSVG(const stbtt_fontinfo *info, int unicode_codepoint, const char **svg)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointSVG / STBTT_DEF");
    return stbtt_GetGlyphSVG(info, stbtt_FindGlyphIndex(info, unicode_codepoint), svg);
 }
 
@@ -14252,9 +14061,8 @@ STBTT_DEF int stbtt_GetCodepointSVG(const stbtt_fontinfo *info, int unicode_code
 /*  antialiasing software rasterizer */
 /*  */
 
-STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int glyph, int scale_x, int scale_y,int shift_x, int shift_y, int *ix0, int *iy0, int *ix1, int *iy1)
+STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y,float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphBitmapBoxSubpixel / STBTT_DEF");
    int x0=0,y0=0,x1,y1; /*  =0 suppresses compiler warning */
    if (!stbtt_GetGlyphBox(font, glyph, &x0,&y0,&x1,&y1)) {
       /*  e.g. space character */
@@ -14271,21 +14079,18 @@ STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int g
    }
 }
 
-STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, int glyph, int scale_x, int scale_y, int *ix0, int *iy0, int *ix1, int *iy1)
+STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y, int *ix0, int *iy0, int *ix1, int *iy1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetGlyphBitmapBox / STBTT_DEF");
    stbtt_GetGlyphBitmapBoxSubpixel(font, glyph, scale_x, scale_y,0.0f,0.0f, ix0, iy0, ix1, iy1);
 }
 
-STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, int scale_x, int scale_y, int shift_x, int shift_y, int *ix0, int *iy0, int *ix1, int *iy1)
+STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y, float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointBitmapBoxSubpixel / STBTT_DEF");
    stbtt_GetGlyphBitmapBoxSubpixel(font, stbtt_FindGlyphIndex(font,codepoint), scale_x, scale_y,shift_x,shift_y, ix0,iy0,ix1,iy1);
 }
 
-STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codepoint, int scale_x, int scale_y, int *ix0, int *iy0, int *ix1, int *iy1)
+STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y, int *ix0, int *iy0, int *ix1, int *iy1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetCodepointBitmapBox / STBTT_DEF");
    stbtt_GetCodepointBitmapBoxSubpixel(font, codepoint, scale_x, scale_y,0.0f,0.0f, ix0,iy0,ix1,iy1);
 }
 
@@ -14307,7 +14112,6 @@ typedef struct stbtt__hheap
 
 static void *stbtt__hheap_alloc(stbtt__hheap *hh, size_t size, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__hheap_alloc / static");
    if (hh->first_free) {
       void *p = hh->first_free;
       hh->first_free = * (void **) p;
@@ -14329,14 +14133,12 @@ static void *stbtt__hheap_alloc(stbtt__hheap *hh, size_t size, void *userdata)
 
 static void stbtt__hheap_free(stbtt__hheap *hh, void *p)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__hheap_free / static");
    *(void **) p = hh->first_free;
    hh->first_free = p;
 }
 
 static void stbtt__hheap_cleanup(stbtt__hheap *hh, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__hheap_cleanup / static");
    stbtt__hheap_chunk *c = hh->head;
    while (c) {
       stbtt__hheap_chunk *n = c->next;
@@ -14346,7 +14148,7 @@ static void stbtt__hheap_cleanup(stbtt__hheap *hh, void *userdata)
 }
 
 typedef struct stbtt__edge {
-   int x0,y0, x1,y1;
+   float x0,y0, x1,y1;
    int invert;
 } stbtt__edge;
 
@@ -14356,13 +14158,13 @@ typedef struct stbtt__active_edge
    struct stbtt__active_edge *next;
    #if STBTT_RASTERIZER_VERSION==1
    int x,dx;
-   int ey;
+   float ey;
    int direction;
    #elif STBTT_RASTERIZER_VERSION==2
-   int fx,fdx,fdy;
-   int direction;
-   int sy;
-   int ey;
+   float fx,fdx,fdy;
+   float direction;
+   float sy;
+   float ey;
    #else
    #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
    #endif
@@ -14373,11 +14175,10 @@ typedef struct stbtt__active_edge
 #define STBTT_FIX        (1 << STBTT_FIXSHIFT)
 #define STBTT_FIXMASK    (STBTT_FIX-1)
 
-static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, int start_point, void *userdata)
+static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, float start_point, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__new_active / static");
    stbtt__active_edge *z = (stbtt__active_edge *) stbtt__hheap_alloc(hh, sizeof(*z), userdata);
-   int dxdy = (e->x1 - e->x0) / (e->y1 - e->y0);
+   float dxdy = (e->x1 - e->x0) / (e->y1 - e->y0);
    STBTT_assert(z != NULL);
    if (!z) return z;
 
@@ -14396,11 +14197,10 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, i
    return z;
 }
 #elif STBTT_RASTERIZER_VERSION == 2
-static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, int start_point, void *userdata)
+static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, float start_point, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__new_active / static");
    stbtt__active_edge *z = (stbtt__active_edge *) stbtt__hheap_alloc(hh, sizeof(*z), userdata);
-   int dxdy = (e->x1 - e->x0) / (e->y1 - e->y0);
+   float dxdy = (e->x1 - e->x0) / (e->y1 - e->y0);
    STBTT_assert(z != NULL);
    /* STBTT_assert(e->y0 <= start_point); */
    if (!z) return z;
@@ -14424,7 +14224,6 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, i
 /*  are wrong, or if the user supplies a too-small bitmap */
 static void stbtt__fill_active_edges(unsigned char *scanline, int len, stbtt__active_edge *e, int max_weight)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__fill_active_edges / static");
    /*  non-zero winding fill */
    int x0=0, w=0;
 
@@ -14467,7 +14266,6 @@ static void stbtt__fill_active_edges(unsigned char *scanline, int len, stbtt__ac
 
 static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e, int n, int vsubsample, int off_x, int off_y, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__rasterize_sorted_edges / static");
    stbtt__hheap hh = { 0, 0, 0 };
    stbtt__active_edge *active = NULL;
    int y,j=0;
@@ -14481,13 +14279,13 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
       scanline = scanline_data;
 
    y = off_y * vsubsample;
-   e[n].y0 = (off_y + result->h) * (int) vsubsample + 1;
+   e[n].y0 = (off_y + result->h) * (float) vsubsample + 1;
 
    while (j < result->h) {
       STBTT_memset(scanline, 0, result->w);
       for (s=0; s < vsubsample; ++s) {
          /*  find center of pixel for this scanline */
-         int scan_y = y + 0.5f;
+         float scan_y = y + 0.5f;
          stbtt__active_edge **step = &active;
 
          /*  update all active edges; */
@@ -14570,9 +14368,8 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
 
 /*  the edge passed in here does not cross the vertical line at x or the vertical line at x+1 */
 /*  (i.e. it has already been clipped to those) */
-static void stbtt__handle_clipped_edge(int *scanline, int x, stbtt__active_edge *e, int x0, int y0, int x1, int y1)
+static void stbtt__handle_clipped_edge(float *scanline, int x, stbtt__active_edge *e, float x0, float y0, float x1, float y1)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__handle_clipped_edge / static");
    if (y0 == y1) return;
    STBTT_assert(y0 < y1);
    STBTT_assert(e->sy <= e->ey);
@@ -14608,10 +14405,9 @@ static void stbtt__handle_clipped_edge(int *scanline, int x, stbtt__active_edge 
    }
 }
 
-static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int len, stbtt__active_edge *e, int y_top)
+static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, int len, stbtt__active_edge *e, float y_top)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__fill_active_edges_new / static");
-   int y_bottom = y_top+1;
+   float y_bottom = y_top+1;
 
    while (e) {
       /*  brute force every pixel */
@@ -14620,7 +14416,7 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
       STBTT_assert(e->ey >= y_top);
 
       if (e->fdx == 0) {
-         int x0 = e->fx;
+         float x0 = e->fx;
          if (x0 < len) {
             if (x0 >= 0) {
                stbtt__handle_clipped_edge(scanline,(int) x0,e, x0,y_top, x0,y_bottom);
@@ -14630,12 +14426,12 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
             }
          }
       } else {
-         int x0 = e->fx;
-         int dx = e->fdx;
-         int xb = x0 + dx;
-         int x_top, x_bottom;
-         int sy0,sy1;
-         int dy = e->fdy;
+         float x0 = e->fx;
+         float dx = e->fdx;
+         float xb = x0 + dx;
+         float x_top, x_bottom;
+         float sy0,sy1;
+         float dy = e->fdy;
          STBTT_assert(e->sy <= y_bottom && e->ey >= y_top);
 
          /*  compute endpoints of line segment clipped to this scanline (if the */
@@ -14660,7 +14456,7 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
             /*  from here on, we don't have to range check x values */
 
             if ((int) x_top == (int) x_bottom) {
-               int height;
+               float height;
                /*  simple case, only spans one pixel */
                int x = (int) x_top;
                height = sy1 - sy0;
@@ -14669,11 +14465,11 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
                scanline_fill[x] += e->direction * height; /*  everything right of this pixel is filled */
             } else {
                int x,x1,x2;
-               int y_crossing, step, sign, area;
+               float y_crossing, step, sign, area;
                /*  covers 2+ pixels */
                if (x_top > x_bottom) {
                   /*  flip scanline vertically; signed area is the same */
-                  int t;
+                  float t;
                   sy0 = y_bottom - (sy0 - y_top);
                   sy1 = y_bottom - (sy1 - y_top);
                   t = sy0, sy0 = sy1, sy1 = t;
@@ -14728,17 +14524,17 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
                /*  that, we need to explicitly produce segments based on x positions. */
 
                /*  rename variables to clearly-defined pairs */
-               int y0 = y_top;
-               int x1 = (int) (x);
-               int x2 = (int) (x+1);
-               int x3 = xb;
-               int y3 = y_bottom;
+               float y0 = y_top;
+               float x1 = (float) (x);
+               float x2 = (float) (x+1);
+               float x3 = xb;
+               float y3 = y_bottom;
 
                /*  x = e->x + e->dx * (y-y_top) */
                /*  (y-y_top) = (x - e->x) / e->dx */
                /*  y = (x - e->x) / e->dx + y_top */
-               int y1 = (x - x0) / dx + y_top;
-               int y2 = (x+1 - x0) / dx + y_top;
+               float y1 = (x - x0) / dx + y_top;
+               float y2 = (x+1 - x0) / dx + y_top;
 
                if (x0 < x1 && x3 > x2) {         /*  three segments descending down-right */
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
@@ -14773,28 +14569,27 @@ static void stbtt__fill_active_edges_new(int *scanline, int *scanline_fill, int 
 /*  directly AA rasterize edges w/o supersampling */
 static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e, int n, int vsubsample, int off_x, int off_y, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__rasterize_sorted_edges / static");
    stbtt__hheap hh = { 0, 0, 0 };
    stbtt__active_edge *active = NULL;
    int y,j=0, i;
-   int scanline_data[129], *scanline, *scanline2;
+   float scanline_data[129], *scanline, *scanline2;
 
    STBTT__NOTUSED(vsubsample);
 
    if (result->w > 64)
-      scanline = (int *) STBTT_malloc((result->w*2+1) * sizeof(int), userdata);
+      scanline = (float *) STBTT_malloc((result->w*2+1) * sizeof(float), userdata);
    else
       scanline = scanline_data;
 
    scanline2 = scanline + result->w;
 
    y = off_y;
-   e[n].y0 = (int) (off_y + result->h) + 1;
+   e[n].y0 = (float) (off_y + result->h) + 1;
 
    while (j < result->h) {
       /*  find center of pixel for this scanline */
-      int scan_y_top    = y + 0.0f;
-      int scan_y_bottom = y + 1.0f;
+      float scan_y_top    = y + 0.0f;
+      float scan_y_bottom = y + 1.0f;
       stbtt__active_edge **step = &active;
 
       STBTT_memset(scanline , 0, result->w*sizeof(scanline[0]));
@@ -14839,13 +14634,13 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
          stbtt__fill_active_edges_new(scanline, scanline2+1, result->w, active, scan_y_top);
 
       {
-         int sum = 0;
+         float sum = 0;
          for (i=0; i < result->w; ++i) {
-            int k;
+            float k;
             int m;
             sum += scanline2[i];
             k = scanline[i] + sum;
-            k = (int) STBTT_fabs(k)*255 + 0.5f;
+            k = (float) STBTT_fabs(k)*255 + 0.5f;
             m = (int) k;
             if (m > 255) m = 255;
             result->pixels[j*result->stride + i] = (unsigned char) m;
@@ -14876,7 +14671,6 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
 
 static void stbtt__sort_edges_ins_sort(stbtt__edge *p, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__sort_edges_ins_sort / static");
    int i,j;
    for (i=1; i < n; ++i) {
       stbtt__edge t = p[i], *a = &t;
@@ -14895,7 +14689,6 @@ static void stbtt__sort_edges_ins_sort(stbtt__edge *p, int n)
 
 static void stbtt__sort_edges_quicksort(stbtt__edge *p, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__sort_edges_quicksort / static");
    /* threshold for transitioning to insertion sort */
    while (n > 12) {
       stbtt__edge t;
@@ -14958,20 +14751,18 @@ static void stbtt__sort_edges_quicksort(stbtt__edge *p, int n)
 
 static void stbtt__sort_edges(stbtt__edge *p, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__sort_edges / static");
    stbtt__sort_edges_quicksort(p, n);
    stbtt__sort_edges_ins_sort(p, n);
 }
 
 typedef struct
 {
-   int x,y;
+   float x,y;
 } stbtt__point;
 
-static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcount, int windings, int scale_x, int scale_y, int shift_x, int shift_y, int off_x, int off_y, int invert, void *userdata)
+static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcount, int windings, float scale_x, float scale_y, float shift_x, float shift_y, int off_x, int off_y, int invert, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__rasterize / static");
-   int y_scale_inv = invert ? -scale_y : scale_y;
+   float y_scale_inv = invert ? -scale_y : scale_y;
    stbtt__edge *e;
    int n,i,j,k,m;
 #if STBTT_RASTERIZER_VERSION == 1
@@ -15026,24 +14817,22 @@ static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcou
    STBTT_free(e, userdata);
 }
 
-static void stbtt__add_point(stbtt__point *points, int n, int x, int y)
+static void stbtt__add_point(stbtt__point *points, int n, float x, float y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__add_point / static");
    if (!points) return; /*  during first pass, it's unallocated */
    points[n].x = x;
    points[n].y = y;
 }
 
 /*  tessellate until threshold p is happy... @TODO warped to compensate for non-linear stretching */
-static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, int x0, int y0, int x1, int y1, int x2, int y2, int objspace_flatness_squared, int n)
+static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, float x0, float y0, float x1, float y1, float x2, float y2, float objspace_flatness_squared, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__tesselate_curve / static");
    /*  midpoint */
-   int mx = (x0 + 2*x1 + x2)/4;
-   int my = (y0 + 2*y1 + y2)/4;
+   float mx = (x0 + 2*x1 + x2)/4;
+   float my = (y0 + 2*y1 + y2)/4;
    /*  versus directly drawn line */
-   int dx = (x0+x2)/2 - mx;
-   int dy = (y0+y2)/2 - my;
+   float dx = (x0+x2)/2 - mx;
+   float dy = (y0+y2)/2 - my;
    if (n > 16) /*  65536 segments on one curve better be enough! */
       return 1;
    if (dx*dx+dy*dy > objspace_flatness_squared) { /*  half-pixel error allowed... need to be smaller if AA */
@@ -15056,40 +14845,39 @@ static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, int x0,
    return 1;
 }
 
-static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int objspace_flatness_squared, int n)
+static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float objspace_flatness_squared, int n)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__tesselate_cubic / static");
    /*  @TODO this "flatness" calculation is just made-up nonsense that seems to work well enough */
-   int dx0 = x1-x0;
-   int dy0 = y1-y0;
-   int dx1 = x2-x1;
-   int dy1 = y2-y1;
-   int dx2 = x3-x2;
-   int dy2 = y3-y2;
-   int dx = x3-x0;
-   int dy = y3-y0;
-   int longlen = (int) (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
-   int shortlen = (int) STBTT_sqrt(dx*dx+dy*dy);
-   int flatness_squared = longlen*longlen-shortlen*shortlen;
+   float dx0 = x1-x0;
+   float dy0 = y1-y0;
+   float dx1 = x2-x1;
+   float dy1 = y2-y1;
+   float dx2 = x3-x2;
+   float dy2 = y3-y2;
+   float dx = x3-x0;
+   float dy = y3-y0;
+   float longlen = (float) (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
+   float shortlen = (float) STBTT_sqrt(dx*dx+dy*dy);
+   float flatness_squared = longlen*longlen-shortlen*shortlen;
 
    if (n > 16) /*  65536 segments on one curve better be enough! */
       return;
 
    if (flatness_squared > objspace_flatness_squared) {
-      int x01 = (x0+x1)/2;
-      int y01 = (y0+y1)/2;
-      int x12 = (x1+x2)/2;
-      int y12 = (y1+y2)/2;
-      int x23 = (x2+x3)/2;
-      int y23 = (y2+y3)/2;
+      float x01 = (x0+x1)/2;
+      float y01 = (y0+y1)/2;
+      float x12 = (x1+x2)/2;
+      float y12 = (y1+y2)/2;
+      float x23 = (x2+x3)/2;
+      float y23 = (y2+y3)/2;
 
-      int xa = (x01+x12)/2;
-      int ya = (y01+y12)/2;
-      int xb = (x12+x23)/2;
-      int yb = (y12+y23)/2;
+      float xa = (x01+x12)/2;
+      float ya = (y01+y12)/2;
+      float xb = (x12+x23)/2;
+      float yb = (y12+y23)/2;
 
-      int mx = (xa+xb)/2;
-      int my = (ya+yb)/2;
+      float mx = (xa+xb)/2;
+      float my = (ya+yb)/2;
 
       stbtt__tesselate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n+1);
       stbtt__tesselate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n+1);
@@ -15100,13 +14888,12 @@ static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, int x0
 }
 
 /*  returns number of contours */
-static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts, int objspace_flatness, int **contour_lengths, int *num_contours, void *userdata)
+static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts, float objspace_flatness, int **contour_lengths, int *num_contours, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FlattenCurves / static");
    stbtt__point *points=0;
    int num_points=0;
 
-   int objspace_flatness_squared = objspace_flatness * objspace_flatness;
+   float objspace_flatness_squared = objspace_flatness * objspace_flatness;
    int i,n=0,start=0, pass;
 
    /*  count how many "moves" there are to get the contour count */
@@ -15126,7 +14913,7 @@ static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts, 
 
    /*  make two passes through the points so we don't need to realloc */
    for (pass=0; pass < 2; ++pass) {
-      int x=0,y=0;
+      float x=0,y=0;
       if (pass == 1) {
          points = (stbtt__point *) STBTT_malloc(num_points * sizeof(points[0]), userdata);
          if (points == NULL) goto error;
@@ -15178,10 +14965,9 @@ error:
    return NULL;
 }
 
-STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result, int flatness_in_pixels, stbtt_vertex *vertices, int num_verts, int scale_x, int scale_y, int shift_x, int shift_y, int x_off, int y_off, int invert, void *userdata)
+STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result, float flatness_in_pixels, stbtt_vertex *vertices, int num_verts, float scale_x, float scale_y, float shift_x, float shift_y, int x_off, int y_off, int invert, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_Rasterize / STBTT_DEF");
-   int scale            = scale_x > scale_y ? scale_y : scale_x;
+   float scale            = scale_x > scale_y ? scale_y : scale_x;
    int winding_count      = 0;
    int *winding_lengths   = NULL;
    stbtt__point *windings = stbtt_FlattenCurves(vertices, num_verts, flatness_in_pixels / scale, &winding_lengths, &winding_count, userdata);
@@ -15194,13 +14980,11 @@ STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result, int flatness_in_pixels, st
 
 STBTT_DEF void stbtt_FreeBitmap(unsigned char *bitmap, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FreeBitmap / STBTT_DEF");
    STBTT_free(bitmap, userdata);
 }
 
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, int scale_x, int scale_y, int shift_x, int shift_y, int glyph, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y, float shift_x, float shift_y, int glyph, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    int ix0,iy0,ix1,iy1;
    stbtt__bitmap gbm;
    stbtt_vertex *vertices;
@@ -15239,15 +15023,13 @@ STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info
    return gbm.pixels;
 }
 
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, int scale_x, int scale_y, int glyph, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y, int glyph, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, 0.0f, 0.0f, glyph, width, height, xoff, yoff);
 }
 
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int glyph)
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeGlyphBitmapSubpixel / STBTT_DEF");
    int ix0,iy0;
    stbtt_vertex *vertices;
    int num_verts = stbtt_GetGlyphShape(info, glyph, &vertices);
@@ -15265,39 +15047,33 @@ STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigne
    STBTT_free(vertices, info->userdata);
 }
 
-STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int glyph)
+STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, int glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeGlyphBitmap / STBTT_DEF");
    stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0.0f,0.0f, glyph);
 }
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, int scale_x, int scale_y, int shift_x, int shift_y, int codepoint, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y, float shift_x, float shift_y, int codepoint, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y,shift_x,shift_y, stbtt_FindGlyphIndex(info,codepoint), width,height,xoff,yoff);
 }
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int oversample_x, int oversample_y, int *sub_x, int *sub_y, int codepoint)
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int oversample_x, int oversample_y, float *sub_x, float *sub_y, int codepoint)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeCodepointBitmapSubpixelPrefilter / STBTT_DEF");
    stbtt_MakeGlyphBitmapSubpixelPrefilter(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, oversample_x, oversample_y, sub_x, sub_y, stbtt_FindGlyphIndex(info,codepoint));
 }
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int codepoint)
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int codepoint)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeCodepointBitmapSubpixel / STBTT_DEF");
    stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, stbtt_FindGlyphIndex(info,codepoint));
 }
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, int scale_x, int scale_y, int codepoint, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y, int codepoint, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    return stbtt_GetCodepointBitmapSubpixel(info, scale_x, scale_y, 0.0f,0.0f, codepoint, width,height,xoff,yoff);
 }
 
-STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int codepoint)
+STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, int codepoint)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeCodepointBitmap / STBTT_DEF");
    stbtt_MakeCodepointBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0.0f,0.0f, codepoint);
 }
 
@@ -15308,13 +15084,12 @@ STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned ch
 /*  This is SUPER-CRAPPY packing to keep source code small */
 
 static int stbtt_BakeFontBitmap_internal(unsigned char *data, int offset,  /*  font location (use offset=0 for plain .ttf) */
-                                int pixel_height,                     /*  height of font in pixels */
+                                float pixel_height,                     /*  height of font in pixels */
                                 unsigned char *pixels, int pw, int ph,  /*  bitmap to be filled in */
                                 int first_char, int num_chars,          /*  characters to bake */
                                 stbtt_bakedchar *chardata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - chardata) /                                 stbtt_bakedchar");
-   int scale;
+   float scale;
    int x,y,bottom_y, i;
    stbtt_fontinfo f;
    f.userdata = NULL;
@@ -15345,8 +15120,8 @@ static int stbtt_BakeFontBitmap_internal(unsigned char *data, int offset,  /*  f
       chardata[i].x1 = (stbtt_int16) (x + gw);
       chardata[i].y1 = (stbtt_int16) (y + gh);
       chardata[i].xadvance = scale * advance;
-      chardata[i].xoff     = (int) x0;
-      chardata[i].yoff     = (int) y0;
+      chardata[i].xoff     = (float) x0;
+      chardata[i].yoff     = (float) y0;
       x = x + gw + 1;
       if (y+gh+1 > bottom_y)
          bottom_y = y+gh+1;
@@ -15354,11 +15129,10 @@ static int stbtt_BakeFontBitmap_internal(unsigned char *data, int offset,  /*  f
    return bottom_y;
 }
 
-STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph, int char_index, int *xpos, int *ypos, stbtt_aligned_quad *q, int opengl_fillrule)
+STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int opengl_fillrule)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetBakedQuad / STBTT_DEF");
-   int d3d_bias = opengl_fillrule ? 0 : -0.5f;
-   int ipw = 1.0f / pw, iph = 1.0f / ph;
+   float d3d_bias = opengl_fillrule ? 0 : -0.5f;
+   float ipw = 1.0f / pw, iph = 1.0f / ph;
    const stbtt_bakedchar *b = chardata + char_index;
    int round_x = STBTT_ifloor((*xpos + b->xoff) + 0.5f);
    int round_y = STBTT_ifloor((*ypos + b->yoff) + 0.5f);
@@ -15415,7 +15189,6 @@ struct stbrp_rect
 
 static void stbrp_init_target(stbrp_context *con, int pw, int ph, stbrp_node *nodes, int num_nodes)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_init_target / static");
    con->width  = pw;
    con->height = ph;
    con->x = 0;
@@ -15427,7 +15200,6 @@ static void stbrp_init_target(stbrp_context *con, int pw, int ph, stbrp_node *no
 
 static void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, int num_rects)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbrp_pack_rects / static");
    int i;
    for (i=0; i < num_rects; ++i) {
       if (con->x + rects[i].w > con->width) {
@@ -15457,7 +15229,6 @@ static void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, int num_rect
 
 STBTT_DEF int stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, int pw, int ph, int stride_in_bytes, int padding, void *alloc_context)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackBegin / STBTT_DEF");
    stbrp_context *context = (stbrp_context *) STBTT_malloc(sizeof(*context)            ,alloc_context);
    int            num_nodes = pw - padding;
    stbrp_node    *nodes   = (stbrp_node    *) STBTT_malloc(sizeof(*nodes  ) * num_nodes,alloc_context);
@@ -15490,14 +15261,12 @@ STBTT_DEF int stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, in
 
 STBTT_DEF void stbtt_PackEnd  (stbtt_pack_context *spc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackEnd / STBTT_DEF");
    STBTT_free(spc->nodes    , spc->user_allocator_context);
    STBTT_free(spc->pack_info, spc->user_allocator_context);
 }
 
 STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, unsigned int h_oversample, unsigned int v_oversample)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackSetOversampling / STBTT_DEF");
    STBTT_assert(h_oversample <= STBTT_MAX_OVERSAMPLE);
    STBTT_assert(v_oversample <= STBTT_MAX_OVERSAMPLE);
    if (h_oversample <= STBTT_MAX_OVERSAMPLE)
@@ -15508,7 +15277,6 @@ STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, unsigned int h
 
 STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, int skip)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackSetSkipMissingCodepoints / STBTT_DEF");
    spc->skip_missing = skip;
 }
 
@@ -15516,7 +15284,6 @@ STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, int s
 
 static void stbtt__h_prefilter(unsigned char *pixels, int w, int h, int stride_in_bytes, unsigned int kernel_width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__h_prefilter / static");
    unsigned char buffer[STBTT_MAX_OVERSAMPLE];
    int safe_w = w - kernel_width;
    int j;
@@ -15579,7 +15346,6 @@ static void stbtt__h_prefilter(unsigned char *pixels, int w, int h, int stride_i
 
 static void stbtt__v_prefilter(unsigned char *pixels, int w, int h, int stride_in_bytes, unsigned int kernel_width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__v_prefilter / static");
    unsigned char buffer[STBTT_MAX_OVERSAMPLE];
    int safe_h = h - kernel_width;
    int j;
@@ -15640,9 +15406,8 @@ static void stbtt__v_prefilter(unsigned char *pixels, int w, int h, int stride_i
    }
 }
 
-static int stbtt__oversample_shift(int oversample)
+static float stbtt__oversample_shift(int oversample)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__oversample_shift / static");
    if (!oversample)
       return 0.0f;
 
@@ -15650,20 +15415,19 @@ static int stbtt__oversample_shift(int oversample)
    /*  which shifts phase by (oversample - 1)/2 pixels in */
    /*  oversampled space. We want to shift in the opposite */
    /*  direction to counter this. */
-   return (int)-(oversample - 1) / (2.0f * (int)oversample);
+   return (float)-(oversample - 1) / (2.0f * (float)oversample);
 }
 
 /*  rects array must be big enough to accommodate all characters in the given ranges */
 STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackFontRangesGatherRects / STBTT_DEF");
    int i,j,k;
    int missing_glyph_added = 0;
 
    k=0;
    for (i=0; i < num_ranges; ++i) {
-      int fh = ranges[i].font_size;
-      int scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
+      float fh = ranges[i].font_size;
+      float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
       ranges[i].h_oversample = (unsigned char) spc->h_oversample;
       ranges[i].v_oversample = (unsigned char) spc->v_oversample;
       for (j=0; j < ranges[i].num_chars; ++j) {
@@ -15690,9 +15454,8 @@ STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stb
    return k;
 }
 
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, int scale_x, int scale_y, int shift_x, int shift_y, int prefilter_x, int prefilter_y, int *sub_x, int *sub_y, int glyph)
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int prefilter_x, int prefilter_y, float *sub_x, float *sub_y, int glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_MakeGlyphBitmapSubpixelPrefilter / STBTT_DEF");
    stbtt_MakeGlyphBitmapSubpixel(info,
                                  output,
                                  out_w - (prefilter_x - 1),
@@ -15717,7 +15480,6 @@ STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info
 /*  rects array must be big enough to accommodate all characters in the given ranges */
 STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackFontRangesRenderIntoRects / STBTT_DEF");
    int i,j,k, missing_glyph = -1, return_value = 1;
 
    /*  save current values */
@@ -15726,9 +15488,9 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
 
    k = 0;
    for (i=0; i < num_ranges; ++i) {
-      int fh = ranges[i].font_size;
-      int scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
-      int recip_h,recip_v,sub_x,sub_y;
+      float fh = ranges[i].font_size;
+      float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
+      float recip_h,recip_v,sub_x,sub_y;
       spc->h_oversample = ranges[i].h_oversample;
       spc->v_oversample = ranges[i].v_oversample;
       recip_h = 1.0f / spc->h_oversample;
@@ -15779,8 +15541,8 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
             bc->x1       = (stbtt_int16) (r->x + r->w);
             bc->y1       = (stbtt_int16) (r->y + r->h);
             bc->xadvance =                scale * advance;
-            bc->xoff     =       (int)  x0 * recip_h + sub_x;
-            bc->yoff     =       (int)  y0 * recip_v + sub_y;
+            bc->xoff     =       (float)  x0 * recip_h + sub_x;
+            bc->yoff     =       (float)  y0 * recip_v + sub_y;
             bc->xoff2    =                (x0 + r->w) * recip_h + sub_x;
             bc->yoff2    =                (y0 + r->h) * recip_v + sub_y;
 
@@ -15807,13 +15569,11 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
 
 STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_rect *rects, int num_rects)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackFontRangesPackRects / STBTT_DEF");
    stbrp_pack_rects((stbrp_context *) spc->pack_info, rects, num_rects);
 }
 
 STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, stbtt_pack_range *ranges, int num_ranges)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_PackFontRanges / STBTT_DEF");
    stbtt_fontinfo info;
    int i,j,n, return_value = 1;
    /* stbrp_context *context = (stbrp_context *) spc->pack_info; */
@@ -15848,10 +15608,9 @@ STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char 
    return return_value;
 }
 
-STBTT_DEF int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, int font_size,
+STBTT_DEF int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, float font_size,
             int first_unicode_codepoint_in_range, int num_chars_in_range, stbtt_packedchar *chardata_for_range)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - first_unicode_codepoint_in_range, /             int");
    stbtt_pack_range range;
    range.first_unicode_codepoint_in_range = first_unicode_codepoint_in_range;
    range.array_of_unicode_codepoints = NULL;
@@ -15861,29 +15620,27 @@ STBTT_DEF int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *
    return stbtt_PackFontRanges(spc, fontdata, font_index, &range, 1);
 }
 
-STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int index, int size, int *ascent, int *descent, int *lineGap)
+STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int index, float size, float *ascent, float *descent, float *lineGap)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetScaledFontVMetrics / STBTT_DEF");
    int i_ascent, i_descent, i_lineGap;
-   int scale;
+   float scale;
    stbtt_fontinfo info;
    stbtt_InitFont(&info, fontdata, stbtt_GetFontOffsetForIndex(fontdata, index));
    scale = size > 0 ? stbtt_ScaleForPixelHeight(&info, size) : stbtt_ScaleForMappingEmToPixels(&info, -size);
    stbtt_GetFontVMetrics(&info, &i_ascent, &i_descent, &i_lineGap);
-   *ascent  = (int) i_ascent  * scale;
-   *descent = (int) i_descent * scale;
-   *lineGap = (int) i_lineGap * scale;
+   *ascent  = (float) i_ascent  * scale;
+   *descent = (float) i_descent * scale;
+   *lineGap = (float) i_lineGap * scale;
 }
 
-STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph, int char_index, int *xpos, int *ypos, stbtt_aligned_quad *q, int align_to_integer)
+STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int align_to_integer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetPackedQuad / STBTT_DEF");
-   int ipw = 1.0f / pw, iph = 1.0f / ph;
+   float ipw = 1.0f / pw, iph = 1.0f / ph;
    const stbtt_packedchar *b = chardata + char_index;
 
    if (align_to_integer) {
-      int x = (int) STBTT_ifloor((*xpos + b->xoff) + 0.5f);
-      int y = (int) STBTT_ifloor((*ypos + b->yoff) + 0.5f);
+      float x = (float) STBTT_ifloor((*xpos + b->xoff) + 0.5f);
+      float y = (float) STBTT_ifloor((*ypos + b->yoff) + 0.5f);
       q->x0 = x;
       q->y0 = y;
       q->x1 = x + b->xoff2 - b->xoff;
@@ -15911,26 +15668,25 @@ STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int
 #define STBTT_min(a,b)  ((a) < (b) ? (a) : (b))
 #define STBTT_max(a,b)  ((a) < (b) ? (b) : (a))
 
-static int stbtt__ray_intersect_bezier(int orig[2], int ray[2], int q0[2], int q1[2], int q2[2], int hits[2][2])
+static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2], float q1[2], float q2[2], float hits[2][2])
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__ray_intersect_bezier / static");
-   int q0perp = q0[1]*ray[0] - q0[0]*ray[1];
-   int q1perp = q1[1]*ray[0] - q1[0]*ray[1];
-   int q2perp = q2[1]*ray[0] - q2[0]*ray[1];
-   int roperp = orig[1]*ray[0] - orig[0]*ray[1];
+   float q0perp = q0[1]*ray[0] - q0[0]*ray[1];
+   float q1perp = q1[1]*ray[0] - q1[0]*ray[1];
+   float q2perp = q2[1]*ray[0] - q2[0]*ray[1];
+   float roperp = orig[1]*ray[0] - orig[0]*ray[1];
 
-   int a = q0perp - 2*q1perp + q2perp;
-   int b = q1perp - q0perp;
-   int c = q0perp - roperp;
+   float a = q0perp - 2*q1perp + q2perp;
+   float b = q1perp - q0perp;
+   float c = q0perp - roperp;
 
-   int s0 = 0., s1 = 0.;
+   float s0 = 0., s1 = 0.;
    int num_s = 0;
 
    if (a != 0.0) {
-      int discr = b*b - a*c;
+      float discr = b*b - a*c;
       if (discr > 0.0) {
-         int rcpna = -1 / a;
-         int d = (int) STBTT_sqrt(discr);
+         float rcpna = -1 / a;
+         float d = (float) STBTT_sqrt(discr);
          s0 = (b+d) * rcpna;
          s1 = (b-d) * rcpna;
          if (s0 >= 0.0 && s0 <= 1.0)
@@ -15951,17 +15707,17 @@ static int stbtt__ray_intersect_bezier(int orig[2], int ray[2], int q0[2], int q
    if (num_s == 0)
       return 0;
    else {
-      int rcp_len2 = 1 / (ray[0]*ray[0] + ray[1]*ray[1]);
-      int rayn_x = ray[0] * rcp_len2, rayn_y = ray[1] * rcp_len2;
+      float rcp_len2 = 1 / (ray[0]*ray[0] + ray[1]*ray[1]);
+      float rayn_x = ray[0] * rcp_len2, rayn_y = ray[1] * rcp_len2;
 
-      int q0d =   q0[0]*rayn_x +   q0[1]*rayn_y;
-      int q1d =   q1[0]*rayn_x +   q1[1]*rayn_y;
-      int q2d =   q2[0]*rayn_x +   q2[1]*rayn_y;
-      int rod = orig[0]*rayn_x + orig[1]*rayn_y;
+      float q0d =   q0[0]*rayn_x +   q0[1]*rayn_y;
+      float q1d =   q1[0]*rayn_x +   q1[1]*rayn_y;
+      float q2d =   q2[0]*rayn_x +   q2[1]*rayn_y;
+      float rod = orig[0]*rayn_x + orig[1]*rayn_y;
 
-      int q10d = q1d - q0d;
-      int q20d = q2d - q0d;
-      int q0rd = q0d - rod;
+      float q10d = q1d - q0d;
+      float q20d = q2d - q0d;
+      float q0rd = q0d - rod;
 
       hits[0][0] = q0rd + s0*(2.0f - 2.0f*s0)*q10d + s0*s0*q20d;
       hits[0][1] = a*s0+b;
@@ -15976,25 +15732,23 @@ static int stbtt__ray_intersect_bezier(int orig[2], int ray[2], int q0[2], int q
    }
 }
 
-static int equal(int *a, int *b)
+static int equal(float *a, float *b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - equal / static");
    return (a[0] == b[0] && a[1] == b[1]);
 }
 
-static int stbtt__compute_crossings_x(int x, int y, int nverts, stbtt_vertex *verts)
+static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex *verts)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__compute_crossings_x / static");
    int i;
-   int orig[2], ray[2] = { 1, 0 };
-   int y_frac;
+   float orig[2], ray[2] = { 1, 0 };
+   float y_frac;
    int winding = 0;
 
    orig[0] = x;
    orig[1] = y;
 
    /*  make sure y never passes through a vertex of the shape */
-   y_frac = (int) STBTT_fmod(y, 1.0f);
+   y_frac = (float) STBTT_fmod(y, 1.0f);
    if (y_frac < 0.01f)
       y += 0.01f;
    else if (y_frac > 0.99f)
@@ -16007,7 +15761,7 @@ static int stbtt__compute_crossings_x(int x, int y, int nverts, stbtt_vertex *ve
          int x0 = (int) verts[i-1].x, y0 = (int) verts[i-1].y;
          int x1 = (int) verts[i  ].x, y1 = (int) verts[i  ].y;
          if (y > STBTT_min(y0,y1) && y < STBTT_max(y0,y1) && x > STBTT_min(x0,x1)) {
-            int x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
+            float x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
             if (x_inter < x)
                winding += (y0 < y1) ? 1 : -1;
          }
@@ -16019,21 +15773,21 @@ static int stbtt__compute_crossings_x(int x, int y, int nverts, stbtt_vertex *ve
          int ax = STBTT_min(x0,STBTT_min(x1,x2)), ay = STBTT_min(y0,STBTT_min(y1,y2));
          int by = STBTT_max(y0,STBTT_max(y1,y2));
          if (y > ay && y < by && x > ax) {
-            int q0[2],q1[2],q2[2];
-            int hits[2][2];
-            q0[0] = (int)x0;
-            q0[1] = (int)y0;
-            q1[0] = (int)x1;
-            q1[1] = (int)y1;
-            q2[0] = (int)x2;
-            q2[1] = (int)y2;
+            float q0[2],q1[2],q2[2];
+            float hits[2][2];
+            q0[0] = (float)x0;
+            q0[1] = (float)y0;
+            q1[0] = (float)x1;
+            q1[1] = (float)y1;
+            q2[0] = (float)x2;
+            q2[1] = (float)y2;
             if (equal(q0,q1) || equal(q1,q2)) {
                x0 = (int)verts[i-1].x;
                y0 = (int)verts[i-1].y;
                x1 = (int)verts[i  ].x;
                y1 = (int)verts[i  ].y;
                if (y > STBTT_min(y0,y1) && y < STBTT_max(y0,y1) && x > STBTT_min(x0,x1)) {
-                  int x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
+                  float x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
                   if (x_inter < x)
                      winding += (y0 < y1) ? 1 : -1;
                }
@@ -16052,37 +15806,35 @@ static int stbtt__compute_crossings_x(int x, int y, int nverts, stbtt_vertex *ve
    return winding;
 }
 
-static int stbtt__cuberoot( int x )
+static float stbtt__cuberoot( float x )
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__cuberoot / static");
    if (x<0)
-      return -(int) STBTT_pow(-x,1.0f/3.0f);
+      return -(float) STBTT_pow(-x,1.0f/3.0f);
    else
-      return  (int) STBTT_pow( x,1.0f/3.0f);
+      return  (float) STBTT_pow( x,1.0f/3.0f);
 }
 
 /*  x^3 + c*x^2 + b*x + a = 0 */
-static int stbtt__solve_cubic(int a, int b, int c, int* r)
+static int stbtt__solve_cubic(float a, float b, float c, float* r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__solve_cubic / static");
-  int s = -a / 3;
-  int p = b - a*a / 3;
-  int q = a * (2*a*a - 9*b) / 27 + c;
-   int p3 = p*p*p;
-  int d = q*q + 4*p3 / 27;
+  float s = -a / 3;
+  float p = b - a*a / 3;
+  float q = a * (2*a*a - 9*b) / 27 + c;
+   float p3 = p*p*p;
+  float d = q*q + 4*p3 / 27;
   if (d >= 0) {
-    int z = (int) STBTT_sqrt(d);
-    int u = (-q + z) / 2;
-    int v = (-q - z) / 2;
+    float z = (float) STBTT_sqrt(d);
+    float u = (-q + z) / 2;
+    float v = (-q - z) / 2;
     u = stbtt__cuberoot(u);
     v = stbtt__cuberoot(v);
     r[0] = s + u + v;
     return 1;
   } else {
-     int u = (int) STBTT_sqrt(-p/3);
-     int v = (int) STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; /*  p3 must be negative, since d is negative */
-     int m = (int) STBTT_cos(v);
-      int n = (int) STBTT_cos(v-3.141592/2)*1.732050808f;
+     float u = (float) STBTT_sqrt(-p/3);
+     float v = (float) STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; /*  p3 must be negative, since d is negative */
+     float m = (float) STBTT_cos(v);
+      float n = (float) STBTT_cos(v-3.141592/2)*1.732050808f;
      r[0] = s + u * 2 * m;
      r[1] = s - u * (m + n);
      r[2] = s - u * (m - n);
@@ -16094,10 +15846,9 @@ static int stbtt__solve_cubic(int a, int b, int c, int* r)
    }
 }
 
-STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scale, int glyph, int padding, unsigned char onedge_value, int pixel_dist_scale, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float scale, int glyph, int padding, unsigned char onedge_value, float pixel_dist_scale, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
-   int scale_x = scale, scale_y = scale;
+   float scale_x = scale, scale_y = scale;
    int ix0,iy0,ix1,iy1;
    int w,h;
    unsigned char *data;
@@ -16128,24 +15879,24 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
 
    {
       int x,y,i,j;
-      int *precompute;
+      float *precompute;
       stbtt_vertex *verts;
       int num_verts = stbtt_GetGlyphShape(info, glyph, &verts);
       data = (unsigned char *) STBTT_malloc(w * h, info->userdata);
-      precompute = (int *) STBTT_malloc(num_verts * sizeof(int), info->userdata);
+      precompute = (float *) STBTT_malloc(num_verts * sizeof(float), info->userdata);
 
       for (i=0,j=num_verts-1; i < num_verts; j=i++) {
          if (verts[i].type == STBTT_vline) {
-            int x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
-            int x1 = verts[j].x*scale_x, y1 = verts[j].y*scale_y;
-            int dist = (int) STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
+            float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
+            float x1 = verts[j].x*scale_x, y1 = verts[j].y*scale_y;
+            float dist = (float) STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
             precompute[i] = (dist == 0) ? 0.0f : 1.0f / dist;
          } else if (verts[i].type == STBTT_vcurve) {
-            int x2 = verts[j].x *scale_x, y2 = verts[j].y *scale_y;
-            int x1 = verts[i].cx*scale_x, y1 = verts[i].cy*scale_y;
-            int x0 = verts[i].x *scale_x, y0 = verts[i].y *scale_y;
-            int bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
-            int len2 = bx*bx + by*by;
+            float x2 = verts[j].x *scale_x, y2 = verts[j].y *scale_y;
+            float x1 = verts[i].cx*scale_x, y1 = verts[i].cy*scale_y;
+            float x0 = verts[i].x *scale_x, y0 = verts[i].y *scale_y;
+            float bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
+            float len2 = bx*bx + by*by;
             if (len2 != 0.0f)
                precompute[i] = 1.0f / (bx*bx + by*by);
             else
@@ -16156,81 +15907,81 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
 
       for (y=iy0; y < iy1; ++y) {
          for (x=ix0; x < ix1; ++x) {
-            int val;
-            int min_dist = 999999.0f;
-            int sx = (int) x + 0.5f;
-            int sy = (int) y + 0.5f;
-            int x_gspace = (sx / scale_x);
-            int y_gspace = (sy / scale_y);
+            float val;
+            float min_dist = 999999.0f;
+            float sx = (float) x + 0.5f;
+            float sy = (float) y + 0.5f;
+            float x_gspace = (sx / scale_x);
+            float y_gspace = (sy / scale_y);
 
             int winding = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts); /*  @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path */
 
             for (i=0; i < num_verts; ++i) {
-               int x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
+               float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
 
                /*  check against every point here rather than inside line/curve primitives -- @TODO: wrong if multiple 'moves' in a row produce a garbage point, and given culling, probably more efficient to do within line/curve */
-               int dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);
+               float dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);
                if (dist2 < min_dist*min_dist)
-                  min_dist = (int) STBTT_sqrt(dist2);
+                  min_dist = (float) STBTT_sqrt(dist2);
 
                if (verts[i].type == STBTT_vline) {
-                  int x1 = verts[i-1].x*scale_x, y1 = verts[i-1].y*scale_y;
+                  float x1 = verts[i-1].x*scale_x, y1 = verts[i-1].y*scale_y;
 
                   /*  coarse culling against bbox */
                   /* if (sx > STBTT_min(x0,x1)-min_dist && sx < STBTT_max(x0,x1)+min_dist && */
                   /*     sy > STBTT_min(y0,y1)-min_dist && sy < STBTT_max(y0,y1)+min_dist) */
-                  int dist = (int) STBTT_fabs((x1-x0)*(y0-sy) - (y1-y0)*(x0-sx)) * precompute[i];
+                  float dist = (float) STBTT_fabs((x1-x0)*(y0-sy) - (y1-y0)*(x0-sx)) * precompute[i];
                   STBTT_assert(i != 0);
                   if (dist < min_dist) {
                      /*  check position along line */
                      /*  x' = x0 + t*(x1-x0), y' = y0 + t*(y1-y0) */
                      /*  minimize (x'-sx)*(x'-sx)+(y'-sy)*(y'-sy) */
-                     int dx = x1-x0, dy = y1-y0;
-                     int px = x0-sx, py = y0-sy;
+                     float dx = x1-x0, dy = y1-y0;
+                     float px = x0-sx, py = y0-sy;
                      /*  minimize (px+t*dx)^2 + (py+t*dy)^2 = px*px + 2*px*dx*t + t^2*dx*dx + py*py + 2*py*dy*t + t^2*dy*dy */
                      /*  derivative: 2*px*dx + 2*py*dy + (2*dx*dx+2*dy*dy)*t, set to 0 and solve */
-                     int t = -(px*dx + py*dy) / (dx*dx + dy*dy);
+                     float t = -(px*dx + py*dy) / (dx*dx + dy*dy);
                      if (t >= 0.0f && t <= 1.0f)
                         min_dist = dist;
                   }
                } else if (verts[i].type == STBTT_vcurve) {
-                  int x2 = verts[i-1].x *scale_x, y2 = verts[i-1].y *scale_y;
-                  int x1 = verts[i  ].cx*scale_x, y1 = verts[i  ].cy*scale_y;
-                  int box_x0 = STBTT_min(STBTT_min(x0,x1),x2);
-                  int box_y0 = STBTT_min(STBTT_min(y0,y1),y2);
-                  int box_x1 = STBTT_max(STBTT_max(x0,x1),x2);
-                  int box_y1 = STBTT_max(STBTT_max(y0,y1),y2);
+                  float x2 = verts[i-1].x *scale_x, y2 = verts[i-1].y *scale_y;
+                  float x1 = verts[i  ].cx*scale_x, y1 = verts[i  ].cy*scale_y;
+                  float box_x0 = STBTT_min(STBTT_min(x0,x1),x2);
+                  float box_y0 = STBTT_min(STBTT_min(y0,y1),y2);
+                  float box_x1 = STBTT_max(STBTT_max(x0,x1),x2);
+                  float box_y1 = STBTT_max(STBTT_max(y0,y1),y2);
                   /*  coarse culling against bbox to avoid computing cubic unnecessarily */
                   if (sx > box_x0-min_dist && sx < box_x1+min_dist && sy > box_y0-min_dist && sy < box_y1+min_dist) {
                      int num=0;
-                     int ax = x1-x0, ay = y1-y0;
-                     int bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
-                     int mx = x0 - sx, my = y0 - sy;
-                     int res[3],px,py,t,it;
-                     int a_inv = precompute[i];
+                     float ax = x1-x0, ay = y1-y0;
+                     float bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
+                     float mx = x0 - sx, my = y0 - sy;
+                     float res[3],px,py,t,it;
+                     float a_inv = precompute[i];
                      if (a_inv == 0.0) { /*  if a_inv is 0, it's 2nd degree so use quadratic formula */
-                        int a = 3*(ax*bx + ay*by);
-                        int b = 2*(ax*ax + ay*ay) + (mx*bx+my*by);
-                        int c = mx*ax+my*ay;
+                        float a = 3*(ax*bx + ay*by);
+                        float b = 2*(ax*ax + ay*ay) + (mx*bx+my*by);
+                        float c = mx*ax+my*ay;
                         if (a == 0.0) { /*  if a is 0, it's linear */
                            if (b != 0.0) {
                               res[num++] = -c/b;
                            }
                         } else {
-                           int discriminant = b*b - 4*a*c;
+                           float discriminant = b*b - 4*a*c;
                            if (discriminant < 0)
                               num = 0;
                            else {
-                              int root = (int) STBTT_sqrt(discriminant);
+                              float root = (float) STBTT_sqrt(discriminant);
                               res[0] = (-b - root)/(2*a);
                               res[1] = (-b + root)/(2*a);
                               num = 2; /*  don't bother distinguishing 1-solution case, as code below will still work */
                            }
                         }
                      } else {
-                        int b = 3*(ax*bx + ay*by) * a_inv; /*  could precompute this as it doesn't depend on sample point */
-                        int c = (2*(ax*ax + ay*ay) + (mx*bx+my*by)) * a_inv;
-                        int d = (mx*ax+my*ay) * a_inv;
+                        float b = 3*(ax*bx + ay*by) * a_inv; /*  could precompute this as it doesn't depend on sample point */
+                        float c = (2*(ax*ax + ay*ay) + (mx*bx+my*by)) * a_inv;
+                        float d = (mx*ax+my*ay) * a_inv;
                         num = stbtt__solve_cubic(b, c, d, res);
                      }
                      if (num >= 1 && res[0] >= 0.0f && res[0] <= 1.0f) {
@@ -16239,7 +15990,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (int) STBTT_sqrt(dist2);
+                           min_dist = (float) STBTT_sqrt(dist2);
                      }
                      if (num >= 2 && res[1] >= 0.0f && res[1] <= 1.0f) {
                         t = res[1], it = 1.0f - t;
@@ -16247,7 +15998,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (int) STBTT_sqrt(dist2);
+                           min_dist = (float) STBTT_sqrt(dist2);
                      }
                      if (num >= 3 && res[2] >= 0.0f && res[2] <= 1.0f) {
                         t = res[2], it = 1.0f - t;
@@ -16255,7 +16006,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (int) STBTT_sqrt(dist2);
+                           min_dist = (float) STBTT_sqrt(dist2);
                      }
                   }
                }
@@ -16276,15 +16027,13 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, int scal
    return data;
 }
 
-STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, int scale, int codepoint, int padding, unsigned char onedge_value, int pixel_dist_scale, int *width, int *height, int *xoff, int *yoff)
+STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, float scale, int codepoint, int padding, unsigned char onedge_value, float pixel_dist_scale, int *width, int *height, int *xoff, int *yoff)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    return stbtt_GetGlyphSDF(info, scale, stbtt_FindGlyphIndex(info, codepoint), padding, onedge_value, pixel_dist_scale, width, height, xoff, yoff);
 }
 
 STBTT_DEF void stbtt_FreeSDF(unsigned char *bitmap, void *userdata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FreeSDF / STBTT_DEF");
    STBTT_free(bitmap, userdata);
 }
 
@@ -16296,7 +16045,6 @@ STBTT_DEF void stbtt_FreeSDF(unsigned char *bitmap, void *userdata)
 /*  check if a utf8 string contains a prefix which is the utf16 string; if so return length of matching utf8 string */
 static stbtt_int32 stbtt__CompareUTF8toUTF16_bigendian_prefix(stbtt_uint8 *s1, stbtt_int32 len1, stbtt_uint8 *s2, stbtt_int32 len2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__CompareUTF8toUTF16_bigendian_prefix / static");
    stbtt_int32 i=0;
 
    /*  convert utf16 to utf8 and compare the results while converting */
@@ -16336,7 +16084,6 @@ static stbtt_int32 stbtt__CompareUTF8toUTF16_bigendian_prefix(stbtt_uint8 *s1, s
 
 static int stbtt_CompareUTF8toUTF16_bigendian_internal(char *s1, int len1, char *s2, int len2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_CompareUTF8toUTF16_bigendian_internal / static");
    return len1 == stbtt__CompareUTF8toUTF16_bigendian_prefix((stbtt_uint8*) s1, len1, (stbtt_uint8*) s2, len2);
 }
 
@@ -16344,7 +16091,6 @@ static int stbtt_CompareUTF8toUTF16_bigendian_internal(char *s1, int len1, char 
 /*  will be BIG-ENDIAN... use stbtt_CompareUTF8toUTF16_bigendian() to compare */
 STBTT_DEF const char *stbtt_GetFontNameString(const stbtt_fontinfo *font, int *length, int platformID, int encodingID, int languageID, int nameID)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / STBTT_DEF");
    stbtt_int32 i,count,stringOffset;
    stbtt_uint8 *fc = font->data;
    stbtt_uint32 offset = font->fontstart;
@@ -16366,7 +16112,6 @@ STBTT_DEF const char *stbtt_GetFontNameString(const stbtt_fontinfo *font, int *l
 
 static int stbtt__matchpair(stbtt_uint8 *fc, stbtt_uint32 nm, stbtt_uint8 *name, stbtt_int32 nlen, stbtt_int32 target_id, stbtt_int32 next_id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__matchpair / static");
    stbtt_int32 i;
    stbtt_int32 count = ttUSHORT(fc+nm+2);
    stbtt_int32 stringOffset = nm + ttUSHORT(fc+nm+4);
@@ -16414,7 +16159,6 @@ static int stbtt__matchpair(stbtt_uint8 *fc, stbtt_uint32 nm, stbtt_uint8 *name,
 
 static int stbtt__matches(stbtt_uint8 *fc, stbtt_uint32 offset, stbtt_uint8 *name, stbtt_int32 flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt__matches / static");
    stbtt_int32 nlen = (stbtt_int32) STBTT_strlen((char *) name);
    stbtt_uint32 nm,hd;
    if (!stbtt__isfont(fc+offset)) return 0;
@@ -16444,7 +16188,6 @@ static int stbtt__matches(stbtt_uint8 *fc, stbtt_uint32 offset, stbtt_uint8 *nam
 
 static int stbtt_FindMatchingFont_internal(unsigned char *font_collection, char *name_utf8, stbtt_int32 flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FindMatchingFont_internal / static");
    stbtt_int32 i;
    for (i=0;;++i) {
       stbtt_int32 off = stbtt_GetFontOffsetForIndex(font_collection, i);
@@ -16460,40 +16203,34 @@ static int stbtt_FindMatchingFont_internal(unsigned char *font_collection, char 
 #endif
 
 STBTT_DEF int stbtt_BakeFontBitmap(const unsigned char *data, int offset,
-                                int pixel_height, unsigned char *pixels, int pw, int ph,
+                                float pixel_height, unsigned char *pixels, int pw, int ph,
                                 int first_char, int num_chars, stbtt_bakedchar *chardata)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - first_char, /                                 int");
    return stbtt_BakeFontBitmap_internal((unsigned char *) data, offset, pixel_height, pixels, pw, ph, first_char, num_chars, chardata);
 }
 
 STBTT_DEF int stbtt_GetFontOffsetForIndex(const unsigned char *data, int index)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetFontOffsetForIndex / STBTT_DEF");
    return stbtt_GetFontOffsetForIndex_internal((unsigned char *) data, index);
 }
 
 STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char *data)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_GetNumberOfFonts / STBTT_DEF");
    return stbtt_GetNumberOfFonts_internal((unsigned char *) data);
 }
 
 STBTT_DEF int stbtt_InitFont(stbtt_fontinfo *info, const unsigned char *data, int offset)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_InitFont / STBTT_DEF");
    return stbtt_InitFont_internal(info, (unsigned char *) data, offset);
 }
 
 STBTT_DEF int stbtt_FindMatchingFont(const unsigned char *fontdata, const char *name, int flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_FindMatchingFont / STBTT_DEF");
    return stbtt_FindMatchingFont_internal((unsigned char *) fontdata, (char *) name, flags);
 }
 
 STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char *s1, int len1, const char *s2, int len2)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - stbtt_CompareUTF8toUTF16_bigendian / STBTT_DEF");
    return stbtt_CompareUTF8toUTF16_bigendian_internal((char *) s1, len1, (char *) s2, len2);
 }
 
@@ -16655,9 +16392,8 @@ NK_GLOBAL const nk_size nk_baker_align = NK_ALIGNOF(struct nk_font_baker);
 NK_INTERN int
 nk_range_count(const nk_rune *range)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rune / nk_range_count");
     const nk_rune *iter = range;
-    // NK_ASSERT(range);
+    NK_ASSERT(range);
     if (!range) return 0;
     while (*(iter++) != 0);
     return (iter == range) ? 0 : (int)((iter - range)/2);
@@ -16665,14 +16401,13 @@ nk_range_count(const nk_rune *range)
 NK_INTERN int
 nk_range_glyph_count(const nk_rune *range, int count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rune / nk_range_glyph_count");
     int i = 0;
     int total_glyphs = 0;
     for (i = 0; i < count; ++i) {
         int diff;
         nk_rune f = range[(i*2)+0];
         nk_rune t = range[(i*2)+1];
-        // NK_ASSERT(t >= f);
+        NK_ASSERT(t >= f);
         diff = (int)((t - f) + 1);
         total_glyphs += diff;
     }
@@ -16681,14 +16416,12 @@ nk_range_glyph_count(const nk_rune *range, int count)
 NK_API const nk_rune*
 nk_font_default_glyph_ranges(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_font_default_glyph_ranges");
     NK_STORAGE const nk_rune ranges[] = {0x0020, 0x00FF, 0};
     return ranges;
 }
 NK_API const nk_rune*
 nk_font_chinese_glyph_ranges(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_font_chinese_glyph_ranges");
     NK_STORAGE const nk_rune ranges[] = {
         0x0020, 0x00FF,
         0x3000, 0x30FF,
@@ -16702,7 +16435,6 @@ nk_font_chinese_glyph_ranges(void)
 NK_API const nk_rune*
 nk_font_cyrillic_glyph_ranges(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_font_cyrillic_glyph_ranges");
     NK_STORAGE const nk_rune ranges[] = {
         0x0020, 0x00FF,
         0x0400, 0x052F,
@@ -16715,7 +16447,6 @@ nk_font_cyrillic_glyph_ranges(void)
 NK_API const nk_rune*
 nk_font_korean_glyph_ranges(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_font_korean_glyph_ranges");
     NK_STORAGE const nk_rune ranges[] = {
         0x0020, 0x00FF,
         0x3131, 0x3163,
@@ -16728,13 +16459,12 @@ NK_INTERN void
 nk_font_baker_memory(nk_size *temp, int *glyph_count,
     struct nk_font_config *config_list, int count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - config_list /     struct");
     int range_count = 0;
     int total_range_count = 0;
     struct nk_font_config *iter, *i;
 
-    // NK_ASSERT(config_list);
-    // NK_ASSERT(glyph_count);
+    NK_ASSERT(config_list);
+    NK_ASSERT(glyph_count);
     if (!config_list) {
         *temp = 0;
         *glyph_count = 0;
@@ -16760,7 +16490,6 @@ nk_font_baker_memory(nk_size *temp, int *glyph_count,
 NK_INTERN struct nk_font_baker*
 nk_font_baker(void *memory, int glyph_count, int count, struct nk_allocator *alloc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - memory / nk_font_baker");
     struct nk_font_baker *baker;
     if (!memory) return 0;
     /* setup baker inside a memory block  */
@@ -16778,7 +16507,6 @@ nk_font_bake_pack(struct nk_font_baker *baker,
     const struct nk_font_config *config_list, int count,
     struct nk_allocator *alloc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - alloc /     struct");
     NK_STORAGE const nk_size max_height = 1024 * 32;
     const struct nk_font_config *config_iter, *it;
     int total_glyph_count = 0;
@@ -16786,12 +16514,12 @@ nk_font_bake_pack(struct nk_font_baker *baker,
     int range_count = 0;
     int i = 0;
 
-    // NK_ASSERT(image_memory);
-    // NK_ASSERT(width);
-    // NK_ASSERT(height);
-    // NK_ASSERT(config_list);
-    // NK_ASSERT(count);
-    // NK_ASSERT(alloc);
+    NK_ASSERT(image_memory);
+    NK_ASSERT(width);
+    NK_ASSERT(height);
+    NK_ASSERT(config_list);
+    NK_ASSERT(count);
+    NK_ASSERT(alloc);
 
     if (!image_memory || !width || !height || !config_list || !count) return nk_false;
     for (config_iter = config_list; config_iter; config_iter = config_iter->next) {
@@ -16803,11 +16531,13 @@ nk_font_bake_pack(struct nk_font_baker *baker,
     }
     /* setup font baker from temporary memory */
     for (config_iter = config_list; config_iter; config_iter = config_iter->next) {
-        struct stbtt_fontinfo *font_info = &baker->build[i++].info;
         it = config_iter;
-        font_info->userdata = alloc;
-        do {if (!stbtt_InitFont(font_info, (const unsigned char*)it->ttf_blob, 0))
-            return nk_false;
+        do {
+            struct stbtt_fontinfo *font_info = &baker->build[i++].info;
+            font_info->userdata = alloc;
+
+            if (!stbtt_InitFont(font_info, (const unsigned char*)it->ttf_blob, 0))
+                return nk_false;
         } while ((it = it->n) != config_iter);
     }
     *height = 0;
@@ -16881,9 +16611,9 @@ nk_font_bake_pack(struct nk_font_baker *baker,
                 }
             } while ((it = it->n) != config_iter);
         }
-        // NK_ASSERT(rect_n == total_glyph_count);
-        // NK_ASSERT(char_n == total_glyph_count);
-        // NK_ASSERT(range_n == total_range_count);
+        NK_ASSERT(rect_n == total_glyph_count);
+        NK_ASSERT(char_n == total_glyph_count);
+        NK_ASSERT(range_n == total_range_count);
     }
     *height = (int)nk_round_up_pow2((nk_uint)*height);
     *image_memory = (nk_size)(*width) * (nk_size)(*height);
@@ -16894,19 +16624,18 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
     struct nk_font_glyph *glyphs, int glyphs_count,
     const struct nk_font_config *config_list, int font_count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_config /     const");
     int input_i = 0;
     nk_rune glyph_n = 0;
     const struct nk_font_config *config_iter;
     const struct nk_font_config *it;
 
-    // NK_ASSERT(image_memory);
-    // NK_ASSERT(width);
-    // NK_ASSERT(height);
-    // NK_ASSERT(config_list);
-    // NK_ASSERT(baker);
-    // NK_ASSERT(font_count);
-    // NK_ASSERT(glyphs_count);
+    NK_ASSERT(image_memory);
+    NK_ASSERT(width);
+    NK_ASSERT(height);
+    NK_ASSERT(config_list);
+    NK_ASSERT(baker);
+    NK_ASSERT(font_count);
+    NK_ASSERT(glyphs_count);
     if (!image_memory || !width || !height || !config_list ||
         !font_count || !glyphs || !glyphs_count)
         return;
@@ -16936,7 +16665,7 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
             struct nk_font_bake_data *tmp = &baker->build[input_i++];
             struct nk_baked_font *dst_font = cfg->font;
 
-            int font_scale = stbtt_ScaleForPixelHeight(&tmp->info, cfg->size);
+            float font_scale = stbtt_ScaleForPixelHeight(&tmp->info, cfg->size);
             int unscaled_ascent, unscaled_descent, unscaled_line_gap;
             stbtt_GetFontVMetrics(&tmp->info, &unscaled_ascent, &unscaled_descent,
                                     &unscaled_line_gap);
@@ -16945,8 +16674,8 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
             if (!cfg->merge_mode) {
                 dst_font->ranges = cfg->range;
                 dst_font->height = cfg->size;
-                dst_font->ascent = ((int)unscaled_ascent * font_scale);
-                dst_font->descent = ((int)unscaled_descent * font_scale);
+                dst_font->ascent = ((float)unscaled_ascent * font_scale);
+                dst_font->descent = ((float)unscaled_descent * font_scale);
                 dst_font->glyph_offset = glyph_n;
                 /*
                     Need to zero this, or it will carry over from a previous
@@ -16961,7 +16690,7 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
                 for (char_idx = 0; char_idx < range->num_chars; char_idx++)
                 {
                     nk_rune codepoint = 0;
-                    int dummy_x = 0, dummy_y = 0;
+                    float dummy_x = 0, dummy_y = 0;
                     stbtt_aligned_quad q;
                     struct nk_font_glyph *glyph;
 
@@ -16983,10 +16712,10 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
                     glyph->h = glyph->y1 - glyph->y0;
 
                     if (cfg->coord_type == NK_COORD_PIXEL) {
-                        glyph->u0 = q.s0 * (int)width;
-                        glyph->v0 = q.t0 * (int)height;
-                        glyph->u1 = q.s1 * (int)width;
-                        glyph->v1 = q.t1 * (int)height;
+                        glyph->u0 = q.s0 * (float)width;
+                        glyph->v0 = q.t0 * (float)height;
+                        glyph->u1 = q.s1 * (float)width;
+                        glyph->v1 = q.t1 * (float)height;
                     } else {
                         glyph->u0 = q.s0;
                         glyph->v0 = q.t0;
@@ -16995,7 +16724,7 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
                     }
                     glyph->xadvance = (pc->xadvance + cfg->spacing.x);
                     if (cfg->pixel_snap)
-                        glyph->xadvance = (int)(int)(glyph->xadvance + 0.5f);
+                        glyph->xadvance = (float)(int)(glyph->xadvance + 0.5f);
                     glyph_count++;
                 }
             }
@@ -17009,16 +16738,15 @@ nk_font_bake_custom_data(void *img_memory, int img_width, int img_height,
     struct nk_recti img_dst, const char *texture_data_mask, int tex_width,
     int tex_height, char white, char black)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - tex_height, /     int");
     nk_byte *pixels;
     int y = 0;
     int x = 0;
     int n = 0;
 
-    // NK_ASSERT(img_memory);
-    // NK_ASSERT(img_width);
-    // NK_ASSERT(img_height);
-    // NK_ASSERT(texture_data_mask);
+    NK_ASSERT(img_memory);
+    NK_ASSERT(img_width);
+    NK_ASSERT(img_height);
+    NK_ASSERT(texture_data_mask);
     NK_UNUSED(tex_height);
     if (!img_memory || !img_width || !img_height || !texture_data_mask)
         return;
@@ -17037,15 +16765,14 @@ NK_INTERN void
 nk_font_bake_convert(void *out_memory, int img_width, int img_height,
     const void *in_memory)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - in_memory /     const");
     int n = 0;
     nk_rune *dst;
     const nk_byte *src;
 
-    // NK_ASSERT(out_memory);
-    // NK_ASSERT(in_memory);
-    // NK_ASSERT(img_width);
-    // NK_ASSERT(img_height);
+    NK_ASSERT(out_memory);
+    NK_ASSERT(in_memory);
+    NK_ASSERT(img_width);
+    NK_ASSERT(img_height);
     if (!out_memory || !in_memory || !img_height || !img_width) return;
 
     dst = (nk_rune*)out_memory;
@@ -17059,19 +16786,18 @@ nk_font_bake_convert(void *out_memory, int img_width, int img_height,
  *                          FONT
  *
  * --------------------------------------------------------------*/
-NK_INTERN int
-nk_font_text_width(nk_handle handle, int height, const char *text, int len)
+NK_INTERN float
+nk_font_text_width(nk_handle handle, float height, const char *text, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - handle / nk_font_text_width");
     nk_rune unicode;
     int text_len  = 0;
-    int text_width = 0;
+    float text_width = 0;
     int glyph_len = 0;
-    int scale = 0;
+    float scale = 0;
 
     struct nk_font *font = (struct nk_font*)handle.ptr;
-    // NK_ASSERT(font);
-    // NK_ASSERT(font->glyphs);
+    NK_ASSERT(font);
+    NK_ASSERT(font->glyphs);
     if (!font || !text || !len)
         return 0;
 
@@ -17094,20 +16820,19 @@ nk_font_text_width(nk_handle handle, int height, const char *text, int len)
 }
 #ifdef NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 NK_INTERN void
-nk_font_query_font_glyph(nk_handle handle, int height,
+nk_font_query_font_glyph(nk_handle handle, float height,
     struct nk_user_font_glyph *glyph, nk_rune codepoint, nk_rune next_codepoint)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - glyph /     struct");
-    int scale;
+    float scale;
     const struct nk_font_glyph *g;
     struct nk_font *font;
 
-    // NK_ASSERT(glyph);
+    NK_ASSERT(glyph);
     NK_UNUSED(next_codepoint);
 
     font = (struct nk_font*)handle.ptr;
-    // NK_ASSERT(font);
-    // NK_ASSERT(font->glyphs);
+    NK_ASSERT(font);
+    NK_ASSERT(font->glyphs);
     if (!font || !glyph)
         return;
 
@@ -17124,16 +16849,15 @@ nk_font_query_font_glyph(nk_handle handle, int height,
 NK_API const struct nk_font_glyph*
 nk_font_find_glyph(struct nk_font *font, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font / nk_font_find_glyph");
     int i = 0;
     int count;
     int total_glyphs = 0;
     const struct nk_font_glyph *glyph = 0;
     const struct nk_font_config *iter = 0;
 
-    // NK_ASSERT(font);
-    // NK_ASSERT(font->glyphs);
-    // NK_ASSERT(font->info.ranges);
+    NK_ASSERT(font);
+    NK_ASSERT(font->glyphs);
+    NK_ASSERT(font->info.ranges);
     if (!font || !font->glyphs) return 0;
 
     glyph = font->fallback;
@@ -17151,22 +16875,21 @@ nk_font_find_glyph(struct nk_font *font, nk_rune unicode)
     return glyph;
 }
 NK_INTERN void
-nk_font_init(struct nk_font *font, int pixel_height,
+nk_font_init(struct nk_font *font, float pixel_height,
     nk_rune fallback_codepoint, struct nk_font_glyph *glyphs,
     const struct nk_baked_font *baked_font, nk_handle atlas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_baked_font /     const");
     struct nk_baked_font baked;
-    // NK_ASSERT(font);
-    // NK_ASSERT(glyphs);
-    // NK_ASSERT(baked_font);
+    NK_ASSERT(font);
+    NK_ASSERT(glyphs);
+    NK_ASSERT(baked_font);
     if (!font || !glyphs || !baked_font)
         return;
 
     baked = *baked_font;
     font->fallback = 0;
     font->info = baked;
-    font->scale = (int)pixel_height / (int)font->info.height;
+    font->scale = (float)pixel_height / (float)font->info.height;
     font->glyphs = &glyphs[baked_font->glyph_offset];
     font->texture = atlas;
     font->fallback_codepoint = fallback_codepoint;
@@ -17338,15 +17061,13 @@ NK_GLOBAL unsigned char *nk__dout;
 NK_INTERN unsigned int
 nk_decompress_length(unsigned char *input)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_decompress_length");
     return (unsigned int)((input[8] << 24) + (input[9] << 16) + (input[10] << 8) + input[11]);
 }
 NK_INTERN void
 nk__match(unsigned char *data, unsigned int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk__match");
     /* INVERSE of memmove... write each byte before copying the next...*/
-    // NK_ASSERT (nk__dout + length <= nk__barrier);
+    NK_ASSERT (nk__dout + length <= nk__barrier);
     if (nk__dout + length > nk__barrier) { nk__dout += length; return; }
     if (data < nk__barrier4) { nk__dout = nk__barrier+1; return; }
     while (length--) *nk__dout++ = *data++;
@@ -17354,8 +17075,7 @@ nk__match(unsigned char *data, unsigned int length)
 NK_INTERN void
 nk__lit(unsigned char *data, unsigned int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk__lit");
-    // NK_ASSERT (nk__dout + length <= nk__barrier);
+    NK_ASSERT (nk__dout + length <= nk__barrier);
     if (nk__dout + length > nk__barrier) { nk__dout += length; return; }
     if (data < nk__barrier2) { nk__dout = nk__barrier+1; return; }
     NK_MEMCPY(nk__dout, data, length);
@@ -17364,7 +17084,6 @@ nk__lit(unsigned char *data, unsigned int length)
 NK_INTERN unsigned char*
 nk_decompress_token(unsigned char *i)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_decompress_token");
     #define nk__in2(x)   ((i[x] << 8) + i[(x)+1])
     #define nk__in3(x)   ((i[x] << 16) + nk__in2((x)+1))
     #define nk__in4(x)   ((i[x] << 24) + nk__in3((x)+1))
@@ -17386,7 +17105,6 @@ nk_decompress_token(unsigned char *i)
 NK_INTERN unsigned int
 nk_adler32(unsigned int adler32, unsigned char *buffer, unsigned int buflen)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - int / nk_adler32");
     const unsigned long ADLER_MOD = 65521;
     unsigned long s1 = adler32 & 0xffff, s2 = adler32 >> 16;
     unsigned long blocklen, i;
@@ -17417,7 +17135,6 @@ nk_adler32(unsigned int adler32, unsigned char *buffer, unsigned int buflen)
 NK_INTERN unsigned int
 nk_decompress(unsigned char *output, unsigned char *i, unsigned int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_decompress");
     unsigned int olen;
     if (nk__in4(0) != 0x57bC0000) return 0;
     if (nk__in4(4) != 0)          return 0; /* error! stream is > 4GB */
@@ -17434,17 +17151,17 @@ nk_decompress(unsigned char *output, unsigned char *i, unsigned int length)
         i = nk_decompress_token(i);
         if (i == old_i) {
             if (*i == 0x05 && i[1] == 0xfa) {
-                // NK_ASSERT(nk__dout == output + olen);
+                NK_ASSERT(nk__dout == output + olen);
                 if (nk__dout != output + olen) return 0;
                 if (nk_adler32(1, output, olen) != (unsigned int) nk__in4(2))
                     return 0;
                 return olen;
             } else {
-                // NK_ASSERT(0); /* NOTREACHED */
+                NK_ASSERT(0); /* NOTREACHED */
                 return 0;
             }
         }
-        // NK_ASSERT(nk__dout <= output + olen);
+        NK_ASSERT(nk__dout <= output + olen);
         if (nk__dout > output + olen)
             return 0;
     }
@@ -17452,13 +17169,11 @@ nk_decompress(unsigned char *output, unsigned char *i, unsigned int length)
 NK_INTERN unsigned int
 nk_decode_85_byte(char c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c / nk_decode_85_byte");
     return (unsigned int)((c >= '\\') ? c-36 : c-35);
 }
 NK_INTERN void
 nk_decode_85(unsigned char* dst, const unsigned char* src)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char / nk_decode_85");
     while (*src)
     {
         unsigned int tmp =
@@ -17485,9 +17200,8 @@ nk_decode_85(unsigned char* dst, const unsigned char* src)
  *
  * --------------------------------------------------------------*/
 NK_API struct nk_font_config
-nk_font_config(int pixel_height)
+nk_font_config(float pixel_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pixel_height / nk_font_config");
     struct nk_font_config cfg;
     nk_zero_struct(cfg);
     cfg.ttf_blob = 0;
@@ -17510,8 +17224,7 @@ nk_font_config(int pixel_height)
 NK_API void
 nk_font_atlas_init_default(struct nk_font_atlas *atlas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_init_default");
-    // NK_ASSERT(atlas);
+    NK_ASSERT(atlas);
     if (!atlas) return;
     nk_zero_struct(*atlas);
     atlas->temporary.userdata.ptr = 0;
@@ -17525,9 +17238,8 @@ nk_font_atlas_init_default(struct nk_font_atlas *atlas)
 NK_API void
 nk_font_atlas_init(struct nk_font_atlas *atlas, struct nk_allocator *alloc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_init");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(alloc);
+    NK_ASSERT(atlas);
+    NK_ASSERT(alloc);
     if (!atlas || !alloc) return;
     nk_zero_struct(*atlas);
     atlas->permanent = *alloc;
@@ -17537,10 +17249,9 @@ NK_API void
 nk_font_atlas_init_custom(struct nk_font_atlas *atlas,
     struct nk_allocator *permanent, struct nk_allocator *temporary)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - permanent /     struct");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(permanent);
-    // NK_ASSERT(temporary);
+    NK_ASSERT(atlas);
+    NK_ASSERT(permanent);
+    NK_ASSERT(temporary);
     if (!atlas || !permanent || !temporary) return;
     nk_zero_struct(*atlas);
     atlas->permanent = *permanent;
@@ -17549,10 +17260,9 @@ nk_font_atlas_init_custom(struct nk_font_atlas *atlas,
 NK_API void
 nk_font_atlas_begin(struct nk_font_atlas *atlas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_begin");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc && atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc && atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc && atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc && atlas->permanent.free);
     if (!atlas || !atlas->permanent.alloc || !atlas->permanent.free ||
         !atlas->temporary.alloc || !atlas->temporary.free) return;
     if (atlas->glyphs) {
@@ -17567,20 +17277,19 @@ nk_font_atlas_begin(struct nk_font_atlas *atlas)
 NK_API struct nk_font*
 nk_font_atlas_add(struct nk_font_atlas *atlas, const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_add");
     struct nk_font *font = 0;
     struct nk_font_config *cfg;
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
 
-    // NK_ASSERT(config);
-    // NK_ASSERT(config->ttf_blob);
-    // NK_ASSERT(config->ttf_size);
-    // NK_ASSERT(config->size > 0.0f);
+    NK_ASSERT(config);
+    NK_ASSERT(config->ttf_blob);
+    NK_ASSERT(config->ttf_size);
+    NK_ASSERT(config->size > 0.0f);
 
     if (!atlas || !config || !config->ttf_blob || !config->ttf_size || config->size <= 0.0f||
         !atlas->permanent.alloc || !atlas->permanent.free ||
@@ -17608,7 +17317,7 @@ nk_font_atlas_add(struct nk_font_atlas *atlas, const struct nk_font_config *conf
         /* allocate new font */
         font = (struct nk_font*)
             atlas->permanent.alloc(atlas->permanent.userdata,0, sizeof(struct nk_font));
-        // NK_ASSERT(font);
+        NK_ASSERT(font);
         nk_zero(font, sizeof(*font));
         if (!font) return 0;
         font->config = cfg;
@@ -17628,7 +17337,7 @@ nk_font_atlas_add(struct nk_font_atlas *atlas, const struct nk_font_config *conf
         /* extend previously added font */
         struct nk_font *f = 0;
         struct nk_font_config *c = 0;
-        // NK_ASSERT(atlas->font_num);
+        NK_ASSERT(atlas->font_num);
         f = atlas->fonts;
         c = f->config;
         cfg->font = &f->info;
@@ -17641,7 +17350,7 @@ nk_font_atlas_add(struct nk_font_atlas *atlas, const struct nk_font_config *conf
     /* create own copy of .TTF font blob */
     if (!config->ttf_data_owned_by_atlas) {
         cfg->ttf_blob = atlas->permanent.alloc(atlas->permanent.userdata,0, cfg->ttf_size);
-        // NK_ASSERT(cfg->ttf_blob);
+        NK_ASSERT(cfg->ttf_blob);
         if (!cfg->ttf_blob) {
             atlas->font_num++;
             return 0;
@@ -17654,18 +17363,17 @@ nk_font_atlas_add(struct nk_font_atlas *atlas, const struct nk_font_config *conf
 }
 NK_API struct nk_font*
 nk_font_atlas_add_from_memory(struct nk_font_atlas *atlas, void *memory,
-    nk_size size, int height, const struct nk_font_config *config)
+    nk_size size, float height, const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - size, /     nk_size");
     struct nk_font_config cfg;
-    // NK_ASSERT(memory);
-    // NK_ASSERT(size);
+    NK_ASSERT(memory);
+    NK_ASSERT(size);
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
     if (!atlas || !atlas->temporary.alloc || !atlas->temporary.free || !memory || !size ||
         !atlas->permanent.alloc || !atlas->permanent.free)
         return 0;
@@ -17680,18 +17388,17 @@ nk_font_atlas_add_from_memory(struct nk_font_atlas *atlas, void *memory,
 #ifdef NK_INCLUDE_STANDARD_IO
 NK_API struct nk_font*
 nk_font_atlas_add_from_file(struct nk_font_atlas *atlas, const char *file_path,
-    int height, const struct nk_font_config *config)
+    float height, const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - height, /     int");
     nk_size size;
     char *memory;
     struct nk_font_config cfg;
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
 
     if (!atlas || !file_path) return 0;
     memory = nk_file_load(file_path, &size, &atlas->permanent);
@@ -17707,29 +17414,28 @@ nk_font_atlas_add_from_file(struct nk_font_atlas *atlas, const char *file_path,
 #endif
 NK_API struct nk_font*
 nk_font_atlas_add_compressed(struct nk_font_atlas *atlas,
-    void *compressed_data, nk_size compressed_size, int height,
+    void *compressed_data, nk_size compressed_size, float height,
     const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_config /     const");
     unsigned int decompressed_size;
     void *decompressed_data;
     struct nk_font_config cfg;
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
 
-    // NK_ASSERT(compressed_data);
-    // NK_ASSERT(compressed_size);
+    NK_ASSERT(compressed_data);
+    NK_ASSERT(compressed_size);
     if (!atlas || !compressed_data || !atlas->temporary.alloc || !atlas->temporary.free ||
         !atlas->permanent.alloc || !atlas->permanent.free)
         return 0;
 
     decompressed_size = nk_decompress_length((unsigned char*)compressed_data);
     decompressed_data = atlas->permanent.alloc(atlas->permanent.userdata,0,decompressed_size);
-    // NK_ASSERT(decompressed_data);
+    NK_ASSERT(decompressed_data);
     if (!decompressed_data) return 0;
     nk_decompress((unsigned char*)decompressed_data, (unsigned char*)compressed_data,
         (unsigned int)compressed_size);
@@ -17743,27 +17449,26 @@ nk_font_atlas_add_compressed(struct nk_font_atlas *atlas,
 }
 NK_API struct nk_font*
 nk_font_atlas_add_compressed_base85(struct nk_font_atlas *atlas,
-    const char *data_base85, int height, const struct nk_font_config *config)
+    const char *data_base85, float height, const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - data_base85 /     const");
     int compressed_size;
     void *compressed_data;
     struct nk_font *font;
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
 
-    // NK_ASSERT(data_base85);
+    NK_ASSERT(data_base85);
     if (!atlas || !data_base85 || !atlas->temporary.alloc || !atlas->temporary.free ||
         !atlas->permanent.alloc || !atlas->permanent.free)
         return 0;
 
-    compressed_size = (((int)strlen(data_base85) + 4) / 5) * 4;
+    compressed_size = (((int)nk_strlen(data_base85) + 4) / 5) * 4;
     compressed_data = atlas->temporary.alloc(atlas->temporary.userdata,0, (nk_size)compressed_size);
-    // NK_ASSERT(compressed_data);
+    NK_ASSERT(compressed_data);
     if (!compressed_data) return 0;
     nk_decode_85((unsigned char*)compressed_data, (const unsigned char*)data_base85);
     font = nk_font_atlas_add_compressed(atlas, compressed_data,
@@ -17775,14 +17480,13 @@ nk_font_atlas_add_compressed_base85(struct nk_font_atlas *atlas,
 #ifdef NK_INCLUDE_DEFAULT_FONT
 NK_API struct nk_font*
 nk_font_atlas_add_default(struct nk_font_atlas *atlas,
-    int pixel_height, const struct nk_font_config *config)
+    float pixel_height, const struct nk_font_config *config)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pixel_height, /     int");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
     return nk_font_atlas_add_compressed_base85(atlas,
         nk_proggy_clean_ttf_compressed_data_base85, pixel_height, config);
 }
@@ -17791,21 +17495,20 @@ NK_API const void*
 nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
     enum nk_font_atlas_format fmt)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fmt /     enum");
     int i = 0;
     void *tmp = 0;
     nk_size tmp_size, img_size;
     struct nk_font *font_iter;
     struct nk_font_baker *baker;
 
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
 
-    // NK_ASSERT(width);
-    // NK_ASSERT(height);
+    NK_ASSERT(width);
+    NK_ASSERT(height);
     if (!atlas || !width || !height ||
         !atlas->temporary.alloc || !atlas->temporary.free ||
         !atlas->permanent.alloc || !atlas->permanent.free)
@@ -17816,21 +17519,21 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
     if (!atlas->font_num)
         atlas->default_font = nk_font_atlas_add_default(atlas, 13.0f, 0);
 #endif
-    // NK_ASSERT(atlas->font_num);
+    NK_ASSERT(atlas->font_num);
     if (!atlas->font_num) return 0;
 
     /* allocate temporary baker memory required for the baking process */
     nk_font_baker_memory(&tmp_size, &atlas->glyph_count, atlas->config, atlas->font_num);
     tmp = atlas->temporary.alloc(atlas->temporary.userdata,0, tmp_size);
-    // NK_ASSERT(tmp);
+    NK_ASSERT(tmp);
     if (!tmp) goto failed;
-    memset(tmp,0,tmp_size);
+    NK_MEMSET(tmp,0,tmp_size);
 
     /* allocate glyph memory for all fonts */
     baker = nk_font_baker(tmp, atlas->glyph_count, atlas->font_num, &atlas->temporary);
     atlas->glyphs = (struct nk_font_glyph*)atlas->permanent.alloc(
         atlas->permanent.userdata,0, sizeof(struct nk_font_glyph)*(nk_size)atlas->glyph_count);
-    // NK_ASSERT(atlas->glyphs);
+    NK_ASSERT(atlas->glyphs);
     if (!atlas->glyphs)
         goto failed;
 
@@ -17843,7 +17546,7 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
 
     /* allocate memory for the baked image font atlas */
     atlas->pixel = atlas->temporary.alloc(atlas->temporary.userdata,0, img_size);
-    // NK_ASSERT(atlas->pixel);
+    NK_ASSERT(atlas->pixel);
     if (!atlas->pixel)
         goto failed;
 
@@ -17857,7 +17560,7 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
         /* convert alpha8 image into rgba32 image */
         void *img_rgba = atlas->temporary.alloc(atlas->temporary.userdata,0,
                             (nk_size)(*width * *height * 4));
-        // NK_ASSERT(img_rgba);
+        NK_ASSERT(img_rgba);
         if (!img_rgba) goto failed;
         nk_font_bake_convert(img_rgba, *width, *height, atlas->pixel);
         atlas->temporary.free(atlas->temporary.userdata, atlas->pixel);
@@ -17917,10 +17620,9 @@ NK_API void
 nk_font_atlas_end(struct nk_font_atlas *atlas, nk_handle texture,
     struct nk_draw_null_texture *null)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - null /     struct");
     int i = 0;
     struct nk_font *font_iter;
-    // NK_ASSERT(atlas);
+    NK_ASSERT(atlas);
     if (!atlas) {
         if (!null) return;
         null->texture = texture;
@@ -17928,8 +17630,8 @@ nk_font_atlas_end(struct nk_font_atlas *atlas, nk_handle texture,
     }
     if (null) {
         null->texture = texture;
-        null->uv.x = (atlas->custom.x + 0.5f)/(int)atlas->tex_width;
-        null->uv.y = (atlas->custom.y + 0.5f)/(int)atlas->tex_height;
+        null->uv.x = (atlas->custom.x + 0.5f)/(float)atlas->tex_width;
+        null->uv.y = (atlas->custom.y + 0.5f)/(float)atlas->tex_height;
     }
     for (font_iter = atlas->fonts; font_iter; font_iter = font_iter->next) {
         font_iter->texture = texture;
@@ -17952,12 +17654,11 @@ nk_font_atlas_end(struct nk_font_atlas *atlas, nk_handle texture,
 NK_API void
 nk_font_atlas_cleanup(struct nk_font_atlas *atlas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_cleanup");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
     if (!atlas || !atlas->permanent.alloc || !atlas->permanent.free) return;
     if (atlas->config) {
         struct nk_font_config *iter;
@@ -17975,12 +17676,11 @@ nk_font_atlas_cleanup(struct nk_font_atlas *atlas)
 NK_API void
 nk_font_atlas_clear(struct nk_font_atlas *atlas)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_font_atlas / nk_font_atlas_clear");
-    // NK_ASSERT(atlas);
-    // NK_ASSERT(atlas->temporary.alloc);
-    // NK_ASSERT(atlas->temporary.free);
-    // NK_ASSERT(atlas->permanent.alloc);
-    // NK_ASSERT(atlas->permanent.free);
+    NK_ASSERT(atlas);
+    NK_ASSERT(atlas->temporary.alloc);
+    NK_ASSERT(atlas->temporary.free);
+    NK_ASSERT(atlas->permanent.alloc);
+    NK_ASSERT(atlas->permanent.free);
     if (!atlas || !atlas->permanent.alloc || !atlas->permanent.free) return;
 
     if (atlas->config) {
@@ -18026,10 +17726,9 @@ nk_font_atlas_clear(struct nk_font_atlas *atlas)
 NK_API void
 nk_input_begin(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_begin");
     int i;
     struct nk_input *in;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
     for (i = 0; i < NK_BUTTON_MAX; ++i)
@@ -18047,9 +17746,8 @@ nk_input_begin(struct nk_context *ctx)
 NK_API void
 nk_input_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_end");
     struct nk_input *in;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
     if (in->mouse.grab)
@@ -18063,22 +17761,20 @@ nk_input_end(struct nk_context *ctx)
 NK_API void
 nk_input_motion(struct nk_context *ctx, int x, int y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_motion");
     struct nk_input *in;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
-    in->mouse.pos.x = (int)x;
-    in->mouse.pos.y = (int)y;
+    in->mouse.pos.x = (float)x;
+    in->mouse.pos.y = (float)y;
     in->mouse.delta.x = in->mouse.pos.x - in->mouse.prev.x;
     in->mouse.delta.y = in->mouse.pos.y - in->mouse.prev.y;
 }
 NK_API void
 nk_input_key(struct nk_context *ctx, enum nk_keys key, nk_bool down)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_key");
     struct nk_input *in;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
 #ifdef NK_KEYSTATE_BASED_INPUT
@@ -18092,25 +17788,23 @@ nk_input_key(struct nk_context *ctx, enum nk_keys key, nk_bool down)
 NK_API void
 nk_input_button(struct nk_context *ctx, enum nk_buttons id, int x, int y, nk_bool down)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_button");
     struct nk_mouse_button *btn;
     struct nk_input *in;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
     if (in->mouse.buttons[id].down == down) return;
 
     btn = &in->mouse.buttons[id];
-    btn->clicked_pos.x = (int)x;
-    btn->clicked_pos.y = (int)y;
+    btn->clicked_pos.x = (float)x;
+    btn->clicked_pos.y = (float)y;
     btn->down = down;
     btn->clicked++;
 }
 NK_API void
 nk_input_scroll(struct nk_context *ctx, struct nk_vec2 val)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_scroll");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     ctx->input.mouse.scroll_delta.x += val.x;
     ctx->input.mouse.scroll_delta.y += val.y;
@@ -18118,12 +17812,11 @@ nk_input_scroll(struct nk_context *ctx, struct nk_vec2 val)
 NK_API void
 nk_input_glyph(struct nk_context *ctx, const nk_glyph glyph)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_glyph");
     int len = 0;
     nk_rune unicode;
     struct nk_input *in;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     in = &ctx->input;
 
@@ -18137,9 +17830,8 @@ nk_input_glyph(struct nk_context *ctx, const nk_glyph glyph)
 NK_API void
 nk_input_char(struct nk_context *ctx, char c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_char");
     nk_glyph glyph;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     glyph[0] = c;
     nk_input_glyph(ctx, glyph);
@@ -18147,9 +17839,8 @@ nk_input_char(struct nk_context *ctx, char c)
 NK_API void
 nk_input_unicode(struct nk_context *ctx, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_input_unicode");
     nk_glyph rune;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     nk_utf_encode(unicode, rune, NK_UTF_SIZE);
     nk_input_glyph(ctx, rune);
@@ -18157,7 +17848,6 @@ nk_input_unicode(struct nk_context *ctx, nk_rune unicode)
 NK_API nk_bool
 nk_input_has_mouse_click(const struct nk_input *i, enum nk_buttons id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_has_mouse_click");
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
     btn = &i->mouse.buttons[id];
@@ -18167,7 +17857,6 @@ NK_API nk_bool
 nk_input_has_mouse_click_in_rect(const struct nk_input *i, enum nk_buttons id,
     struct nk_rect b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input_has_mouse_click_in_rect");
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
     btn = &i->mouse.buttons[id];
@@ -18179,7 +17868,6 @@ NK_API nk_bool
 nk_input_has_mouse_click_down_in_rect(const struct nk_input *i, enum nk_buttons id,
     struct nk_rect b, nk_bool down)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input_has_mouse_click_down_in_rect");
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
     btn = &i->mouse.buttons[id];
@@ -18189,26 +17877,25 @@ NK_API nk_bool
 nk_input_is_mouse_click_in_rect(const struct nk_input *i, enum nk_buttons id,
     struct nk_rect b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input_is_mouse_click_in_rect");
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
     btn = &i->mouse.buttons[id];
-    return (nk_input_has_mouse_click_down_in_rect(i, id, b, nk_false) &&            btn->clicked) ? nk_true : nk_false;
+    return (nk_input_has_mouse_click_down_in_rect(i, id, b, nk_false) &&
+            btn->clicked) ? nk_true : nk_false;
 }
 NK_API nk_bool
 nk_input_is_mouse_click_down_in_rect(const struct nk_input *i, enum nk_buttons id,
     struct nk_rect b, nk_bool down)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input_is_mouse_click_down_in_rect");
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
     btn = &i->mouse.buttons[id];
-    return (nk_input_has_mouse_click_down_in_rect(i, id, b, down) &&            btn->clicked) ? nk_true : nk_false;
+    return (nk_input_has_mouse_click_down_in_rect(i, id, b, down) &&
+            btn->clicked) ? nk_true : nk_false;
 }
 NK_API nk_bool
 nk_input_any_mouse_click_in_rect(const struct nk_input *in, struct nk_rect b)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_any_mouse_click_in_rect");
     int i, down = 0;
     for (i = 0; i < NK_BUTTON_MAX; ++i)
         down = down || nk_input_is_mouse_click_in_rect(in, (enum nk_buttons)i, b);
@@ -18217,21 +17904,18 @@ nk_input_any_mouse_click_in_rect(const struct nk_input *in, struct nk_rect b)
 NK_API nk_bool
 nk_input_is_mouse_hovering_rect(const struct nk_input *i, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_mouse_hovering_rect");
     if (!i) return nk_false;
     return NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h);
 }
 NK_API nk_bool
 nk_input_is_mouse_prev_hovering_rect(const struct nk_input *i, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_mouse_prev_hovering_rect");
     if (!i) return nk_false;
     return NK_INBOX(i->mouse.prev.x, i->mouse.prev.y, rect.x, rect.y, rect.w, rect.h);
 }
 NK_API nk_bool
 nk_input_mouse_clicked(const struct nk_input *i, enum nk_buttons id, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_mouse_clicked");
     if (!i) return nk_false;
     if (!nk_input_is_mouse_hovering_rect(i, rect)) return nk_false;
     return nk_input_is_mouse_click_in_rect(i, id, rect);
@@ -18239,14 +17923,12 @@ nk_input_mouse_clicked(const struct nk_input *i, enum nk_buttons id, struct nk_r
 NK_API nk_bool
 nk_input_is_mouse_down(const struct nk_input *i, enum nk_buttons id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_mouse_down");
     if (!i) return nk_false;
     return i->mouse.buttons[id].down;
 }
 NK_API nk_bool
 nk_input_is_mouse_pressed(const struct nk_input *i, enum nk_buttons id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_mouse_pressed");
     const struct nk_mouse_button *b;
     if (!i) return nk_false;
     b = &i->mouse.buttons[id];
@@ -18257,18 +17939,15 @@ nk_input_is_mouse_pressed(const struct nk_input *i, enum nk_buttons id)
 NK_API nk_bool
 nk_input_is_mouse_released(const struct nk_input *i, enum nk_buttons id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_mouse_released");
     if (!i) return nk_false;
     return (!i->mouse.buttons[id].down && i->mouse.buttons[id].clicked);
 }
 NK_API nk_bool
 nk_input_is_key_pressed(const struct nk_input *i, enum nk_keys key)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_key_pressed");
     const struct nk_key *k;
     if (!i) return nk_false;
     k = &i->keyboard.keys[key];
-
     if ((k->down && k->clicked) || (!k->down && k->clicked >= 2))
         return nk_true;
     return nk_false;
@@ -18276,7 +17955,6 @@ nk_input_is_key_pressed(const struct nk_input *i, enum nk_keys key)
 NK_API nk_bool
 nk_input_is_key_released(const struct nk_input *i, enum nk_keys key)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_key_released");
     const struct nk_key *k;
     if (!i) return nk_false;
     k = &i->keyboard.keys[key];
@@ -18287,7 +17965,6 @@ nk_input_is_key_released(const struct nk_input *i, enum nk_keys key)
 NK_API nk_bool
 nk_input_is_key_down(const struct nk_input *i, enum nk_keys key)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_input_is_key_down");
     const struct nk_key *k;
     if (!i) return nk_false;
     k = &i->keyboard.keys[key];
@@ -18350,31 +18027,35 @@ NK_GLOBAL const char *nk_color_names[NK_COLOR_COUNT] = {
 NK_API const char*
 nk_style_get_color_by_name(enum nk_style_colors c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_colors / nk_style_get_color_by_name");
     return nk_color_names[c];
-}
-NK_API struct nk_style_item
-nk_style_item_image(struct nk_image img)
-{
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_image / nk_style_item_image");
-    struct nk_style_item i;
-    i.type = NK_STYLE_ITEM_IMAGE;
-    i.data.image = img;
-    return i;
 }
 NK_API struct nk_style_item
 nk_style_item_color(struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_color / nk_style_item_color");
     struct nk_style_item i;
     i.type = NK_STYLE_ITEM_COLOR;
     i.data.color = col;
     return i;
 }
 NK_API struct nk_style_item
+nk_style_item_image(struct nk_image img)
+{
+    struct nk_style_item i;
+    i.type = NK_STYLE_ITEM_IMAGE;
+    i.data.image = img;
+    return i;
+}
+NK_API struct nk_style_item
+nk_style_item_nine_slice(struct nk_nine_slice slice)
+{
+    struct nk_style_item i;
+    i.type = NK_STYLE_ITEM_NINE_SLICE;
+    i.data.slice = slice;
+    return i;
+}
+NK_API struct nk_style_item
 nk_style_item_hide(void)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - void) / nk_style_item_hide");
     struct nk_style_item i;
     i.type = NK_STYLE_ITEM_COLOR;
     i.data.color = nk_rgba(0,0,0,0);
@@ -18383,7 +18064,6 @@ nk_style_item_hide(void)
 NK_API void
 nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_from_table");
     struct nk_style *style;
     struct nk_style_text *text;
     struct nk_style_button *button;
@@ -18399,7 +18079,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     struct nk_style_tab *tab;
     struct nk_style_window *win;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     style = &ctx->style;
     table = (!table) ? nk_default_color_style: table;
@@ -18908,13 +18588,13 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->scrollbar_size = nk_vec2(10,10);
     win->min_size = nk_vec2(64,64);
 
-    win->combo_border = 1;
-    win->contextual_border = 1;
-    win->menu_border = 1;
-    win->group_border = 1;
-    win->tooltip_border = 1;
-    win->popup_border = 1;
-    win->border = 2;
+    win->combo_border = 1.0f;
+    win->contextual_border = 1.0f;
+    win->menu_border = 1.0f;
+    win->group_border = 1.0f;
+    win->tooltip_border = 1.0f;
+    win->popup_border = 1.0f;
+    win->border = 2.0f;
     win->min_row_height_padding = 8;
 
     win->padding = nk_vec2(4,4);
@@ -18928,9 +18608,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
 NK_API void
 nk_style_set_font(struct nk_context *ctx, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_set_font");
     struct nk_style *style;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
 
     if (!ctx) return;
     style = &ctx->style;
@@ -18942,15 +18621,14 @@ nk_style_set_font(struct nk_context *ctx, const struct nk_user_font *font)
 NK_API nk_bool
 nk_style_push_font(struct nk_context *ctx, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_push_font");
     struct nk_config_stack_user_font *font_stack;
     struct nk_config_stack_user_font_element *element;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
     font_stack = &ctx->stacks.fonts;
-    // NK_ASSERT(font_stack->head < (int)NK_LEN(font_stack->elements));
+    NK_ASSERT(font_stack->head < (int)NK_LEN(font_stack->elements));
     if (font_stack->head >= (int)NK_LEN(font_stack->elements))
         return 0;
 
@@ -18963,15 +18641,14 @@ nk_style_push_font(struct nk_context *ctx, const struct nk_user_font *font)
 NK_API nk_bool
 nk_style_pop_font(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_pop_font");
     struct nk_config_stack_user_font *font_stack;
     struct nk_config_stack_user_font_element *element;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
     font_stack = &ctx->stacks.fonts;
-    // NK_ASSERT(font_stack->head > 0);
+    NK_ASSERT(font_stack->head > 0);
     if (font_stack->head < 1)
         return 0;
 
@@ -18979,56 +18656,55 @@ nk_style_pop_font(struct nk_context *ctx)
     *element->address = element->old_value;
     return 1;
 }
-// #define NK_STYLE_PUSH_IMPLEMENATION(prefix, type, stack) \
-// nk_style_push_##type(struct nk_context *ctx, prefix##_##type *address, prefix##_##type value)\
-// {\
-//     struct nk_config_stack_##type * type_stack;\
-//     struct nk_config_stack_##type##_element *element;\
-//     NK_ASSERT(ctx);\
-//     if (!ctx) return 0;\
-//     type_stack = &ctx->stacks.stack;\
-//     NK_ASSERT(type_stack->head < (int)NK_LEN(type_stack->elements));\
-//     if (type_stack->head >= (int)NK_LEN(type_stack->elements))\
-//         return 0;\
-//     element = &type_stack->elements[type_stack->head++];\
-//     element->address = address;\
-//     element->old_value = *address;\
-//     *address = value;\
-//     return 1;\
-// }
-// #define NK_STYLE_POP_IMPLEMENATION(type, stack) \
-// nk_style_pop_##type(struct nk_context *ctx)\
-// {\
-//     struct nk_config_stack_##type *type_stack;\
-//     struct nk_config_stack_##type##_element *element;\
-//     NK_ASSERT(ctx);\
-//     if (!ctx) return 0;\
-//     type_stack = &ctx->stacks.stack;\
-//     NK_ASSERT(type_stack->head > 0);\
-//     if (type_stack->head < 1)\
-//         return 0;\
-//     element = &type_stack->elements[--type_stack->head];\
-//     *element->address = element->old_value;\
-//     return 1;\
-// }
-// NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk, style_item, style_items)
-// NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(nk,int, ints)
-// NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk, vec2, vectors)
-// NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(nk,flags, flags)
-// NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk,color, colors)
+#define NK_STYLE_PUSH_IMPLEMENATION(prefix, type, stack) \
+nk_style_push_##type(struct nk_context *ctx, prefix##_##type *address, prefix##_##type value)\
+{\
+    struct nk_config_stack_##type * type_stack;\
+    struct nk_config_stack_##type##_element *element;\
+    NK_ASSERT(ctx);\
+    if (!ctx) return 0;\
+    type_stack = &ctx->stacks.stack;\
+    NK_ASSERT(type_stack->head < (int)NK_LEN(type_stack->elements));\
+    if (type_stack->head >= (int)NK_LEN(type_stack->elements))\
+        return 0;\
+    element = &type_stack->elements[type_stack->head++];\
+    element->address = address;\
+    element->old_value = *address;\
+    *address = value;\
+    return 1;\
+}
+#define NK_STYLE_POP_IMPLEMENATION(type, stack) \
+nk_style_pop_##type(struct nk_context *ctx)\
+{\
+    struct nk_config_stack_##type *type_stack;\
+    struct nk_config_stack_##type##_element *element;\
+    NK_ASSERT(ctx);\
+    if (!ctx) return 0;\
+    type_stack = &ctx->stacks.stack;\
+    NK_ASSERT(type_stack->head > 0);\
+    if (type_stack->head < 1)\
+        return 0;\
+    element = &type_stack->elements[--type_stack->head];\
+    *element->address = element->old_value;\
+    return 1;\
+}
+NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk, style_item, style_items)
+NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(nk,float, floats)
+NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk, vec2, vectors)
+NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(nk,flags, flags)
+NK_API nk_bool NK_STYLE_PUSH_IMPLEMENATION(struct nk,color, colors)
 
-// NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(style_item, style_items)
-// NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(int,ints)
-// NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(vec2, vectors)
-// NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(flags,flags)
-// NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(color,colors)
+NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(style_item, style_items)
+NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(float,floats)
+NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(vec2, vectors)
+NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(flags,flags)
+NK_API nk_bool NK_STYLE_POP_IMPLEMENATION(color,colors)
 
 NK_API nk_bool
 nk_style_set_cursor(struct nk_context *ctx, enum nk_style_cursor c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_set_cursor");
     struct nk_style *style;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     style = &ctx->style;
     if (style->cursors[c]) {
@@ -19040,22 +18716,19 @@ nk_style_set_cursor(struct nk_context *ctx, enum nk_style_cursor c)
 NK_API void
 nk_style_show_cursor(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_show_cursor");
     ctx->style.cursor_visible = nk_true;
 }
 NK_API void
 nk_style_hide_cursor(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_hide_cursor");
     ctx->style.cursor_visible = nk_false;
 }
 NK_API void
 nk_style_load_cursor(struct nk_context *ctx, enum nk_style_cursor cursor,
     const struct nk_cursor *c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_cursor /     const");
     struct nk_style *style;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     style = &ctx->style;
     style->cursors[cursor] = c;
@@ -19063,10 +18736,9 @@ nk_style_load_cursor(struct nk_context *ctx, enum nk_style_cursor cursor,
 NK_API void
 nk_style_load_all_cursors(struct nk_context *ctx, struct nk_cursor *cursors)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_style_load_all_cursors");
     int i = 0;
     struct nk_style *style;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     style = &ctx->style;
     for (i = 0; i < NK_CURSOR_COUNT; ++i)
@@ -19086,8 +18758,7 @@ nk_style_load_all_cursors(struct nk_context *ctx, struct nk_cursor *cursors)
 NK_INTERN void
 nk_setup(struct nk_context *ctx, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_setup");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     nk_zero_struct(*ctx);
     nk_style_default(ctx);
@@ -19101,7 +18772,6 @@ nk_setup(struct nk_context *ctx, const struct nk_user_font *font)
 NK_API nk_bool
 nk_init_default(struct nk_context *ctx, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_init_default");
     struct nk_allocator alloc;
     alloc.userdata.ptr = 0;
     alloc.alloc = nk_malloc;
@@ -19113,8 +18783,7 @@ NK_API nk_bool
 nk_init_fixed(struct nk_context *ctx, void *memory, nk_size size,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
-    // NK_ASSERT(memory);
+    NK_ASSERT(memory);
     if (!memory) return 0;
     nk_setup(ctx, font);
     nk_buffer_init_fixed(&ctx->memory, memory, size);
@@ -19125,9 +18794,8 @@ NK_API nk_bool
 nk_init_custom(struct nk_context *ctx, struct nk_buffer *cmds,
     struct nk_buffer *pool, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - pool /     struct");
-    // NK_ASSERT(cmds);
-    // NK_ASSERT(pool);
+    NK_ASSERT(cmds);
+    NK_ASSERT(pool);
     if (!cmds || !pool) return 0;
 
     nk_setup(ctx, font);
@@ -19147,8 +18815,7 @@ NK_API nk_bool
 nk_init(struct nk_context *ctx, struct nk_allocator *alloc,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
-    // NK_ASSERT(alloc);
+    NK_ASSERT(alloc);
     if (!alloc) return 0;
     nk_setup(ctx, font);
     nk_buffer_init(&ctx->memory, alloc, NK_DEFAULT_COMMAND_BUFFER_SIZE);
@@ -19160,7 +18827,6 @@ nk_init(struct nk_context *ctx, struct nk_allocator *alloc,
 NK_API void
 nk_set_user_data(struct nk_context *ctx, nk_handle handle)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_set_user_data");
     if (!ctx) return;
     ctx->userdata = handle;
     if (ctx->current)
@@ -19170,8 +18836,7 @@ nk_set_user_data(struct nk_context *ctx, nk_handle handle)
 NK_API void
 nk_free(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_free");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     nk_buffer_free(&ctx->memory);
     if (ctx->use_pool)
@@ -19193,10 +18858,9 @@ nk_free(struct nk_context *ctx)
 NK_API void
 nk_clear(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_clear");
     struct nk_window *iter;
     struct nk_window *next;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
 
     if (!ctx) return;
     if (ctx->use_pool)
@@ -19213,13 +18877,16 @@ nk_clear(struct nk_context *ctx)
     iter = ctx->begin;
     while (iter) {
         /* make sure valid minimized windows do not get removed */
-        if ((iter->flags & NK_WINDOW_MINIMIZED) &&            !(iter->flags & NK_WINDOW_CLOSED) &&            iter->seq == ctx->seq) {
+        if ((iter->flags & NK_WINDOW_MINIMIZED) &&
+            !(iter->flags & NK_WINDOW_CLOSED) &&
+            iter->seq == ctx->seq) {
             iter = iter->next;
             continue;
         }
         /* remove hotness from hidden or closed windows*/
         if (((iter->flags & NK_WINDOW_HIDDEN) ||
-            (iter->flags & NK_WINDOW_CLOSED)) &&            iter == ctx->active) {
+            (iter->flags & NK_WINDOW_CLOSED)) &&
+            iter == ctx->active) {
             ctx->active = iter->prev;
             ctx->end = iter->prev;
             if (!ctx->end)
@@ -19257,9 +18924,8 @@ nk_clear(struct nk_context *ctx)
 NK_LIB void
 nk_start_buffer(struct nk_context *ctx, struct nk_command_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_start_buffer");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(buffer);
+    NK_ASSERT(ctx);
+    NK_ASSERT(buffer);
     if (!ctx || !buffer) return;
     buffer->begin = ctx->memory.allocated;
     buffer->end = buffer->begin;
@@ -19269,18 +18935,16 @@ nk_start_buffer(struct nk_context *ctx, struct nk_command_buffer *buffer)
 NK_LIB void
 nk_start(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_start");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     nk_start_buffer(ctx, &win->buffer);
 }
 NK_LIB void
 nk_start_popup(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_start_popup");
     struct nk_popup_buffer *buf;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     if (!ctx || !win) return;
 
     /* save buffer fill state for popup */
@@ -19294,10 +18958,9 @@ nk_start_popup(struct nk_context *ctx, struct nk_window *win)
 NK_LIB void
 nk_finish_popup(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_finish_popup");
     struct nk_popup_buffer *buf;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     if (!ctx || !win) return;
 
     buf = &win->popup.buf;
@@ -19307,22 +18970,20 @@ nk_finish_popup(struct nk_context *ctx, struct nk_window *win)
 NK_LIB void
 nk_finish_buffer(struct nk_context *ctx, struct nk_command_buffer *buffer)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_finish_buffer");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(buffer);
+    NK_ASSERT(ctx);
+    NK_ASSERT(buffer);
     if (!ctx || !buffer) return;
     buffer->end = ctx->memory.allocated;
 }
 NK_LIB void
 nk_finish(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_finish");
     struct nk_popup_buffer *buf;
     struct nk_command *parent_last;
     void *memory;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     if (!ctx || !win) return;
     nk_finish_buffer(ctx, &win->buffer);
     if (!win->popup.buf.active) return;
@@ -19335,7 +18996,6 @@ nk_finish(struct nk_context *ctx, struct nk_window *win)
 NK_LIB void
 nk_build(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_build");
     struct nk_window *it = 0;
     struct nk_command *cmd = 0;
     nk_byte *buffer = 0;
@@ -19398,10 +19058,9 @@ nk_build(struct nk_context *ctx)
 NK_API const struct nk_command*
 nk__begin(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk__begin");
     struct nk_window *iter;
     nk_byte *buffer;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     if (!ctx->count) return 0;
 
@@ -19421,10 +19080,9 @@ nk__begin(struct nk_context *ctx)
 NK_API const struct nk_command*
 nk__next(struct nk_context *ctx, const struct nk_command *cmd)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk__next");
     nk_byte *buffer;
     const struct nk_command *next;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx || !cmd || !ctx->count) return 0;
     if (cmd->next >= ctx->memory.allocated) return 0;
     buffer = (nk_byte*)ctx->memory.memory.ptr;
@@ -19446,8 +19104,7 @@ NK_LIB void
 nk_pool_init(struct nk_pool *pool, struct nk_allocator *alloc,
     unsigned int capacity)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - capacity /     unsigned");
-    // NK_ASSERT(capacity >= 1);
+    NK_ASSERT(capacity >= 1);
     nk_zero(pool, sizeof(*pool));
     pool->alloc = *alloc;
     pool->capacity = capacity;
@@ -19457,7 +19114,6 @@ nk_pool_init(struct nk_pool *pool, struct nk_allocator *alloc,
 NK_LIB void
 nk_pool_free(struct nk_pool *pool)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_pool / nk_pool_free");
     struct nk_page *iter;
     if (!pool) return;
     iter = pool->pages;
@@ -19471,12 +19127,11 @@ nk_pool_free(struct nk_pool *pool)
 NK_LIB void
 nk_pool_init_fixed(struct nk_pool *pool, void *memory, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_pool / nk_pool_init_fixed");
     nk_zero(pool, sizeof(*pool));
-    // NK_ASSERT(size >= sizeof(struct nk_page));
+    NK_ASSERT(size >= sizeof(struct nk_page));
     if (size < sizeof(struct nk_page)) return;
     /* first nk_page_element is embedded in nk_page, additional elements follow in adjacent space */
-    pool->capacity = 1 + (unsigned)(size - sizeof(struct nk_page)) / sizeof(struct nk_page_element);
+    pool->capacity = (unsigned)(1 + (size - sizeof(struct nk_page)) / sizeof(struct nk_page_element));
     pool->pages = (struct nk_page*)memory;
     pool->type = NK_BUFFER_FIXED;
     pool->size = size;
@@ -19484,14 +19139,13 @@ nk_pool_init_fixed(struct nk_pool *pool, void *memory, nk_size size)
 NK_LIB struct nk_page_element*
 nk_pool_alloc(struct nk_pool *pool)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_pool / nk_pool_alloc");
     if (!pool->pages || pool->pages->size >= pool->capacity) {
         /* allocate new page */
         struct nk_page *page;
         if (pool->type == NK_BUFFER_FIXED) {
-            // NK_ASSERT(pool->pages);
+            NK_ASSERT(pool->pages);
             if (!pool->pages) return 0;
-            // NK_ASSERT(pool->pages->size < pool->capacity);
+            NK_ASSERT(pool->pages->size < pool->capacity);
             return 0;
         } else {
             nk_size size = sizeof(struct nk_page);
@@ -19516,7 +19170,6 @@ nk_pool_alloc(struct nk_pool *pool)
 NK_LIB struct nk_page_element*
 nk_create_page_element(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_create_page_element");
     struct nk_page_element *elem;
     if (ctx->freelist) {
         /* unlink page element from free list */
@@ -19525,14 +19178,14 @@ nk_create_page_element(struct nk_context *ctx)
     } else if (ctx->use_pool) {
         /* allocate page element from memory pool */
         elem = nk_pool_alloc(&ctx->pool);
-        // NK_ASSERT(elem);
+        NK_ASSERT(elem);
         if (!elem) return 0;
     } else {
         /* allocate new page element from back of fixed size memory buffer */
         NK_STORAGE const nk_size size = sizeof(struct nk_page_element);
         NK_STORAGE const nk_size align = NK_ALIGNOF(struct nk_page_element);
         elem = (struct nk_page_element*)nk_buffer_alloc(&ctx->memory, NK_BUFFER_BACK, size, align);
-        // NK_ASSERT(elem);
+        NK_ASSERT(elem);
         if (!elem) return 0;
     }
     nk_zero_struct(*elem);
@@ -19544,7 +19197,6 @@ NK_LIB void
 nk_link_page_element_into_freelist(struct nk_context *ctx,
     struct nk_page_element *elem)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - elem /     struct");
     /* link table into freelist */
     if (!ctx->freelist) {
         ctx->freelist = elem;
@@ -19556,7 +19208,6 @@ nk_link_page_element_into_freelist(struct nk_context *ctx,
 NK_LIB void
 nk_free_page_element(struct nk_context *ctx, struct nk_page_element *elem)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_free_page_element");
     /* we have a pool so just add to free list */
     if (ctx->use_pool) {
         nk_link_page_element_into_freelist(ctx, elem);
@@ -19582,7 +19233,6 @@ nk_free_page_element(struct nk_context *ctx, struct nk_page_element *elem)
 NK_LIB struct nk_table*
 nk_create_table(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_create_table");
     struct nk_page_element *elem;
     elem = nk_create_page_element(ctx);
     if (!elem) return 0;
@@ -19592,7 +19242,6 @@ nk_create_table(struct nk_context *ctx)
 NK_LIB void
 nk_free_table(struct nk_context *ctx, struct nk_table *tbl)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_free_table");
     union nk_page_data *pd = NK_CONTAINER_OF(tbl, union nk_page_data, tbl);
     struct nk_page_element *pe = NK_CONTAINER_OF(pd, struct nk_page_element, data);
     nk_free_page_element(ctx, pe);
@@ -19600,7 +19249,6 @@ nk_free_table(struct nk_context *ctx, struct nk_table *tbl)
 NK_LIB void
 nk_push_table(struct nk_window *win, struct nk_table *tbl)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_window / nk_push_table");
     if (!win->tables) {
         win->tables = tbl;
         tbl->next = 0;
@@ -19619,7 +19267,6 @@ nk_push_table(struct nk_window *win, struct nk_table *tbl)
 NK_LIB void
 nk_remove_table(struct nk_window *win, struct nk_table *tbl)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_window / nk_remove_table");
     if (win->tables == tbl)
         win->tables = tbl->next;
     if (tbl->next)
@@ -19633,13 +19280,12 @@ NK_LIB nk_uint*
 nk_add_value(struct nk_context *ctx, struct nk_window *win,
             nk_hash name, nk_uint value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - name, /             nk_hash");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     if (!win || !ctx) return 0;
     if (!win->tables || win->tables->size >= NK_VALUE_PAGE_CAPACITY) {
         struct nk_table *tbl = nk_create_table(ctx);
-        // NK_ASSERT(tbl);
+        NK_ASSERT(tbl);
         if (!tbl) return 0;
         nk_push_table(win, tbl);
     }
@@ -19651,7 +19297,6 @@ nk_add_value(struct nk_context *ctx, struct nk_window *win,
 NK_LIB nk_uint*
 nk_find_value(struct nk_window *win, nk_hash name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_window / nk_find_value");
     struct nk_table *iter = win->tables;
     while (iter) {
         unsigned int i = 0;
@@ -19679,7 +19324,6 @@ nk_find_value(struct nk_window *win, nk_hash name)
 NK_LIB void*
 nk_create_panel(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_create_panel");
     struct nk_page_element *elem;
     elem = nk_create_page_element(ctx);
     if (!elem) return 0;
@@ -19689,7 +19333,6 @@ nk_create_panel(struct nk_context *ctx)
 NK_LIB void
 nk_free_panel(struct nk_context *ctx, struct nk_panel *pan)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_free_panel");
     union nk_page_data *pd = NK_CONTAINER_OF(pan, union nk_page_data, pan);
     struct nk_page_element *pe = NK_CONTAINER_OF(pd, struct nk_page_element, data);
     nk_free_page_element(ctx, pe);
@@ -19697,7 +19340,6 @@ nk_free_panel(struct nk_context *ctx, struct nk_panel *pan)
 NK_LIB nk_bool
 nk_panel_has_header(nk_flags flags, const char *title)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - flags / nk_panel_has_header");
     nk_bool active = 0;
     active = (flags & (NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE));
     active = active || (flags & NK_WINDOW_TITLE);
@@ -19707,7 +19349,6 @@ nk_panel_has_header(nk_flags flags, const char *title)
 NK_LIB struct nk_vec2
 nk_panel_get_padding(const struct nk_style *style, enum nk_panel_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_panel_get_padding");
     switch (type) {
     default:
     case NK_PANEL_WINDOW: return style->window.padding;
@@ -19718,11 +19359,10 @@ nk_panel_get_padding(const struct nk_style *style, enum nk_panel_type type)
     case NK_PANEL_MENU: return style->window.menu_padding;
     case NK_PANEL_TOOLTIP: return style->window.menu_padding;}
 }
-NK_LIB int
+NK_LIB float
 nk_panel_get_border(const struct nk_style *style, nk_flags flags,
     enum nk_panel_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_panel_get_border");
     if (flags & NK_WINDOW_BORDER) {
         switch (type) {
         default:
@@ -19738,7 +19378,6 @@ nk_panel_get_border(const struct nk_style *style, nk_flags flags,
 NK_LIB struct nk_color
 nk_panel_get_border_color(const struct nk_style *style, enum nk_panel_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_panel_get_border_color");
     switch (type) {
     default:
     case NK_PANEL_WINDOW: return style->window.border_color;
@@ -19752,27 +19391,16 @@ nk_panel_get_border_color(const struct nk_style *style, enum nk_panel_type type)
 NK_LIB nk_bool
 nk_panel_is_sub(enum nk_panel_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_panel_type / nk_panel_is_sub");
     return (type & NK_PANEL_SET_SUB)?1:0;
 }
 NK_LIB nk_bool
 nk_panel_is_nonblock(enum nk_panel_type type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_panel_type / nk_panel_is_nonblock");
     return (type & NK_PANEL_SET_NONBLOCK)?1:0;
 }
 NK_LIB nk_bool
 nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type panel_type)
 {
-
-
-      long start;
-      long end;
-      long total;
-      long eventTime0;
-
-      start = TickCount();
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_panel_begin");
     struct nk_input *in;
     struct nk_window *win;
     struct nk_panel *layout;
@@ -19783,9 +19411,9 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     struct nk_vec2 scrollbar_size;
     struct nk_vec2 panel_padding;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return 0;
     nk_zero(ctx->current->layout, sizeof(*ctx->current->layout));
     if ((ctx->current->flags & NK_WINDOW_HIDDEN) || (ctx->current->flags & NK_WINDOW_CLOSED)) {
@@ -19809,8 +19437,8 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
 
     /* window movement */
     if ((win->flags & NK_WINDOW_MOVABLE) && !(win->flags & NK_WINDOW_ROM)) {
-        int left_mouse_down;
-        int left_mouse_clicked;
+        nk_bool left_mouse_down;
+        unsigned int left_mouse_clicked;
         int left_mouse_click_in_cursor;
 
         /* calculate draggable window space */
@@ -19825,7 +19453,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
 
         /* window movement by dragging */
         left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
-        left_mouse_clicked = (int)in->mouse.buttons[NK_BUTTON_LEFT].clicked;
+        left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
         left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
             NK_BUTTON_LEFT, header, nk_true);
         if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
@@ -19844,7 +19472,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     layout->bounds.x += panel_padding.x;
     layout->bounds.w -= 2*panel_padding.x;
     if (win->flags & NK_WINDOW_BORDER) {
-        layout->border = 1;//= nk_panel_get_border(style, win->flags, panel_type);
+        layout->border = nk_panel_get_border(style, win->flags, panel_type);
         layout->bounds = nk_shrink_rect(layout->bounds, layout->border);
     } else layout->border = 0;
     layout->at_y = layout->bounds.y;
@@ -19903,12 +19531,20 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
 
         /* draw header background */
         header.h += 1.0f;
-        if (background->type == NK_STYLE_ITEM_IMAGE) {
-            text.background = nk_rgba(0,0,0,0);
-            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-        } else {
-            text.background = background->data.color;
-            nk_fill_rect(out, header, 0, background->data.color);
+
+        switch(background->type) {
+            case NK_STYLE_ITEM_IMAGE:
+                text.background = nk_rgba(0,0,0,0);
+                nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+                break;
+            case NK_STYLE_ITEM_NINE_SLICE:
+                text.background = nk_rgba(0, 0, 0, 0);
+                nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+                break;
+            case NK_STYLE_ITEM_COLOR:
+                text.background = background->data.color;
+                nk_fill_rect(out, header, 0, background->data.color);
+                break;
         }
 
         /* window close button */
@@ -19958,9 +19594,9 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         }}
 
         {/* window header title */
-        int text_len = strlen(title);
+        int text_len = nk_strlen(title);
         struct nk_rect label = {0,0,0,0};
-        int t = font->width(font->userdata, font->height, title, text_len);
+        float t = font->width(font->userdata, font->height, title, text_len);
         text.padding = nk_vec2(0,0);
 
         label.x = header.x + style->window.header.padding.x;
@@ -19969,7 +19605,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         label.h = font->height + 2 * style->window.header.label_padding.y;
         label.w = t + 2 * style->window.header.spacing.x;
         label.w = NK_CLAMP(0, label.w, header.x + header.w - label.x);
-        nk_widget_text(out, label,(const char*)title, text_len, &text, NK_TEXT_LEFT, font);}
+        nk_widget_text(out, label, (const char*)title, text_len, &text, NK_TEXT_LEFT, font);}
     }
 
     /* draw window background */
@@ -19979,9 +19615,18 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         body.w = win->bounds.w;
         body.y = (win->bounds.y + layout->header_height);
         body.h = (win->bounds.h - layout->header_height);
-        if (style->window.fixed_background.type == NK_STYLE_ITEM_IMAGE)
-            nk_draw_image(out, body, &style->window.fixed_background.data.image, nk_white);
-        else nk_fill_rect(out, body, 0, style->window.fixed_background.data.color);
+
+        switch(style->window.fixed_background.type) {
+            case NK_STYLE_ITEM_IMAGE:
+                nk_draw_image(out, body, &style->window.fixed_background.data.image, nk_white);
+                break;
+            case NK_STYLE_ITEM_NINE_SLICE:
+                nk_draw_nine_slice(out, body, &style->window.fixed_background.data.slice, nk_white);
+                break;
+            case NK_STYLE_ITEM_COLOR:
+                nk_fill_rect(out, body, 0, style->window.fixed_background.data.color);
+                break;
+        }
     }
 
     /* set clipping rectangle */
@@ -19989,26 +19634,13 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     layout->clip = layout->bounds;
     nk_unify(&clip, &win->buffer.clip, layout->clip.x, layout->clip.y,
         layout->clip.x + layout->clip.w, layout->clip.y + layout->clip.h);
-    // nk_push_scissor(out, clip);
+    nk_push_scissor(out, clip);
     layout->clip = clip;}
-
-
-
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime0 = total;// / 60.0;
-
-        //char logx[255];
-        //sprintf(logx, "nk_panel_begin() eventTime0 (run UI) %ld\n", eventTime0);
-        //writeSerialPort(boutRefNum, logx);
     return !(layout->flags & NK_WINDOW_HIDDEN) && !(layout->flags & NK_WINDOW_MINIMIZED);
 }
 NK_LIB void
 nk_panel_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_panel_end");
     struct nk_input *in;
     struct nk_window *window;
     struct nk_panel *layout;
@@ -20018,9 +19650,9 @@ nk_panel_end(struct nk_context *ctx)
     struct nk_vec2 scrollbar_size;
     struct nk_vec2 panel_padding;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -20029,8 +19661,8 @@ nk_panel_end(struct nk_context *ctx)
     style = &ctx->style;
     out = &window->buffer;
     in = (layout->flags & NK_WINDOW_ROM || layout->flags & NK_WINDOW_NO_INPUT) ? 0 :&ctx->input;
-    // if (!nk_panel_is_sub(layout->type))
-        // nk_push_scissor(out, nk_null_rect);
+    if (!nk_panel_is_sub(layout->type))
+        nk_push_scissor(out, nk_null_rect);
 
     /* cache configuration data */
     scrollbar_size = style->window.scrollbar_size;
@@ -20081,14 +19713,16 @@ nk_panel_end(struct nk_context *ctx)
     }
 
     /* scrollbars */
-    if (!(layout->flags & NK_WINDOW_NO_SCROLLBAR) &&        !(layout->flags & NK_WINDOW_MINIMIZED) &&        window->scrollbar_hiding_timer < NK_SCROLLBAR_HIDING_TIMEOUT)
+    if (!(layout->flags & NK_WINDOW_NO_SCROLLBAR) &&
+        !(layout->flags & NK_WINDOW_MINIMIZED) &&
+        window->scrollbar_hiding_timer < NK_SCROLLBAR_HIDING_TIMEOUT)
     {
         struct nk_rect scroll;
         int scroll_has_scrolling;
-        int scroll_target;
-        int scroll_offset;
-        int scroll_step;
-        int scroll_inc;
+        float scroll_target;
+        float scroll_offset;
+        float scroll_step;
+        float scroll_inc;
 
         /* mouse wheel scrolling */
         if (nk_panel_is_sub(layout->type))
@@ -20105,7 +19739,8 @@ nk_panel_end(struct nk_context *ctx)
             scroll_has_scrolling = 0;
             if ((root_window == ctx->active) && layout->has_scrolling) {
                 /* and panel is being hovered and inside clip rect*/
-                if (nk_input_is_mouse_hovering_rect(in, layout->bounds) &&                    NK_INTERSECT(layout->bounds.x, layout->bounds.y, layout->bounds.w, layout->bounds.h,
+                if (nk_input_is_mouse_hovering_rect(in, layout->bounds) &&
+                    NK_INTERSECT(layout->bounds.x, layout->bounds.y, layout->bounds.w, layout->bounds.h,
                         root_panel->clip.x, root_panel->clip.y, root_panel->clip.w, root_panel->clip.h))
                 {
                     /* deactivate all parent scrolling */
@@ -20134,10 +19769,10 @@ nk_panel_end(struct nk_context *ctx)
             scroll.w = scrollbar_size.x;
             scroll.h = layout->bounds.h;
 
-            scroll_offset = (int)*layout->offset_y;
+            scroll_offset = (float)*layout->offset_y;
             scroll_step = scroll.h * 0.10f;
             scroll_inc = scroll.h * 0.01f;
-            scroll_target = (int)(int)(layout->at_y - scroll.y);
+            scroll_target = (float)(int)(layout->at_y - scroll.y);
             scroll_offset = nk_do_scrollbarv(&state, out, scroll, scroll_has_scrolling,
                 scroll_offset, scroll_target, scroll_step, scroll_inc,
                 &ctx->style.scrollv, in, style->font);
@@ -20153,8 +19788,8 @@ nk_panel_end(struct nk_context *ctx)
             scroll.w = layout->bounds.w;
             scroll.h = scrollbar_size.y;
 
-            scroll_offset = (int)*layout->offset_x;
-            scroll_target = (int)(int)(layout->max_x - scroll.x);
+            scroll_offset = (float)*layout->offset_x;
+            scroll_target = (float)(int)(layout->max_x - scroll.x);
             scroll_step = layout->max_x * 0.05f;
             scroll_inc = layout->max_x * 0.005f;
             scroll_offset = nk_do_scrollbarh(&state, out, scroll, scroll_has_scrolling,
@@ -20178,7 +19813,7 @@ nk_panel_end(struct nk_context *ctx)
     if (layout->flags & NK_WINDOW_BORDER)
     {
         struct nk_color border_color = nk_panel_get_border_color(style, layout->type);
-        const int padding_y = (layout->flags & NK_WINDOW_MINIMIZED)
+        const float padding_y = (layout->flags & NK_WINDOW_MINIMIZED)
             ? (style->window.border + window->bounds.y + layout->header_height)
             : ((layout->flags & NK_WINDOW_DYNAMIC)
                 ? (layout->bounds.y + layout->bounds.h + layout->footer_height)
@@ -20225,7 +19860,7 @@ nk_panel_end(struct nk_context *ctx)
                     NK_BUTTON_LEFT, scaler, nk_true);
 
             if (left_mouse_down && left_mouse_click_in_scaler) {
-                int delta_x = in->mouse.delta.x;
+                float delta_x = in->mouse.delta.x;
                 if (layout->flags & NK_WINDOW_SCALE_LEFT) {
                     delta_x = -delta_x;
                     window->bounds.x += in->mouse.delta.x;
@@ -20268,7 +19903,8 @@ nk_panel_end(struct nk_context *ctx)
     window->flags = layout->flags;
 
     /* property garbage collector */
-    if (window->property.active && window->property.old != window->property.seq &&        window->property.active == window->property.prev) {
+    if (window->property.active && window->property.old != window->property.seq &&
+        window->property.active == window->property.prev) {
         nk_zero(&window->property, sizeof(window->property));
     } else {
         window->property.old = window->property.seq;
@@ -20276,7 +19912,8 @@ nk_panel_end(struct nk_context *ctx)
         window->property.seq = 0;
     }
     /* edit garbage collector */
-    if (window->edit.active && window->edit.old != window->edit.seq &&       window->edit.active == window->edit.prev) {
+    if (window->edit.active && window->edit.old != window->edit.seq &&
+       window->edit.active == window->edit.prev) {
         nk_zero(&window->edit, sizeof(window->edit));
     } else {
         window->edit.old = window->edit.seq;
@@ -20294,7 +19931,7 @@ nk_panel_end(struct nk_context *ctx)
     }
     window->popup.combo_count = 0;
     /* helper to make sure you have a 'nk_tree_push' for every 'nk_tree_pop' */
-    // NK_ASSERT(!layout->row.tree_depth);
+    NK_ASSERT(!layout->row.tree_depth);
 }
 
 
@@ -20309,7 +19946,6 @@ nk_panel_end(struct nk_context *ctx)
 NK_LIB void*
 nk_create_window(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_create_window");
     struct nk_page_element *elem;
     elem = nk_create_page_element(ctx);
     if (!elem) return 0;
@@ -20319,7 +19955,6 @@ nk_create_window(struct nk_context *ctx)
 NK_LIB void
 nk_free_window(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_free_window");
     /* unlink windows from list */
     struct nk_table *it = win->tables;
     if (win->popup.win) {
@@ -20347,13 +19982,12 @@ nk_free_window(struct nk_context *ctx, struct nk_window *win)
 NK_LIB struct nk_window*
 nk_find_window(struct nk_context *ctx, nk_hash hash, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_find_window");
     struct nk_window *iter;
     iter = ctx->begin;
     while (iter) {
-        // NK_ASSERT(iter != iter->next);
+        NK_ASSERT(iter != iter->next);
         if (iter->name == hash) {
-            int max_len = strlen(iter->name_string);
+            int max_len = nk_strlen(iter->name_string);
             if (!nk_stricmpn(iter->name_string, name, max_len))
                 return iter;
         }
@@ -20365,16 +19999,15 @@ NK_LIB void
 nk_insert_window(struct nk_context *ctx, struct nk_window *win,
     enum nk_window_insert_location loc)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - loc /     enum");
     const struct nk_window *iter;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(win);
+    NK_ASSERT(ctx);
+    NK_ASSERT(win);
     if (!win || !ctx) return;
 
     iter = ctx->begin;
     while (iter) {
-        // NK_ASSERT(iter != iter->next);
-        // NK_ASSERT(iter != win);
+        NK_ASSERT(iter != iter->next);
+        NK_ASSERT(iter != win);
         if (iter == win) return;
         iter = iter->next;
     }
@@ -20410,7 +20043,6 @@ nk_insert_window(struct nk_context *ctx, struct nk_window *win,
 NK_LIB void
 nk_remove_window(struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_remove_window");
     if (win == ctx->begin || win == ctx->end) {
         if (win == ctx->begin) {
             ctx->begin = win->next;
@@ -20441,38 +20073,36 @@ NK_API nk_bool
 nk_begin(struct nk_context *ctx, const char *title,
     struct nk_rect bounds, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - bounds /     struct");
     return nk_begin_titled(ctx, title, title, bounds, flags);
 }
 NK_API nk_bool
 nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
     struct nk_rect bounds, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - bounds /     struct");
     struct nk_window *win;
     struct nk_style *style;
     nk_hash name_hash;
     int name_len;
     int ret = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
-    // NK_ASSERT(title);
-    // NK_ASSERT(ctx->style.font && ctx->style.font->width && "if this triggers you forgot to add a font");
-    // NK_ASSERT(!ctx->current && "if this triggers you missed a `nk_end` call");
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(title);
+    NK_ASSERT(ctx->style.font && ctx->style.font->width && "if this triggers you forgot to add a font");
+    NK_ASSERT(!ctx->current && "if this triggers you missed a `nk_end` call");
     if (!ctx || ctx->current || !title || !name)
         return 0;
 
     /* find or create window */
     style = &ctx->style;
-    name_len = (int)strlen(name);
+    name_len = (int)nk_strlen(name);
     name_hash = nk_murmur_hash(name, (int)name_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, name_hash, name);
     if (!win) {
         /* create new window */
         nk_size name_length = (nk_size)name_len;
         win = (struct nk_window*)nk_create_window(ctx);
-        // NK_ASSERT(win);
+        NK_ASSERT(win);
         if (!win) return 0;
 
         if (flags & NK_WINDOW_BACKGROUND)
@@ -20502,7 +20132,7 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
          *      More specific you did not call `nk_clear` (nk_clear will be
          *      automatically called for you if you are using one of the
          *      provided demo backends). */
-        // NK_ASSERT(win->seq != ctx->seq);
+        NK_ASSERT(win->seq != ctx->seq);
         win->seq = ctx->seq;
         if (!ctx->active && !(win->flags & NK_WINDOW_HIDDEN)) {
             ctx->active = win;
@@ -20520,7 +20150,7 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
     {
         int inpanel, ishovered;
         struct nk_window *iter = win;
-        int h = ctx->style.font->height + 2.0f * style->window.header.padding.y +
+        float h = ctx->style.font->height + 2.0f * style->window.header.padding.y +
             (2.0f * style->window.header.label_padding.y);
         struct nk_rect win_bounds = (!(win->flags & NK_WINDOW_MINIMIZED))?
             win->bounds: nk_rect(win->bounds.x, win->bounds.y, win->bounds.w, h);
@@ -20535,10 +20165,12 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
                 struct nk_rect iter_bounds = (!(iter->flags & NK_WINDOW_MINIMIZED))?
                     iter->bounds: nk_rect(iter->bounds.x, iter->bounds.y, iter->bounds.w, h);
                 if (NK_INTERSECT(win_bounds.x, win_bounds.y, win_bounds.w, win_bounds.h,
-                    iter_bounds.x, iter_bounds.y, iter_bounds.w, iter_bounds.h) &&                    (!(iter->flags & NK_WINDOW_HIDDEN)))
+                    iter_bounds.x, iter_bounds.y, iter_bounds.w, iter_bounds.h) &&
+                    (!(iter->flags & NK_WINDOW_HIDDEN)))
                     break;
 
-                if (iter->popup.win && iter->popup.active && !(iter->flags & NK_WINDOW_HIDDEN) &&                    NK_INTERSECT(win->bounds.x, win_bounds.y, win_bounds.w, win_bounds.h,
+                if (iter->popup.win && iter->popup.active && !(iter->flags & NK_WINDOW_HIDDEN) &&
+                    NK_INTERSECT(win->bounds.x, win_bounds.y, win_bounds.w, win_bounds.h,
                     iter->popup.win->bounds.x, iter->popup.win->bounds.y,
                     iter->popup.win->bounds.w, iter->popup.win->bounds.h))
                     break;
@@ -20554,9 +20186,11 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
                 struct nk_rect iter_bounds = (!(iter->flags & NK_WINDOW_MINIMIZED))?
                 iter->bounds: nk_rect(iter->bounds.x, iter->bounds.y, iter->bounds.w, h);
                 if (NK_INBOX(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y,
-                    iter_bounds.x, iter_bounds.y, iter_bounds.w, iter_bounds.h) &&                    !(iter->flags & NK_WINDOW_HIDDEN))
+                    iter_bounds.x, iter_bounds.y, iter_bounds.w, iter_bounds.h) &&
+                    !(iter->flags & NK_WINDOW_HIDDEN))
                     break;
-                if (iter->popup.win && iter->popup.active && !(iter->flags & NK_WINDOW_HIDDEN) &&                    NK_INTERSECT(win_bounds.x, win_bounds.y, win_bounds.w, win_bounds.h,
+                if (iter->popup.win && iter->popup.active && !(iter->flags & NK_WINDOW_HIDDEN) &&
+                    NK_INTERSECT(win_bounds.x, win_bounds.y, win_bounds.w, win_bounds.h,
                     iter->popup.win->bounds.x, iter->popup.win->bounds.y,
                     iter->popup.win->bounds.w, iter->popup.win->bounds.h))
                     break;
@@ -20598,10 +20232,9 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
 NK_API void
 nk_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_end");
     struct nk_panel *layout;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current && "if this triggers you forgot to call `nk_begin`");
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current && "if this triggers you forgot to call `nk_begin`");
     if (!ctx || !ctx->current)
         return;
 
@@ -20617,74 +20250,66 @@ nk_end(struct nk_context *ctx)
 NK_API struct nk_rect
 nk_window_get_bounds(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_get_bounds");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return nk_rect(0,0,0,0);
     return ctx->current->bounds;
 }
 NK_API struct nk_vec2
 nk_window_get_position(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_get_position");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return nk_vec2(0,0);
     return nk_vec2(ctx->current->bounds.x, ctx->current->bounds.y);
 }
 NK_API struct nk_vec2
 nk_window_get_size(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_get_size");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return nk_vec2(0,0);
     return nk_vec2(ctx->current->bounds.w, ctx->current->bounds.h);
 }
-NK_API int
+NK_API float
 nk_window_get_width(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_get_width");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return 0;
     return ctx->current->bounds.w;
 }
-NK_API int
+NK_API float
 nk_window_get_height(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_get_height");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return 0;
     return ctx->current->bounds.h;
 }
 NK_API struct nk_rect
 nk_window_get_content_region(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_content_region");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return nk_rect(0,0,0,0);
     return ctx->current->layout->clip;
 }
 NK_API struct nk_vec2
 nk_window_get_content_region_min(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_content_region_min");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current) return nk_vec2(0,0);
     return nk_vec2(ctx->current->layout->clip.x, ctx->current->layout->clip.y);
 }
 NK_API struct nk_vec2
 nk_window_get_content_region_max(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_content_region_max");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current) return nk_vec2(0,0);
     return nk_vec2(ctx->current->layout->clip.x + ctx->current->layout->clip.w,
         ctx->current->layout->clip.y + ctx->current->layout->clip.h);
@@ -20692,39 +20317,35 @@ nk_window_get_content_region_max(struct nk_context *ctx)
 NK_API struct nk_vec2
 nk_window_get_content_region_size(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_content_region_size");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current) return nk_vec2(0,0);
     return nk_vec2(ctx->current->layout->clip.w, ctx->current->layout->clip.h);
 }
 NK_API struct nk_command_buffer*
 nk_window_get_canvas(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_canvas");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current) return 0;
     return &ctx->current->buffer;
 }
 NK_API struct nk_panel*
 nk_window_get_panel(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_panel");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return 0;
     return ctx->current->layout;
 }
 NK_API void
 nk_window_get_scroll(struct nk_context *ctx, nk_uint *offset_x, nk_uint *offset_y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_get_scroll");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return ;
     win = ctx->current;
@@ -20736,19 +20357,17 @@ nk_window_get_scroll(struct nk_context *ctx, nk_uint *offset_x, nk_uint *offset_
 NK_API nk_bool
 nk_window_has_focus(const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_window_has_focus");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current) return 0;
     return ctx->current == ctx->active;
 }
 NK_API nk_bool
 nk_window_is_hovered(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_hovered");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return 0;
     if(ctx->current->flags & NK_WINDOW_HIDDEN)
         return 0;
@@ -20757,9 +20376,8 @@ nk_window_is_hovered(struct nk_context *ctx)
 NK_API nk_bool
 nk_window_is_any_hovered(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_any_hovered");
     struct nk_window *iter;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     iter = ctx->begin;
     while (iter) {
@@ -20785,7 +20403,6 @@ nk_window_is_any_hovered(struct nk_context *ctx)
 NK_API nk_bool
 nk_item_is_any_active(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_item_is_any_active");
     int any_hovered = nk_window_is_any_hovered(ctx);
     int any_active = (ctx->last_widget_state & NK_WIDGET_STATE_MODIFIED);
     return any_hovered || any_active;
@@ -20793,14 +20410,13 @@ nk_item_is_any_active(struct nk_context *ctx)
 NK_API nk_bool
 nk_window_is_collapsed(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_collapsed");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return 0;
@@ -20809,14 +20425,13 @@ nk_window_is_collapsed(struct nk_context *ctx, const char *name)
 NK_API nk_bool
 nk_window_is_closed(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_closed");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 1;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return 1;
@@ -20825,14 +20440,13 @@ nk_window_is_closed(struct nk_context *ctx, const char *name)
 NK_API nk_bool
 nk_window_is_hidden(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_hidden");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 1;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return 1;
@@ -20841,14 +20455,13 @@ nk_window_is_hidden(struct nk_context *ctx, const char *name)
 NK_API nk_bool
 nk_window_is_active(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_is_active");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return 0;
@@ -20857,23 +20470,21 @@ nk_window_is_active(struct nk_context *ctx, const char *name)
 NK_API struct nk_window*
 nk_window_find(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_find");
     int title_len;
     nk_hash title_hash;
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     return nk_find_window(ctx, title_hash, name);
 }
 NK_API void
 nk_window_close(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_close");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     win = nk_window_find(ctx, name);
     if (!win) return;
-    // NK_ASSERT(ctx->current != win && "You cannot close a currently active window");
+    NK_ASSERT(ctx->current != win && "You cannot close a currently active window");
     if (ctx->current == win) return;
     win->flags |= NK_WINDOW_HIDDEN;
     win->flags |= NK_WINDOW_CLOSED;
@@ -20882,20 +20493,18 @@ NK_API void
 nk_window_set_bounds(struct nk_context *ctx,
     const char *name, struct nk_rect bounds)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - name /     const");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     win = nk_window_find(ctx, name);
     if (!win) return;
-    // NK_ASSERT(ctx->current != win && "You cannot update a currently in procecss window");
+    NK_ASSERT(ctx->current != win && "You cannot update a currently in procecss window");
     win->bounds = bounds;
 }
 NK_API void
 nk_window_set_position(struct nk_context *ctx,
     const char *name, struct nk_vec2 pos)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - name /     const");
     struct nk_window *win = nk_window_find(ctx, name);
     if (!win) return;
     win->bounds.x = pos.x;
@@ -20905,7 +20514,6 @@ NK_API void
 nk_window_set_size(struct nk_context *ctx,
     const char *name, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - name /     const");
     struct nk_window *win = nk_window_find(ctx, name);
     if (!win) return;
     win->bounds.w = size.x;
@@ -20914,10 +20522,9 @@ nk_window_set_size(struct nk_context *ctx,
 NK_API void
 nk_window_set_scroll(struct nk_context *ctx, nk_uint offset_x, nk_uint offset_y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_set_scroll");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return;
     win = ctx->current;
@@ -20928,14 +20535,13 @@ NK_API void
 nk_window_collapse(struct nk_context *ctx, const char *name,
                     enum nk_collapse_states c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c /                     enum");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return;
@@ -20947,22 +20553,20 @@ NK_API void
 nk_window_collapse_if(struct nk_context *ctx, const char *name,
     enum nk_collapse_states c, int cond)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - c /     enum");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx || !cond) return;
     nk_window_collapse(ctx, name, c);
 }
 NK_API void
 nk_window_show(struct nk_context *ctx, const char *name, enum nk_show_states s)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_show");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) return;
@@ -20974,8 +20578,7 @@ NK_API void
 nk_window_show_if(struct nk_context *ctx, const char *name,
     enum nk_show_states s, int cond)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - s /     enum");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx || !cond) return;
     nk_window_show(ctx, name, s);
 }
@@ -20983,14 +20586,13 @@ nk_window_show_if(struct nk_context *ctx, const char *name,
 NK_API void
 nk_window_set_focus(struct nk_context *ctx, const char *name)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_window_set_focus");
     int title_len;
     nk_hash title_hash;
     struct nk_window *win;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
 
-    title_len = (int)strlen(name);
+    title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (win && ctx->end != win) {
@@ -21012,7 +20614,6 @@ NK_API nk_bool
 nk_popup_begin(struct nk_context *ctx, enum nk_popup_type type,
     const char *title, nk_flags flags, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
     struct nk_window *popup;
     struct nk_window *win;
     struct nk_panel *panel;
@@ -21021,18 +20622,18 @@ nk_popup_begin(struct nk_context *ctx, enum nk_popup_type type,
     nk_hash title_hash;
     nk_size allocated;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(title);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(title);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
     win = ctx->current;
     panel = win->layout;
-    // NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP) && "popups are not allowed to have popups");
+    NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP) && "popups are not allowed to have popups");
     (void)panel;
-    title_len = (int)strlen(title);
+    title_len = (int)nk_strlen(title);
     title_hash = nk_murmur_hash(title, (int)title_len, NK_PANEL_POPUP);
 
     popup = win->popup.win;
@@ -21072,7 +20673,7 @@ nk_popup_begin(struct nk_context *ctx, enum nk_popup_type type,
     popup->buffer = win->buffer;
     nk_start_popup(ctx, win);
     allocated = ctx->memory.allocated;
-    // nk_push_scissor(&popup->buffer, nk_null_rect);
+    nk_push_scissor(&popup->buffer, nk_null_rect);
 
     if (nk_panel_begin(ctx, title, NK_PANEL_POPUP)) {
         /* popup is running therefore invalidate parent panels */
@@ -21110,22 +20711,21 @@ nk_nonblock_begin(struct nk_context *ctx,
     nk_flags flags, struct nk_rect body, struct nk_rect header,
     enum nk_panel_type panel_type)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - panel_type /     enum");
     struct nk_window *popup;
     struct nk_window *win;
     struct nk_panel *panel;
     int is_active = nk_true;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
     /* popups cannot have popups */
     win = ctx->current;
     panel = win->layout;
-    // NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP));
+    NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP));
     (void)panel;
     popup = win->popup.win;
     if (!popup) {
@@ -21167,11 +20767,11 @@ nk_nonblock_begin(struct nk_context *ctx,
     popup->flags |= NK_WINDOW_DYNAMIC;
     popup->seq = ctx->seq;
     win->popup.active = 1;
-    // NK_ASSERT(popup->layout);
+    NK_ASSERT(popup->layout);
 
     nk_start_popup(ctx, win);
     popup->buffer = win->buffer;
-    // nk_push_scissor(&popup->buffer, nk_null_rect);
+    nk_push_scissor(&popup->buffer, nk_null_rect);
     ctx->current = popup;
 
     nk_panel_begin(ctx, 0, panel_type);
@@ -21192,26 +20792,24 @@ nk_nonblock_begin(struct nk_context *ctx,
 NK_API void
 nk_popup_close(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_popup_close");
     struct nk_window *popup;
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx || !ctx->current) return;
 
     popup = ctx->current;
-    // NK_ASSERT(popup->parent);
-    // NK_ASSERT(popup->layout->type & NK_PANEL_SET_POPUP);
+    NK_ASSERT(popup->parent);
+    NK_ASSERT(popup->layout->type & NK_PANEL_SET_POPUP);
     popup->flags |= NK_WINDOW_HIDDEN;
 }
 NK_API void
 nk_popup_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_popup_end");
     struct nk_window *win;
     struct nk_window *popup;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21227,23 +20825,22 @@ nk_popup_end(struct nk_context *ctx)
         }
         win->popup.active = 0;
     }
-    // nk_push_scissor(&popup->buffer, nk_null_rect);
+    nk_push_scissor(&popup->buffer, nk_null_rect);
     nk_end(ctx);
 
     win->buffer = popup->buffer;
     nk_finish_popup(ctx, win);
     ctx->current = win;
-    // nk_push_scissor(&win->buffer, win->layout->clip);
+    nk_push_scissor(&win->buffer, win->layout->clip);
 }
 NK_API void
 nk_popup_get_scroll(struct nk_context *ctx, nk_uint *offset_x, nk_uint *offset_y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_popup_get_scroll");
     struct nk_window *popup;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21256,12 +20853,11 @@ nk_popup_get_scroll(struct nk_context *ctx, nk_uint *offset_x, nk_uint *offset_y
 NK_API void
 nk_popup_set_scroll(struct nk_context *ctx, nk_uint offset_x, nk_uint offset_y)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_popup_set_scroll");
     struct nk_window *popup;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21282,7 +20878,6 @@ NK_API nk_bool
 nk_contextual_begin(struct nk_context *ctx, nk_flags flags, struct nk_vec2 size,
     struct nk_rect trigger_bounds)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - trigger_bounds /     struct");
     struct nk_window *win;
     struct nk_window *popup;
     struct nk_rect body;
@@ -21292,9 +20887,9 @@ nk_contextual_begin(struct nk_context *ctx, nk_flags flags, struct nk_vec2 size,
     int is_open = 0;
     int ret = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21342,7 +20937,6 @@ NK_API nk_bool
 nk_contextual_item_text(struct nk_context *ctx, const char *text, int len,
     nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - alignment) /     nk_flags");
     struct nk_window *win;
     const struct nk_input *in;
     const struct nk_style *style;
@@ -21350,9 +20944,9 @@ nk_contextual_item_text(struct nk_context *ctx, const char *text, int len,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21372,14 +20966,12 @@ nk_contextual_item_text(struct nk_context *ctx, const char *text, int len,
 NK_API nk_bool
 nk_contextual_item_label(struct nk_context *ctx, const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_contextual_item_label");
-    return nk_contextual_item_text(ctx, label, strlen(label), align);
+    return nk_contextual_item_text(ctx, label, nk_strlen(label), align);
 }
 NK_API nk_bool
 nk_contextual_item_image_text(struct nk_context *ctx, struct nk_image img,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     struct nk_window *win;
     const struct nk_input *in;
     const struct nk_style *style;
@@ -21387,9 +20979,9 @@ nk_contextual_item_image_text(struct nk_context *ctx, struct nk_image img,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21410,14 +21002,12 @@ NK_API nk_bool
 nk_contextual_item_image_label(struct nk_context *ctx, struct nk_image img,
     const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
-    return nk_contextual_item_image_text(ctx, img, label, strlen(label), align);
+    return nk_contextual_item_image_text(ctx, img, label, nk_strlen(label), align);
 }
 NK_API nk_bool
 nk_contextual_item_symbol_text(struct nk_context *ctx, enum nk_symbol_type symbol,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     struct nk_window *win;
     const struct nk_input *in;
     const struct nk_style *style;
@@ -21425,9 +21015,9 @@ nk_contextual_item_symbol_text(struct nk_context *ctx, enum nk_symbol_type symbo
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21448,33 +21038,30 @@ NK_API nk_bool
 nk_contextual_item_symbol_label(struct nk_context *ctx, enum nk_symbol_type symbol,
     const char *text, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
-    return nk_contextual_item_symbol_text(ctx, symbol, text, strlen(text), align);
+    return nk_contextual_item_symbol_text(ctx, symbol, text, nk_strlen(text), align);
 }
 NK_API void
 nk_contextual_close(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_contextual_close");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
     nk_popup_close(ctx);
 }
 NK_API void
 nk_contextual_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_contextual_end");
     struct nk_window *popup;
     struct nk_panel *panel;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return;
 
     popup = ctx->current;
     panel = popup->layout;
-    // NK_ASSERT(popup->parent);
-    // NK_ASSERT(panel->type & NK_PANEL_SET_POPUP);
+    NK_ASSERT(popup->parent);
+    NK_ASSERT(panel->type & NK_PANEL_SET_POPUP);
     if (panel->flags & NK_WINDOW_DYNAMIC) {
         /* Close behavior
         This is a bit of a hack solution since we do not know before we end our popup
@@ -21512,16 +21099,15 @@ nk_contextual_end(struct nk_context *ctx)
 NK_API void
 nk_menubar_begin(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_menubar_begin");
     struct nk_panel *layout;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     layout = ctx->current->layout;
-    // NK_ASSERT(layout->at_y == layout->bounds.y);
+    NK_ASSERT(layout->at_y == layout->bounds.y);
     /* if this assert triggers you allocated space between nk_begin and nk_menubar_begin.
     If you want a menubar the first nuklear function after `nk_begin` has to be a
     `nk_menubar_begin` call. Inside the menubar you then have to allocate space for
@@ -21550,14 +21136,13 @@ nk_menubar_begin(struct nk_context *ctx)
 NK_API void
 nk_menubar_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_menubar_end");
     struct nk_window *win;
     struct nk_panel *layout;
     struct nk_command_buffer *out;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21579,22 +21164,21 @@ nk_menubar_end(struct nk_context *ctx)
 
     layout->clip.y = layout->bounds.y;
     layout->clip.h = layout->bounds.h;
-    // nk_push_scissor(out, layout->clip);
+    nk_push_scissor(out, layout->clip);
 }
 NK_INTERN int
 nk_menu_begin(struct nk_context *ctx, struct nk_window *win,
     const char *id, int is_clicked, struct nk_rect header, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - id /     const");
     int is_open = 0;
     int is_active = 0;
     struct nk_rect body;
     struct nk_window *popup;
-    nk_hash hash = nk_murmur_hash(id, (int)strlen(id), NK_PANEL_MENU);
+    nk_hash hash = nk_murmur_hash(id, (int)nk_strlen(id), NK_PANEL_MENU);
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21619,16 +21203,15 @@ NK_API nk_bool
 nk_menu_begin_text(struct nk_context *ctx, const char *title, int len,
     nk_flags align, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - align, /     nk_flags");
     struct nk_window *win;
     const struct nk_input *in;
     struct nk_rect header;
     int is_clicked = nk_false;
     nk_flags state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21644,23 +21227,21 @@ nk_menu_begin_text(struct nk_context *ctx, const char *title, int len,
 NK_API nk_bool nk_menu_begin_label(struct nk_context *ctx,
     const char *text, nk_flags align, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
-    return nk_menu_begin_text(ctx, text, strlen(text), align, size);
+    return nk_menu_begin_text(ctx, text, nk_strlen(text), align, size);
 }
 NK_API nk_bool
 nk_menu_begin_image(struct nk_context *ctx, const char *id, struct nk_image img,
     struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - size /     struct");
     struct nk_window *win;
     struct nk_rect header;
     const struct nk_input *in;
     int is_clicked = nk_false;
     nk_flags state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21677,16 +21258,15 @@ NK_API nk_bool
 nk_menu_begin_symbol(struct nk_context *ctx, const char *id,
     enum nk_symbol_type sym, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - sym /     enum");
     struct nk_window *win;
     const struct nk_input *in;
     struct nk_rect header;
     int is_clicked = nk_false;
     nk_flags state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21703,16 +21283,15 @@ NK_API nk_bool
 nk_menu_begin_image_text(struct nk_context *ctx, const char *title, int len,
     nk_flags align, struct nk_image img, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - align, /     nk_flags");
     struct nk_window *win;
     struct nk_rect header;
     const struct nk_input *in;
     int is_clicked = nk_false;
     nk_flags state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21730,23 +21309,21 @@ NK_API nk_bool
 nk_menu_begin_image_label(struct nk_context *ctx,
     const char *title, nk_flags align, struct nk_image img, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
-    return nk_menu_begin_image_text(ctx, title, strlen(title), align, img, size);
+    return nk_menu_begin_image_text(ctx, title, nk_strlen(title), align, img, size);
 }
 NK_API nk_bool
 nk_menu_begin_symbol_text(struct nk_context *ctx, const char *title, int len,
     nk_flags align, enum nk_symbol_type sym, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - align, /     nk_flags");
     struct nk_window *win;
     struct nk_rect header;
     const struct nk_input *in;
     int is_clicked = nk_false;
     nk_flags state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -21764,56 +21341,47 @@ NK_API nk_bool
 nk_menu_begin_symbol_label(struct nk_context *ctx,
     const char *title, nk_flags align, enum nk_symbol_type sym, struct nk_vec2 size )
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
-    return nk_menu_begin_symbol_text(ctx, title, strlen(title), align,sym,size);
+    return nk_menu_begin_symbol_text(ctx, title, nk_strlen(title), align,sym,size);
 }
 NK_API nk_bool
 nk_menu_item_text(struct nk_context *ctx, const char *title, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_menu_item_text");
     return nk_contextual_item_text(ctx, title, len, align);
 }
 NK_API nk_bool
 nk_menu_item_label(struct nk_context *ctx, const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_menu_item_label");
     return nk_contextual_item_label(ctx, label, align);
 }
 NK_API nk_bool
 nk_menu_item_image_label(struct nk_context *ctx, struct nk_image img,
     const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
     return nk_contextual_item_image_label(ctx, img, label, align);
 }
 NK_API nk_bool
 nk_menu_item_image_text(struct nk_context *ctx, struct nk_image img,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     return nk_contextual_item_image_text(ctx, img, text, len, align);
 }
 NK_API nk_bool nk_menu_item_symbol_text(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     return nk_contextual_item_symbol_text(ctx, sym, text, len, align);
 }
 NK_API nk_bool nk_menu_item_symbol_label(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
     return nk_contextual_item_symbol_label(ctx, sym, label, align);
 }
 NK_API void nk_menu_close(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_menu_close / NK_API");
     nk_contextual_close(ctx);
 }
 NK_API void
 nk_menu_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_menu_end");
     nk_contextual_end(ctx);
 }
 
@@ -21827,15 +21395,14 @@ nk_menu_end(struct nk_context *ctx)
  *
  * ===============================================================*/
 NK_API void
-nk_layout_set_min_row_height(struct nk_context *ctx, int height)
+nk_layout_set_min_row_height(struct nk_context *ctx, float height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_set_min_row_height");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21846,13 +21413,12 @@ nk_layout_set_min_row_height(struct nk_context *ctx, int height)
 NK_API void
 nk_layout_reset_min_row_height(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_reset_min_row_height");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21862,28 +21428,28 @@ nk_layout_reset_min_row_height(struct nk_context *ctx)
     layout->row.min_height += ctx->style.text.padding.y*2;
     layout->row.min_height += ctx->style.window.min_row_height_padding*2;
 }
-NK_LIB int
+NK_LIB float
 nk_layout_row_calculate_usable_space(const struct nk_style *style, enum nk_panel_type type,
-    int total_space, int columns)
+    float total_space, int columns)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - total_space, /     int");
-    int panel_spacing;
-    int panel_space;
+    float panel_spacing;
+    float panel_space;
 
     struct nk_vec2 spacing;
+
+    NK_UNUSED(type);
 
     spacing = style->window.spacing;
 
     /* calculate the usable panel space */
-    panel_spacing = (int)NK_MAX(columns - 1, 0) * spacing.x;
+    panel_spacing = (float)NK_MAX(columns - 1, 0) * spacing.x;
     panel_space  = total_space - panel_spacing;
     return panel_space;
 }
 NK_LIB void
 nk_panel_layout(const struct nk_context *ctx, struct nk_window *win,
-    int height, int cols)
+    float height, int cols)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - height, /     int");
     struct nk_panel *layout;
     const struct nk_style *style;
     struct nk_command_buffer *out;
@@ -21891,9 +21457,9 @@ nk_panel_layout(const struct nk_context *ctx, struct nk_window *win,
     struct nk_vec2 item_spacing;
     struct nk_color color;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21909,9 +21475,9 @@ nk_panel_layout(const struct nk_context *ctx, struct nk_window *win,
         Example:
             if (nk_begin(...) {...} nk_end(...); or
             if (nk_group_begin(...) { nk_group_end(...);} */
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_MINIMIZED));
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_HIDDEN));
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_CLOSED));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_MINIMIZED));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_HIDDEN));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_CLOSED));
 
     /* update the current row and set the current row layout */
     layout->row.index = 0;
@@ -21934,14 +21500,13 @@ nk_panel_layout(const struct nk_context *ctx, struct nk_window *win,
 }
 NK_LIB void
 nk_row_layout(struct nk_context *ctx, enum nk_layout_format fmt,
-    int height, int cols, int width)
+    float height, int cols, int width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - height, /     int");
     /* update the current row and set the current row layout */
     struct nk_window *win;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -21954,42 +21519,38 @@ nk_row_layout(struct nk_context *ctx, enum nk_layout_format fmt,
     win->layout->row.ratio = 0;
     win->layout->row.filled = 0;
     win->layout->row.item_offset = 0;
-    win->layout->row.item_width = (int)width;
+    win->layout->row.item_width = (float)width;
 }
-NK_API int
-nk_layout_ratio_from_pixel(struct nk_context *ctx, int pixel_width)
+NK_API float
+nk_layout_ratio_from_pixel(struct nk_context *ctx, float pixel_width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_ratio_from_pixel");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(pixel_width);
+    NK_ASSERT(ctx);
+    NK_ASSERT(pixel_width);
     if (!ctx || !ctx->current || !ctx->current->layout) return 0;
     win = ctx->current;
     return NK_CLAMP(0.0f, pixel_width/win->bounds.x, 1.0f);
 }
 NK_API void
-nk_layout_row_dynamic(struct nk_context *ctx, int height, int cols)
+nk_layout_row_dynamic(struct nk_context *ctx, float height, int cols)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_dynamic");
     nk_row_layout(ctx, NK_DYNAMIC, height, cols, 0);
 }
 NK_API void
-nk_layout_row_static(struct nk_context *ctx, int height, int item_width, int cols)
+nk_layout_row_static(struct nk_context *ctx, float height, int item_width, int cols)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_static");
     nk_row_layout(ctx, NK_STATIC, height, cols, item_width);
 }
 NK_API void
 nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt,
-    int row_height, int cols)
+    float row_height, int cols)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - row_height, /     int");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22007,26 +21568,25 @@ nk_layout_row_begin(struct nk_context *ctx, enum nk_layout_format fmt,
     layout->row.columns = cols;
 }
 NK_API void
-nk_layout_row_push(struct nk_context *ctx, int ratio_or_width)
+nk_layout_row_push(struct nk_context *ctx, float ratio_or_width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_push");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_STATIC_ROW || layout->row.type == NK_LAYOUT_DYNAMIC_ROW);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_STATIC_ROW || layout->row.type == NK_LAYOUT_DYNAMIC_ROW);
     if (layout->row.type != NK_LAYOUT_STATIC_ROW && layout->row.type != NK_LAYOUT_DYNAMIC_ROW)
         return;
 
     if (layout->row.type == NK_LAYOUT_DYNAMIC_ROW) {
-        int ratio = ratio_or_width;
+        float ratio = ratio_or_width;
         if ((ratio + layout->row.filled) > 1.0f) return;
         if (ratio > 0.0f)
             layout->row.item_width = NK_SATURATE(ratio);
@@ -22036,19 +21596,18 @@ nk_layout_row_push(struct nk_context *ctx, int ratio_or_width)
 NK_API void
 nk_layout_row_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_end");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_STATIC_ROW || layout->row.type == NK_LAYOUT_DYNAMIC_ROW);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_STATIC_ROW || layout->row.type == NK_LAYOUT_DYNAMIC_ROW);
     if (layout->row.type != NK_LAYOUT_STATIC_ROW && layout->row.type != NK_LAYOUT_DYNAMIC_ROW)
         return;
     layout->row.item_width = 0;
@@ -22056,17 +21615,16 @@ nk_layout_row_end(struct nk_context *ctx)
 }
 NK_API void
 nk_layout_row(struct nk_context *ctx, enum nk_layout_format fmt,
-    int height, int cols, const int *ratio)
+    float height, int cols, const float *ratio)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - height, /     int");
     int i;
     int n_undef = 0;
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22075,7 +21633,7 @@ nk_layout_row(struct nk_context *ctx, enum nk_layout_format fmt,
     nk_panel_layout(ctx, win, height, cols);
     if (fmt == NK_DYNAMIC) {
         /* calculate width of undefined widget ratios */
-        int r = 0;
+        float r = 0;
         layout->row.ratio = ratio;
         for (i = 0; i < cols; ++i) {
             if (ratio[i] < 0.0f)
@@ -22084,7 +21642,7 @@ nk_layout_row(struct nk_context *ctx, enum nk_layout_format fmt,
         }
         r = NK_SATURATE(1.0f - r);
         layout->row.type = NK_LAYOUT_DYNAMIC;
-        layout->row.item_width = (r > 0 && n_undef > 0) ? (r / (int)n_undef):0;
+        layout->row.item_width = (r > 0 && n_undef > 0) ? (r / (float)n_undef):0;
     } else {
         layout->row.ratio = ratio;
         layout->row.type = NK_LAYOUT_STATIC;
@@ -22095,15 +21653,14 @@ nk_layout_row(struct nk_context *ctx, enum nk_layout_format fmt,
     layout->row.filled = 0;
 }
 NK_API void
-nk_layout_row_template_begin(struct nk_context *ctx, int height)
+nk_layout_row_template_begin(struct nk_context *ctx, float height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_template_begin");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22125,62 +21682,59 @@ nk_layout_row_template_begin(struct nk_context *ctx, int height)
 NK_API void
 nk_layout_row_template_push_dynamic(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_template_push_dynamic");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
-    // NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
+    NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
     if (layout->row.type != NK_LAYOUT_TEMPLATE) return;
     if (layout->row.columns >= NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS) return;
     layout->row.templates[layout->row.columns++] = -1.0f;
 }
 NK_API void
-nk_layout_row_template_push_variable(struct nk_context *ctx, int min_width)
+nk_layout_row_template_push_variable(struct nk_context *ctx, float min_width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_template_push_variable");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
-    // NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
+    NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
     if (layout->row.type != NK_LAYOUT_TEMPLATE) return;
     if (layout->row.columns >= NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS) return;
     layout->row.templates[layout->row.columns++] = -min_width;
 }
 NK_API void
-nk_layout_row_template_push_static(struct nk_context *ctx, int width)
+nk_layout_row_template_push_static(struct nk_context *ctx, float width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_template_push_static");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
-    // NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
+    NK_ASSERT(layout->row.columns < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
     if (layout->row.type != NK_LAYOUT_TEMPLATE) return;
     if (layout->row.columns >= NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS) return;
     layout->row.templates[layout->row.columns++] = width;
@@ -22188,29 +21742,28 @@ nk_layout_row_template_push_static(struct nk_context *ctx, int width)
 NK_API void
 nk_layout_row_template_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_row_template_end");
     struct nk_window *win;
     struct nk_panel *layout;
 
     int i = 0;
     int variable_count = 0;
     int min_variable_count = 0;
-    int min_fixed_width = 0.0f;
-    int total_fixed_width = 0.0f;
-    int max_variable_width = 0.0f;
+    float min_fixed_width = 0.0f;
+    float total_fixed_width = 0.0f;
+    float max_variable_width = 0.0f;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    // NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
+    NK_ASSERT(layout->row.type == NK_LAYOUT_TEMPLATE);
     if (layout->row.type != NK_LAYOUT_TEMPLATE) return;
     for (i = 0; i < layout->row.columns; ++i) {
-        int width = layout->row.templates[i];
+        float width = layout->row.templates[i];
         if (width >= 0.0f) {
             total_fixed_width += width;
             min_fixed_width += width;
@@ -22225,29 +21778,28 @@ nk_layout_row_template_end(struct nk_context *ctx)
         }
     }
     if (variable_count) {
-        int space = nk_layout_row_calculate_usable_space(&ctx->style, layout->type,
+        float space = nk_layout_row_calculate_usable_space(&ctx->style, layout->type,
                             layout->bounds.w, layout->row.columns);
-        int var_width = (NK_MAX(space-min_fixed_width,0.0f)) / (int)variable_count;
+        float var_width = (NK_MAX(space-min_fixed_width,0.0f)) / (float)variable_count;
         int enough_space = var_width >= max_variable_width;
         if (!enough_space)
-            var_width = (NK_MAX(space-total_fixed_width,0)) / (int)min_variable_count;
+            var_width = (NK_MAX(space-total_fixed_width,0)) / (float)min_variable_count;
         for (i = 0; i < layout->row.columns; ++i) {
-            int *width = &layout->row.templates[i];
+            float *width = &layout->row.templates[i];
             *width = (*width >= 0.0f)? *width: (*width < -1.0f && !enough_space)? -(*width): var_width;
         }
     }
 }
 NK_API void
 nk_layout_space_begin(struct nk_context *ctx, enum nk_layout_format fmt,
-    int height, int widget_count)
+    float height, int widget_count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - height, /     int");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22266,13 +21818,12 @@ nk_layout_space_begin(struct nk_context *ctx, enum nk_layout_format fmt,
 NK_API void
 nk_layout_space_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_end");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22286,13 +21837,12 @@ nk_layout_space_end(struct nk_context *ctx)
 NK_API void
 nk_layout_space_push(struct nk_context *ctx, struct nk_rect rect)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_push");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22303,14 +21853,13 @@ nk_layout_space_push(struct nk_context *ctx, struct nk_rect rect)
 NK_API struct nk_rect
 nk_layout_space_bounds(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_bounds");
     struct nk_rect ret;
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
@@ -22323,14 +21872,13 @@ nk_layout_space_bounds(struct nk_context *ctx)
 NK_API struct nk_rect
 nk_layout_widget_bounds(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_widget_bounds");
     struct nk_rect ret;
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
@@ -22343,123 +21891,117 @@ nk_layout_widget_bounds(struct nk_context *ctx)
 NK_API struct nk_vec2
 nk_layout_space_to_screen(struct nk_context *ctx, struct nk_vec2 ret)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_to_screen");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
-    ret.x += layout->at_x - (int)*layout->offset_x;
-    ret.y += layout->at_y - (int)*layout->offset_y;
+    ret.x += layout->at_x - (float)*layout->offset_x;
+    ret.y += layout->at_y - (float)*layout->offset_y;
     return ret;
 }
 NK_API struct nk_vec2
 nk_layout_space_to_local(struct nk_context *ctx, struct nk_vec2 ret)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_to_local");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
-    ret.x += -layout->at_x + (int)*layout->offset_x;
-    ret.y += -layout->at_y + (int)*layout->offset_y;
+    ret.x += -layout->at_x + (float)*layout->offset_x;
+    ret.y += -layout->at_y + (float)*layout->offset_y;
     return ret;
 }
 NK_API struct nk_rect
 nk_layout_space_rect_to_screen(struct nk_context *ctx, struct nk_rect ret)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_rect_to_screen");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
-    ret.x += layout->at_x - (int)*layout->offset_x;
-    ret.y += layout->at_y - (int)*layout->offset_y;
+    ret.x += layout->at_x - (float)*layout->offset_x;
+    ret.y += layout->at_y - (float)*layout->offset_y;
     return ret;
 }
 NK_API struct nk_rect
 nk_layout_space_rect_to_local(struct nk_context *ctx, struct nk_rect ret)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_layout_space_rect_to_local");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     win = ctx->current;
     layout = win->layout;
 
-    ret.x += -layout->at_x + (int)*layout->offset_x;
-    ret.y += -layout->at_y + (int)*layout->offset_y;
+    ret.x += -layout->at_x + (float)*layout->offset_x;
+    ret.y += -layout->at_y + (float)*layout->offset_y;
     return ret;
 }
 NK_LIB void
 nk_panel_alloc_row(const struct nk_context *ctx, struct nk_window *win)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_panel_alloc_row");
     struct nk_panel *layout = win->layout;
     struct nk_vec2 spacing = ctx->style.window.spacing;
-    const int row_height = layout->row.height - spacing.y;
+    const float row_height = layout->row.height - spacing.y;
     nk_panel_layout(ctx, win, row_height, layout->row.columns);
 }
 NK_LIB void
 nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx,
     struct nk_window *win, int modify)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_layout_widget_space");
     struct nk_panel *layout;
     const struct nk_style *style;
 
     struct nk_vec2 spacing;
 
-    int item_offset = 0;
-    int item_width = 0;
-    int item_spacing = 0;
-    int panel_space = 0;
+    float item_offset = 0;
+    float item_width = 0;
+    float item_spacing = 0;
+    float panel_space = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
     style = &ctx->style;
-    // NK_ASSERT(bounds);
+    NK_ASSERT(bounds);
 
     spacing = style->window.spacing;
     panel_space = nk_layout_row_calculate_usable_space(&ctx->style, layout->type,
                                             layout->bounds.w, layout->row.columns);
 
-    #define NK_FRAC(x) (x - (int)x) /* will be used to remove fookin gaps */
+    #define NK_FRAC(x) (x - (float)(int)x) /* will be used to remove fookin gaps */
     /* calculate the width of one item inside the current layout space */
     switch (layout->row.type) {
     case NK_LAYOUT_DYNAMIC_FIXED: {
         /* scaling fixed size widgets item width */
-        int w = NK_MAX(1.0f,panel_space) / (int)layout->row.columns;
-        item_offset = (int)layout->row.index * w;
+        float w = NK_MAX(1.0f,panel_space) / (float)layout->row.columns;
+        item_offset = (float)layout->row.index * w;
         item_width = w + NK_FRAC(item_offset);
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_spacing = (float)layout->row.index * spacing.x;
     } break;
     case NK_LAYOUT_DYNAMIC_ROW: {
         /* scaling single ratio widget width */
-        int w = layout->row.item_width * panel_space;
+        float w = layout->row.item_width * panel_space;
         item_offset = layout->row.item_offset;
         item_width = w + NK_FRAC(item_offset);
         item_spacing = 0;
@@ -22473,22 +22015,22 @@ nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx,
     case NK_LAYOUT_DYNAMIC_FREE: {
         /* panel width depended free widget placing */
         bounds->x = layout->at_x + (layout->bounds.w * layout->row.item.x);
-        bounds->x -= (int)*layout->offset_x;
+        bounds->x -= (float)*layout->offset_x;
         bounds->y = layout->at_y + (layout->row.height * layout->row.item.y);
-        bounds->y -= (int)*layout->offset_y;
+        bounds->y -= (float)*layout->offset_y;
         bounds->w = layout->bounds.w  * layout->row.item.w + NK_FRAC(bounds->x);
         bounds->h = layout->row.height * layout->row.item.h + NK_FRAC(bounds->y);
         return;
     }
     case NK_LAYOUT_DYNAMIC: {
         /* scaling arrays of panel width ratios for every widget */
-        int ratio, w;
-        // NK_ASSERT(layout->row.ratio);
+        float ratio, w;
+        NK_ASSERT(layout->row.ratio);
         ratio = (layout->row.ratio[layout->row.index] < 0) ?
             layout->row.item_width : layout->row.ratio[layout->row.index];
 
         w = (ratio * panel_space);
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_spacing = (float)layout->row.index * spacing.x;
         item_offset = layout->row.item_offset;
         item_width = w + NK_FRAC(item_offset);
 
@@ -22500,14 +22042,14 @@ nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx,
     case NK_LAYOUT_STATIC_FIXED: {
         /* non-scaling fixed widgets item width */
         item_width = layout->row.item_width;
-        item_offset = (int)layout->row.index * item_width;
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_offset = (float)layout->row.index * item_width;
+        item_spacing = (float)layout->row.index * spacing.x;
     } break;
     case NK_LAYOUT_STATIC_ROW: {
         /* scaling single ratio widget width */
         item_width = layout->row.item_width;
         item_offset = layout->row.item_offset;
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_spacing = (float)layout->row.index * spacing.x;
         if (modify) layout->row.item_offset += item_width;
     } break;
     case NK_LAYOUT_STATIC_FREE: {
@@ -22516,53 +22058,52 @@ nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx,
         bounds->w = layout->row.item.w;
         if (((bounds->x + bounds->w) > layout->max_x) && modify)
             layout->max_x = (bounds->x + bounds->w);
-        bounds->x -= (int)*layout->offset_x;
+        bounds->x -= (float)*layout->offset_x;
         bounds->y = layout->at_y + layout->row.item.y;
-        bounds->y -= (int)*layout->offset_y;
+        bounds->y -= (float)*layout->offset_y;
         bounds->h = layout->row.item.h;
         return;
     }
     case NK_LAYOUT_STATIC: {
         /* non-scaling array of panel pixel width for every widget */
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_spacing = (float)layout->row.index * spacing.x;
         item_width = layout->row.ratio[layout->row.index];
         item_offset = layout->row.item_offset;
         if (modify) layout->row.item_offset += item_width;
     } break;
     case NK_LAYOUT_TEMPLATE: {
         /* stretchy row layout with combined dynamic/static widget width*/
-        int w;
-        // NK_ASSERT(layout->row.index < layout->row.columns);
-        // NK_ASSERT(layout->row.index < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
+        float w;
+        NK_ASSERT(layout->row.index < layout->row.columns);
+        NK_ASSERT(layout->row.index < NK_MAX_LAYOUT_ROW_TEMPLATE_COLUMNS);
         w = layout->row.templates[layout->row.index];
         item_offset = layout->row.item_offset;
         item_width = w + NK_FRAC(item_offset);
-        item_spacing = (int)layout->row.index * spacing.x;
+        item_spacing = (float)layout->row.index * spacing.x;
         if (modify) layout->row.item_offset += w;
     } break;
     #undef NK_FRAC
-    default: break; // NK_ASSERT(0); break;
+    default: NK_ASSERT(0); break;
     };
 
     /* set the bounds of the newly allocated widget */
     bounds->w = item_width;
     bounds->h = layout->row.height - spacing.y;
-    bounds->y = layout->at_y - (int)*layout->offset_y;
+    bounds->y = layout->at_y - (float)*layout->offset_y;
     bounds->x = layout->at_x + item_offset + item_spacing;
     if (((bounds->x + bounds->w) > layout->max_x) && modify)
         layout->max_x = bounds->x + bounds->w;
-    bounds->x -= (int)*layout->offset_x;
+    bounds->x -= (float)*layout->offset_x;
 }
 NK_LIB void
 nk_panel_alloc_space(struct nk_rect *bounds, const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_panel_alloc_space");
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22579,15 +22120,14 @@ nk_panel_alloc_space(struct nk_rect *bounds, const struct nk_context *ctx)
 NK_LIB void
 nk_layout_peek(struct nk_rect *bounds, struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_layout_peek");
-    int y;
+    float y;
     int index;
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -22620,7 +22160,6 @@ NK_INTERN int
 nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     struct nk_image *img, const char *title, enum nk_collapse_states *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - img /     struct");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_style *style;
@@ -22628,7 +22167,7 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     const struct nk_input *in;
     const struct nk_style_button *button;
     enum nk_symbol_type symbol;
-    int row_height;
+    float row_height;
 
     struct nk_vec2 item_spacing;
     struct nk_rect header = {0,0,0,0};
@@ -22638,9 +22177,9 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     nk_flags ws = 0;
     enum nk_widget_layout_states widget_state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -22660,14 +22199,19 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     widget_state = nk_widget(&header, ctx);
     if (type == NK_TREE_TAB) {
         const struct nk_style_item *background = &style->tab.background;
-        if (background->type == NK_STYLE_ITEM_IMAGE) {
-            nk_draw_image(out, header, &background->data.image, nk_white);
-            text.background = nk_rgba(0,0,0,0);
-        } else {
-            text.background = background->data.color;
-            nk_fill_rect(out, header, 0, style->tab.border_color);
-            nk_fill_rect(out, nk_shrink_rect(header, style->tab.border),
-                style->tab.rounding, background->data.color);
+
+        switch(background->type) {
+            case NK_STYLE_ITEM_IMAGE:
+                nk_draw_image(out, header, &background->data.image, nk_white);
+                break;
+            case NK_STYLE_ITEM_NINE_SLICE:
+                nk_draw_nine_slice(out, header, &background->data.slice, nk_white);
+                break;
+            case NK_STYLE_ITEM_COLOR:
+                nk_fill_rect(out, header, 0, style->tab.border_color);
+                nk_fill_rect(out, nk_shrink_rect(header, style->tab.border),
+                    style->tab.rounding, background->data.color);
+                break;
         }
     } else text.background = style->window.background;
 
@@ -22713,12 +22257,12 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     label.h = style->font->height;
     text.text = style->tab.text;
     text.padding = nk_vec2(0,0);
-    nk_widget_text(out, label, title, strlen(title), &text,
+    nk_widget_text(out, label, title, nk_strlen(title), &text,
         NK_TEXT_LEFT, style->font);}
 
     /* increase x-axis cursor widget position pointer */
     if (*state == NK_MAXIMIZED) {
-        layout->at_x = header.x + (int)*layout->offset_x + style->tab.indent;
+        layout->at_x = header.x + (float)*layout->offset_x + style->tab.indent;
         layout->bounds.w = NK_MAX(layout->bounds.w, style->tab.indent);
         layout->bounds.w -= (style->tab.indent + style->window.padding.x);
         layout->row.tree_depth++;
@@ -22730,7 +22274,6 @@ nk_tree_base(struct nk_context *ctx, enum nk_tree_type type,
     struct nk_image *img, const char *title, enum nk_collapse_states initial_state,
     const char *hash, int len, int line)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - hash /     const");
     struct nk_window *win = ctx->current;
     int title_len = 0;
     nk_hash tree_hash = 0;
@@ -22738,7 +22281,7 @@ nk_tree_base(struct nk_context *ctx, enum nk_tree_type type,
 
     /* retrieve tree state from internal widget state tables */
     if (!hash) {
-        title_len = (int)strlen(title);
+        title_len = (int)nk_strlen(title);
         tree_hash = nk_murmur_hash(title, (int)title_len, (nk_hash)line);
     } else tree_hash = nk_murmur_hash(hash, len, (nk_hash)line);
     state = nk_find_value(win, tree_hash);
@@ -22752,34 +22295,31 @@ NK_API nk_bool
 nk_tree_state_push(struct nk_context *ctx, enum nk_tree_type type,
     const char *title, enum nk_collapse_states *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
     return nk_tree_state_base(ctx, type, 0, title, state);
 }
 NK_API nk_bool
 nk_tree_state_image_push(struct nk_context *ctx, enum nk_tree_type type,
     struct nk_image img, const char *title, enum nk_collapse_states *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - img /     struct");
     return nk_tree_state_base(ctx, type, &img, title, state);
 }
 NK_API void
 nk_tree_state_pop(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tree_state_pop");
     struct nk_window *win = 0;
     struct nk_panel *layout = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
     win = ctx->current;
     layout = win->layout;
-    layout->at_x -= ctx->style.tab.indent + (int)*layout->offset_x;
+    layout->at_x -= ctx->style.tab.indent + (float)*layout->offset_x;
     layout->bounds.w += ctx->style.tab.indent + ctx->style.window.padding.x;
-    // NK_ASSERT(layout->row.tree_depth);
+    NK_ASSERT(layout->row.tree_depth);
     layout->row.tree_depth--;
 }
 NK_API nk_bool
@@ -22787,7 +22327,6 @@ nk_tree_push_hashed(struct nk_context *ctx, enum nk_tree_type type,
     const char *title, enum nk_collapse_states initial_state,
     const char *hash, int len, int line)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - hash /     const");
     return nk_tree_base(ctx, type, 0, title, initial_state, hash, len, line);
 }
 NK_API nk_bool
@@ -22795,13 +22334,11 @@ nk_tree_image_push_hashed(struct nk_context *ctx, enum nk_tree_type type,
     struct nk_image img, const char *title, enum nk_collapse_states initial_state,
     const char *hash, int len,int seed)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - hash /     const");
     return nk_tree_base(ctx, type, &img, title, initial_state, hash, len, seed);
 }
 NK_API void
 nk_tree_pop(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tree_pop");
     nk_tree_state_pop(ctx);
 }
 NK_INTERN int
@@ -22809,7 +22346,6 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     struct nk_image *img, const char *title, int title_len,
     enum nk_collapse_states *state, nk_bool *selected)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - state /     enum");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_style *style;
@@ -22817,11 +22353,11 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     const struct nk_input *in;
     const struct nk_style_button *button;
     enum nk_symbol_type symbol;
-    int row_height;
+    float row_height;
     struct nk_vec2 padding;
 
     int text_len;
-    int text_width;
+    float text_width;
 
     struct nk_vec2 item_spacing;
     struct nk_rect header = {0,0,0,0};
@@ -22830,9 +22366,9 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     nk_flags ws = 0;
     enum nk_widget_layout_states widget_state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -22853,12 +22389,19 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     widget_state = nk_widget(&header, ctx);
     if (type == NK_TREE_TAB) {
         const struct nk_style_item *background = &style->tab.background;
-        if (background->type == NK_STYLE_ITEM_IMAGE) {
-            nk_draw_image(out, header, &background->data.image, nk_white);
-        } else {
-            nk_fill_rect(out, header, 0, style->tab.border_color);
-            nk_fill_rect(out, nk_shrink_rect(header, style->tab.border),
-                style->tab.rounding, background->data.color);
+
+        switch (background->type) {
+            case NK_STYLE_ITEM_IMAGE:
+                nk_draw_image(out, header, &background->data.image, nk_white);
+                break;
+            case NK_STYLE_ITEM_NINE_SLICE:
+                nk_draw_nine_slice(out, header, &background->data.slice, nk_white);
+                break;
+            case NK_STYLE_ITEM_COLOR:
+                nk_fill_rect(out, header, 0, style->tab.border_color);
+                nk_fill_rect(out, nk_shrink_rect(header, style->tab.border),
+                    style->tab.rounding, background->data.color);
+                break;
         }
     }
 
@@ -22888,7 +22431,7 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     {nk_flags dummy = 0;
     struct nk_rect label;
     /* calculate size of the text and tooltip */
-    text_len = strlen(title);
+    text_len = nk_strlen(title);
     text_width = style->font->width(style->font->userdata, style->font->height, title, text_len);
     text_width += (4 * padding.x);
 
@@ -22906,7 +22449,7 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     }
     /* increase x-axis cursor widget position pointer */
     if (*state == NK_MAXIMIZED) {
-        layout->at_x = header.x + (int)*layout->offset_x + style->tab.indent;
+        layout->at_x = header.x + (float)*layout->offset_x + style->tab.indent;
         layout->bounds.w = NK_MAX(layout->bounds.w, style->tab.indent);
         layout->bounds.w -= (style->tab.indent + style->window.padding.x);
         layout->row.tree_depth++;
@@ -22918,7 +22461,6 @@ nk_tree_element_base(struct nk_context *ctx, enum nk_tree_type type,
     struct nk_image *img, const char *title, enum nk_collapse_states initial_state,
     nk_bool *selected, const char *hash, int len, int line)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     nk_bool");
     struct nk_window *win = ctx->current;
     int title_len = 0;
     nk_hash tree_hash = 0;
@@ -22926,7 +22468,7 @@ nk_tree_element_base(struct nk_context *ctx, enum nk_tree_type type,
 
     /* retrieve tree state from internal widget state tables */
     if (!hash) {
-        title_len = (int)strlen(title);
+        title_len = (int)nk_strlen(title);
         tree_hash = nk_murmur_hash(title, (int)title_len, (nk_hash)line);
     } else tree_hash = nk_murmur_hash(hash, len, (nk_hash)line);
     state = nk_find_value(win, tree_hash);
@@ -22934,14 +22476,13 @@ nk_tree_element_base(struct nk_context *ctx, enum nk_tree_type type,
         state = nk_add_value(ctx, win, tree_hash, 0);
         *state = initial_state;
     } return nk_tree_element_image_push_hashed_base(ctx, type, img, title,
-        strlen(title), (enum nk_collapse_states*)state, selected);
+        nk_strlen(title), (enum nk_collapse_states*)state, selected);
 }
 NK_API nk_bool
 nk_tree_element_push_hashed(struct nk_context *ctx, enum nk_tree_type type,
     const char *title, enum nk_collapse_states initial_state,
     nk_bool *selected, const char *hash, int len, int seed)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     nk_bool");
     return nk_tree_element_base(ctx, type, 0, title, initial_state, selected, hash, len, seed);
 }
 NK_API nk_bool
@@ -22949,13 +22490,11 @@ nk_tree_element_image_push_hashed(struct nk_context *ctx, enum nk_tree_type type
     struct nk_image img, const char *title, enum nk_collapse_states initial_state,
     nk_bool *selected, const char *hash, int len,int seed)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     nk_bool");
     return nk_tree_element_base(ctx, type, &img, title, initial_state, selected, hash, len, seed);
 }
 NK_API void
 nk_tree_element_pop(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tree_element_pop");
     nk_tree_state_pop(ctx);
 }
 
@@ -22972,7 +22511,6 @@ NK_API nk_bool
 nk_group_scrolled_offset_begin(struct nk_context *ctx,
     nk_uint *x_offset, nk_uint *y_offset, const char *title, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - x_offset, /     nk_uint");
     struct nk_rect bounds;
     struct nk_window panel;
     struct nk_window *win;
@@ -22980,7 +22518,8 @@ nk_group_scrolled_offset_begin(struct nk_context *ctx,
     win = ctx->current;
     nk_panel_alloc_space(&bounds, ctx);
     {const struct nk_rect *c = &win->layout->clip;
-    if (!NK_INTERSECT(c->x, c->y, c->w, c->h, bounds.x, bounds.y, bounds.w, bounds.h) &&        !(flags & NK_WINDOW_MOVABLE)) {
+    if (!NK_INTERSECT(c->x, c->y, c->w, c->h, bounds.x, bounds.y, bounds.w, bounds.h) &&
+        !(flags & NK_WINDOW_MOVABLE)) {
         return 0;
     }}
     if (win->flags & NK_WINDOW_ROM)
@@ -23020,7 +22559,6 @@ nk_group_scrolled_offset_begin(struct nk_context *ctx,
 NK_API void
 nk_group_scrolled_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_group_scrolled_end");
     struct nk_window *win;
     struct nk_panel *parent;
     struct nk_panel *g;
@@ -23029,17 +22567,17 @@ nk_group_scrolled_end(struct nk_context *ctx)
     struct nk_window pan;
     struct nk_vec2 panel_padding;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return;
 
     /* make sure nk_group_begin was called correctly */
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current);
     win = ctx->current;
-    // NK_ASSERT(win->layout);
+    NK_ASSERT(win->layout);
     g = win->layout;
-    // NK_ASSERT(g->parent);
+    NK_ASSERT(g->parent);
     parent = g->parent;
 
     /* dummy window */
@@ -23070,11 +22608,11 @@ nk_group_scrolled_end(struct nk_context *ctx)
     /* make sure group has correct clipping rectangle */
     nk_unify(&clip, &parent->clip, pan.bounds.x, pan.bounds.y,
         pan.bounds.x + pan.bounds.w, pan.bounds.y + pan.bounds.h + panel_padding.x);
-    // nk_push_scissor(&pan.buffer, clip);
+    nk_push_scissor(&pan.buffer, clip);
     nk_end(ctx);
 
     win->buffer = pan.buffer;
-    // nk_push_scissor(&win->buffer, parent->clip);
+    nk_push_scissor(&win->buffer, parent->clip);
     ctx->current = win;
     win->layout = parent;
     g->bounds = pan.bounds;
@@ -23084,38 +22622,36 @@ NK_API nk_bool
 nk_group_scrolled_begin(struct nk_context *ctx,
     struct nk_scroll *scroll, const char *title, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - scroll /     struct");
     return nk_group_scrolled_offset_begin(ctx, &scroll->x, &scroll->y, title, flags);
 }
 NK_API nk_bool
 nk_group_begin_titled(struct nk_context *ctx, const char *id,
     const char *title, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
     int id_len;
     nk_hash id_hash;
     struct nk_window *win;
     nk_uint *x_offset;
     nk_uint *y_offset;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(id);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(id);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !id)
         return 0;
 
     /* find persistent group scrollbar value */
     win = ctx->current;
-    id_len = (int)strlen(id);
+    id_len = (int)nk_strlen(id);
     id_hash = nk_murmur_hash(id, (int)id_len, NK_PANEL_GROUP);
     x_offset = nk_find_value(win, id_hash);
     if (!x_offset) {
         x_offset = nk_add_value(ctx, win, id_hash, 0);
         y_offset = nk_add_value(ctx, win, id_hash+1, 0);
 
-        // NK_ASSERT(x_offset);
-        // NK_ASSERT(y_offset);
+        NK_ASSERT(x_offset);
+        NK_ASSERT(y_offset);
         if (!x_offset || !y_offset) return 0;
         *x_offset = *y_offset = 0;
     } else y_offset = nk_find_value(win, id_hash+1);
@@ -23124,43 +22660,40 @@ nk_group_begin_titled(struct nk_context *ctx, const char *id,
 NK_API nk_bool
 nk_group_begin(struct nk_context *ctx, const char *title, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_group_begin");
     return nk_group_begin_titled(ctx, title, title, flags);
 }
 NK_API void
 nk_group_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_group_end");
     nk_group_scrolled_end(ctx);
 }
 NK_API void
 nk_group_get_scroll(struct nk_context *ctx, const char *id, nk_uint *x_offset, nk_uint *y_offset)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_group_get_scroll");
     int id_len;
     nk_hash id_hash;
     struct nk_window *win;
     nk_uint *x_offset_ptr;
     nk_uint *y_offset_ptr;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(id);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(id);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !id)
         return;
 
     /* find persistent group scrollbar value */
     win = ctx->current;
-    id_len = (int)strlen(id);
+    id_len = (int)nk_strlen(id);
     id_hash = nk_murmur_hash(id, (int)id_len, NK_PANEL_GROUP);
     x_offset_ptr = nk_find_value(win, id_hash);
     if (!x_offset_ptr) {
         x_offset_ptr = nk_add_value(ctx, win, id_hash, 0);
         y_offset_ptr = nk_add_value(ctx, win, id_hash+1, 0);
 
-        // NK_ASSERT(x_offset_ptr);
-        // NK_ASSERT(y_offset_ptr);
+        NK_ASSERT(x_offset_ptr);
+        NK_ASSERT(y_offset_ptr);
         if (!x_offset_ptr || !y_offset_ptr) return;
         *x_offset_ptr = *y_offset_ptr = 0;
     } else y_offset_ptr = nk_find_value(win, id_hash+1);
@@ -23172,31 +22705,30 @@ nk_group_get_scroll(struct nk_context *ctx, const char *id, nk_uint *x_offset, n
 NK_API void
 nk_group_set_scroll(struct nk_context *ctx, const char *id, nk_uint x_offset, nk_uint y_offset)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_group_set_scroll");
     int id_len;
     nk_hash id_hash;
     struct nk_window *win;
     nk_uint *x_offset_ptr;
     nk_uint *y_offset_ptr;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(id);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(id);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !id)
         return;
 
     /* find persistent group scrollbar value */
     win = ctx->current;
-    id_len = (int)strlen(id);
+    id_len = (int)nk_strlen(id);
     id_hash = nk_murmur_hash(id, (int)id_len, NK_PANEL_GROUP);
     x_offset_ptr = nk_find_value(win, id_hash);
     if (!x_offset_ptr) {
         x_offset_ptr = nk_add_value(ctx, win, id_hash, 0);
         y_offset_ptr = nk_add_value(ctx, win, id_hash+1, 0);
 
-        // NK_ASSERT(x_offset_ptr);
-        // NK_ASSERT(y_offset_ptr);
+        NK_ASSERT(x_offset_ptr);
+        NK_ASSERT(y_offset_ptr);
         if (!x_offset_ptr || !y_offset_ptr) return;
         *x_offset_ptr = *y_offset_ptr = 0;
     } else y_offset_ptr = nk_find_value(win, id_hash+1);
@@ -23216,7 +22748,6 @@ NK_API nk_bool
 nk_list_view_begin(struct nk_context *ctx, struct nk_list_view *view,
     const char *title, nk_flags flags, int row_height, int row_count)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
     int title_len;
     nk_hash title_hash;
     nk_uint *x_offset;
@@ -23228,9 +22759,9 @@ nk_list_view_begin(struct nk_context *ctx, struct nk_list_view *view,
     const struct nk_style *style;
     struct nk_vec2 item_spacing;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(view);
-    // NK_ASSERT(title);
+    NK_ASSERT(ctx);
+    NK_ASSERT(view);
+    NK_ASSERT(title);
     if (!ctx || !view || !title) return 0;
 
     win = ctx->current;
@@ -23239,15 +22770,15 @@ nk_list_view_begin(struct nk_context *ctx, struct nk_list_view *view,
     row_height += NK_MAX(0, (int)item_spacing.y);
 
     /* find persistent list view scrollbar offset */
-    title_len = (int)strlen(title);
+    title_len = (int)nk_strlen(title);
     title_hash = nk_murmur_hash(title, (int)title_len, NK_PANEL_GROUP);
     x_offset = nk_find_value(win, title_hash);
     if (!x_offset) {
         x_offset = nk_add_value(ctx, win, title_hash, 0);
         y_offset = nk_add_value(ctx, win, title_hash+1, 0);
 
-        // NK_ASSERT(x_offset);
-        // NK_ASSERT(y_offset);
+        NK_ASSERT(x_offset);
+        NK_ASSERT(y_offset);
         if (!x_offset || !y_offset) return 0;
         *x_offset = *y_offset = 0;
     } else y_offset = nk_find_value(win, title_hash+1);
@@ -23260,8 +22791,8 @@ nk_list_view_begin(struct nk_context *ctx, struct nk_list_view *view,
     layout = win->layout;
 
     view->total_height = row_height * NK_MAX(row_count,1);
-    view->begin = (int)NK_MAX(((int)view->scroll_value / (int)row_height), 0.0f);
-    view->count = (int)NK_MAX(nk_iceilf((layout->clip.h)/(int)row_height),0);
+    view->begin = (int)NK_MAX(((float)view->scroll_value / (float)row_height), 0.0f);
+    view->count = (int)NK_MAX(nk_iceilf((layout->clip.h)/(float)row_height),0);
     view->count = NK_MIN(view->count, row_count - view->begin);
     view->end = view->begin + view->count;
     view->ctx = ctx;
@@ -23270,20 +22801,19 @@ nk_list_view_begin(struct nk_context *ctx, struct nk_list_view *view,
 NK_API void
 nk_list_view_end(struct nk_list_view *view)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_list_view / nk_list_view_end");
     struct nk_context *ctx;
     struct nk_window *win;
     struct nk_panel *layout;
 
-    // NK_ASSERT(view);
-    // NK_ASSERT(view->ctx);
-    // NK_ASSERT(view->scroll_pointer);
+    NK_ASSERT(view);
+    NK_ASSERT(view->ctx);
+    NK_ASSERT(view->scroll_pointer);
     if (!view || !view->ctx) return;
 
     ctx = view->ctx;
     win = ctx->current;
     layout = win->layout;
-    layout->at_y = layout->bounds.y + (int)view->total_height;
+    layout->at_y = layout->bounds.y + (float)view->total_height;
     *view->scroll_pointer = *view->scroll_pointer + view->scroll_value;
     nk_group_end(view->ctx);
 }
@@ -23300,10 +22830,9 @@ nk_list_view_end(struct nk_list_view *view)
 NK_API struct nk_rect
 nk_widget_bounds(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_bounds");
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return nk_rect(0,0,0,0);
     nk_layout_peek(&bounds, ctx);
@@ -23312,10 +22841,9 @@ nk_widget_bounds(struct nk_context *ctx)
 NK_API struct nk_vec2
 nk_widget_position(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_position");
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return nk_vec2(0,0);
 
@@ -23325,36 +22853,33 @@ nk_widget_position(struct nk_context *ctx)
 NK_API struct nk_vec2
 nk_widget_size(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_size");
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return nk_vec2(0,0);
 
     nk_layout_peek(&bounds, ctx);
     return nk_vec2(bounds.w, bounds.h);
 }
-NK_API int
+NK_API float
 nk_widget_width(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_width");
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return 0;
 
     nk_layout_peek(&bounds, ctx);
     return bounds.w;
 }
-NK_API int
+NK_API float
 nk_widget_height(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_height");
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return 0;
 
@@ -23364,19 +22889,18 @@ nk_widget_height(struct nk_context *ctx)
 NK_API nk_bool
 nk_widget_is_hovered(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_is_hovered");
     struct nk_rect c, v;
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current || ctx->active != ctx->current)
         return 0;
 
     c = ctx->current->layout->clip;
-    c.x = (int)((int)c.x);
-    c.y = (int)((int)c.y);
-    c.w = (int)((int)c.w);
-    c.h = (int)((int)c.h);
+    c.x = (float)((int)c.x);
+    c.y = (float)((int)c.y);
+    c.w = (float)((int)c.w);
+    c.h = (float)((int)c.h);
 
     nk_layout_peek(&bounds, ctx);
     nk_unify(&v, &c, bounds.x, bounds.y, bounds.x + bounds.w, bounds.y + bounds.h);
@@ -23387,19 +22911,18 @@ nk_widget_is_hovered(struct nk_context *ctx)
 NK_API nk_bool
 nk_widget_is_mouse_clicked(struct nk_context *ctx, enum nk_buttons btn)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_is_mouse_clicked");
     struct nk_rect c, v;
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current || ctx->active != ctx->current)
         return 0;
 
     c = ctx->current->layout->clip;
-    c.x = (int)((int)c.x);
-    c.y = (int)((int)c.y);
-    c.w = (int)((int)c.w);
-    c.h = (int)((int)c.h);
+    c.x = (float)((int)c.x);
+    c.y = (float)((int)c.y);
+    c.w = (float)((int)c.w);
+    c.h = (float)((int)c.h);
 
     nk_layout_peek(&bounds, ctx);
     nk_unify(&v, &c, bounds.x, bounds.y, bounds.x + bounds.w, bounds.y + bounds.h);
@@ -23410,19 +22933,18 @@ nk_widget_is_mouse_clicked(struct nk_context *ctx, enum nk_buttons btn)
 NK_API nk_bool
 nk_widget_has_mouse_click_down(struct nk_context *ctx, enum nk_buttons btn, nk_bool down)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_widget_has_mouse_click_down");
     struct nk_rect c, v;
     struct nk_rect bounds;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current || ctx->active != ctx->current)
         return 0;
 
     c = ctx->current->layout->clip;
-    c.x = (int)((int)c.x);
-    c.y = (int)((int)c.y);
-    c.w = (int)((int)c.w);
-    c.h = (int)((int)c.h);
+    c.x = (float)((int)c.x);
+    c.y = (float)((int)c.y);
+    c.w = (float)((int)c.w);
+    c.h = (float)((int)c.h);
 
     nk_layout_peek(&bounds, ctx);
     nk_unify(&v, &c, bounds.x, bounds.y, bounds.x + bounds.w, bounds.y + bounds.h);
@@ -23433,15 +22955,14 @@ nk_widget_has_mouse_click_down(struct nk_context *ctx, enum nk_buttons btn, nk_b
 NK_API enum nk_widget_layout_states
 nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect / nk_widget");
     struct nk_rect c, v;
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return NK_WIDGET_INVALID;
 
@@ -23457,20 +22978,20 @@ nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
         Example:
             if (nk_begin(...) {...} nk_end(...); or
             if (nk_group_begin(...) { nk_group_end(...);} */
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_MINIMIZED));
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_HIDDEN));
-    // NK_ASSERT(!(layout->flags & NK_WINDOW_CLOSED));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_MINIMIZED));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_HIDDEN));
+    NK_ASSERT(!(layout->flags & NK_WINDOW_CLOSED));
 
-    /* need to convert to int here to remove inting point errors */
-    bounds->x = (int)((int)bounds->x);
-    bounds->y = (int)((int)bounds->y);
-    bounds->w = (int)((int)bounds->w);
-    bounds->h = (int)((int)bounds->h);
+    /* need to convert to int here to remove floating point errors */
+    bounds->x = (float)((int)bounds->x);
+    bounds->y = (float)((int)bounds->y);
+    bounds->w = (float)((int)bounds->w);
+    bounds->h = (float)((int)bounds->h);
 
-    c.x = (int)((int)c.x);
-    c.y = (int)((int)c.y);
-    c.w = (int)((int)c.w);
-    c.h = (int)((int)c.h);
+    c.x = (float)((int)c.x);
+    c.y = (float)((int)c.y);
+    c.w = (float)((int)c.w);
+    c.h = (float)((int)c.h);
 
     nk_unify(&v, &c, bounds->x, bounds->y, bounds->x + bounds->w, bounds->y + bounds->h);
     if (!NK_INTERSECT(c.x, c.y, c.w, c.h, bounds->x, bounds->y, bounds->w, bounds->h))
@@ -23483,14 +23004,13 @@ NK_API enum nk_widget_layout_states
 nk_widget_fitting(struct nk_rect *bounds, struct nk_context *ctx,
     struct nk_vec2 item_padding)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - item_padding /     struct");
     /* update the bounds to stand without padding  */
     enum nk_widget_layout_states state;
     NK_UNUSED(item_padding);
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return NK_WIDGET_INVALID;
 
@@ -23500,15 +23020,14 @@ nk_widget_fitting(struct nk_rect *bounds, struct nk_context *ctx,
 NK_API void
 nk_spacing(struct nk_context *ctx, int cols)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_spacing");
     struct nk_window *win;
     struct nk_panel *layout;
     struct nk_rect none;
     int i, index, rows;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -23523,7 +23042,8 @@ nk_spacing(struct nk_context *ctx, int cols)
         cols = index;
     }
     /* non table layout need to allocate space */
-    if (layout->row.type != NK_LAYOUT_DYNAMIC_FIXED &&        layout->row.type != NK_LAYOUT_STATIC_FIXED) {
+    if (layout->row.type != NK_LAYOUT_DYNAMIC_FIXED &&
+        layout->row.type != NK_LAYOUT_STATIC_FIXED) {
         for (i = 0; i < cols; ++i)
             nk_panel_alloc_space(&none, ctx);
     } layout->row.index = index;
@@ -23543,10 +23063,11 @@ nk_widget_text(struct nk_command_buffer *o, struct nk_rect b,
     const char *string, int len, const struct nk_text *t,
     nk_flags a, const struct nk_user_font *f)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_widget_text");
     struct nk_rect label;
-    int text_width;
+    float text_width;
 
+    NK_ASSERT(o);
+    NK_ASSERT(t);
     if (!o || !t) return;
 
     b.h = NK_MAX(b.h, 2 * t->padding.y);
@@ -23562,19 +23083,19 @@ nk_widget_text(struct nk_command_buffer *o, struct nk_rect b,
         label.x = b.x + t->padding.x;
         label.w = NK_MAX(0, b.w - 2 * t->padding.x);
     } else if (a & NK_TEXT_ALIGN_CENTERED) {
-        label.w = NK_MAX(1, 2 * t->padding.x + (int)text_width);
+        label.w = NK_MAX(1, 2 * t->padding.x + (float)text_width);
         label.x = (b.x + t->padding.x + ((b.w - 2 * t->padding.x) - label.w) / 2);
         label.x = NK_MAX(b.x + t->padding.x, label.x);
         label.w = NK_MIN(b.x + b.w, label.x + label.w);
         if (label.w >= label.x) label.w -= label.x;
     } else if (a & NK_TEXT_ALIGN_RIGHT) {
-        label.x = NK_MAX(b.x + t->padding.x, (b.x + b.w) - (2 * t->padding.x + (int)text_width));
-        label.w = (int)text_width + 2 * t->padding.x;
+        label.x = NK_MAX(b.x + t->padding.x, (b.x + b.w) - (2 * t->padding.x + (float)text_width));
+        label.w = (float)text_width + 2 * t->padding.x;
     } else return;
 
     /* align in y-axis */
     if (a & NK_TEXT_ALIGN_MIDDLE) {
-        label.y = b.y + b.h/2.0f - (int)f->height/2.0f;
+        label.y = b.y + b.h/2.0f - (float)f->height/2.0f;
         label.h = NK_MAX(b.h/2.0f, b.h - (b.h/2.0f + f->height/2.0f));
     } else if (a & NK_TEXT_ALIGN_BOTTOM) {
         label.y = b.y + b.h - f->height;
@@ -23587,8 +23108,7 @@ nk_widget_text_wrap(struct nk_command_buffer *o, struct nk_rect b,
     const char *string, int len, const struct nk_text *t,
     const struct nk_user_font *f)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
-    int width;
+    float width;
     int glyphs = 0;
     int fitting = 0;
     int done = 0;
@@ -23596,8 +23116,8 @@ nk_widget_text_wrap(struct nk_command_buffer *o, struct nk_rect b,
     struct nk_text text;
     NK_INTERN nk_rune seperator[] = {' '};
 
-    // NK_ASSERT(o);
-    // NK_ASSERT(t);
+    NK_ASSERT(o);
+    NK_ASSERT(t);
     if (!o || !t) return;
 
     text.padding = nk_vec2(0,0);
@@ -23626,7 +23146,6 @@ NK_API void
 nk_text_colored(struct nk_context *ctx, const char *str, int len,
     nk_flags alignment, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - alignment, /     nk_flags");
     struct nk_window *win;
     const struct nk_style *style;
 
@@ -23634,9 +23153,9 @@ nk_text_colored(struct nk_context *ctx, const char *str, int len,
     struct nk_rect bounds;
     struct nk_text text;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
 
     win = ctx->current;
@@ -23654,7 +23173,6 @@ NK_API void
 nk_text_wrap_colored(struct nk_context *ctx, const char *str,
     int len, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - len, /     int");
     struct nk_window *win;
     const struct nk_style *style;
 
@@ -23662,9 +23180,9 @@ nk_text_wrap_colored(struct nk_context *ctx, const char *str,
     struct nk_rect bounds;
     struct nk_text text;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
 
     win = ctx->current;
@@ -23683,7 +23201,6 @@ NK_API void
 nk_labelf_colored(struct nk_context *ctx, nk_flags flags,
     struct nk_color color, const char *fmt, ...)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
     va_list args;
     va_start(args, fmt);
     nk_labelfv_colored(ctx, flags, color, fmt, args);
@@ -23693,7 +23210,6 @@ NK_API void
 nk_labelf_colored_wrap(struct nk_context *ctx, struct nk_color color,
     const char *fmt, ...)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fmt /     const");
     va_list args;
     va_start(args, fmt);
     nk_labelfv_colored_wrap(ctx, color, fmt, args);
@@ -23702,7 +23218,6 @@ nk_labelf_colored_wrap(struct nk_context *ctx, struct nk_color color,
 NK_API void
 nk_labelf(struct nk_context *ctx, nk_flags flags, const char *fmt, ...)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_labelf");
     va_list args;
     va_start(args, fmt);
     nk_labelfv(ctx, flags, fmt, args);
@@ -23711,7 +23226,6 @@ nk_labelf(struct nk_context *ctx, nk_flags flags, const char *fmt, ...)
 NK_API void
 nk_labelf_wrap(struct nk_context *ctx, const char *fmt,...)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_labelf_wrap");
     va_list args;
     va_start(args, fmt);
     nk_labelfv_wrap(ctx, fmt, args);
@@ -23721,7 +23235,6 @@ NK_API void
 nk_labelfv_colored(struct nk_context *ctx, nk_flags flags,
     struct nk_color color, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
     char buf[256];
     nk_strfmt(buf, NK_LEN(buf), fmt, args);
     nk_label_colored(ctx, buf, flags, color);
@@ -23731,7 +23244,6 @@ NK_API void
 nk_labelfv_colored_wrap(struct nk_context *ctx, struct nk_color color,
     const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fmt /     const");
     char buf[256];
     nk_strfmt(buf, NK_LEN(buf), fmt, args);
     nk_label_colored_wrap(ctx, buf, color);
@@ -23740,7 +23252,6 @@ nk_labelfv_colored_wrap(struct nk_context *ctx, struct nk_color color,
 NK_API void
 nk_labelfv(struct nk_context *ctx, nk_flags flags, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_labelfv");
     char buf[256];
     nk_strfmt(buf, NK_LEN(buf), fmt, args);
     nk_label(ctx, buf, flags);
@@ -23749,7 +23260,6 @@ nk_labelfv(struct nk_context *ctx, nk_flags flags, const char *fmt, va_list args
 NK_API void
 nk_labelfv_wrap(struct nk_context *ctx, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_labelfv_wrap");
     char buf[256];
     nk_strfmt(buf, NK_LEN(buf), fmt, args);
     nk_label_wrap(ctx, buf);
@@ -23758,37 +23268,32 @@ nk_labelfv_wrap(struct nk_context *ctx, const char *fmt, va_list args)
 NK_API void
 nk_value_bool(struct nk_context *ctx, const char *prefix, int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_bool");
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: %s", prefix, ((value) ? "true": "false"));
 }
 NK_API void
 nk_value_int(struct nk_context *ctx, const char *prefix, int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_int");
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: %d", prefix, value);
 }
 NK_API void
 nk_value_uint(struct nk_context *ctx, const char *prefix, unsigned int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_uint");
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: %u", prefix, value);
 }
-// NK_API void
-// nk_value_int(struct nk_context *ctx, const char *prefix, int value)
-// {
-//     double double_value = (double)value;
-//     nk_labelf(ctx, NK_TEXT_LEFT, "%s: %.3f", prefix, double_value);
-// }
+NK_API void
+nk_value_float(struct nk_context *ctx, const char *prefix, float value)
+{
+    double double_value = (double)value;
+    nk_labelf(ctx, NK_TEXT_LEFT, "%s: %.3f", prefix, double_value);
+}
 NK_API void
 nk_value_color_byte(struct nk_context *ctx, const char *p, struct nk_color c)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_color_byte");
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: (%d, %d, %d, %d)", p, c.r, c.g, c.b, c.a);
 }
 NK_API void
-nk_value_color_int(struct nk_context *ctx, const char *p, struct nk_color color)
+nk_value_color_float(struct nk_context *ctx, const char *p, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_color_int");
     double c[4]; nk_color_dv(c, color);
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: (%.2f, %.2f, %.2f, %.2f)",
         p, c[0], c[1], c[2], c[3]);
@@ -23796,7 +23301,6 @@ nk_value_color_int(struct nk_context *ctx, const char *p, struct nk_color color)
 NK_API void
 nk_value_color_hex(struct nk_context *ctx, const char *prefix, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_value_color_hex");
     char hex[16];
     nk_color_hex_rgba(hex, color);
     nk_labelf(ctx, NK_TEXT_LEFT, "%s: %s", prefix, hex);
@@ -23805,43 +23309,37 @@ nk_value_color_hex(struct nk_context *ctx, const char *prefix, struct nk_color c
 NK_API void
 nk_text(struct nk_context *ctx, const char *str, int len, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_text");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     nk_text_colored(ctx, str, len, alignment, ctx->style.text.color);
 }
 NK_API void
 nk_text_wrap(struct nk_context *ctx, const char *str, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_text_wrap");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     nk_text_wrap_colored(ctx, str, len, ctx->style.text.color);
 }
 NK_API void
 nk_label(struct nk_context *ctx, const char *str, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_label");
-    nk_text(ctx, str, strlen(str), alignment);
+    nk_text(ctx, str, nk_strlen(str), alignment);
 }
 NK_API void
 nk_label_colored(struct nk_context *ctx, const char *str, nk_flags align,
     struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
-    nk_text_colored(ctx, str, strlen(str), align, color);
+    nk_text_colored(ctx, str, nk_strlen(str), align, color);
 }
 NK_API void
 nk_label_wrap(struct nk_context *ctx, const char *str)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_label_wrap");
-    nk_text_wrap(ctx, str, strlen(str));
+    nk_text_wrap(ctx, str, nk_strlen(str));
 }
 NK_API void
 nk_label_colored_wrap(struct nk_context *ctx, const char *str, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_label_colored_wrap");
-    nk_text_wrap_colored(ctx, str, strlen(str), color);
+    nk_text_wrap_colored(ctx, str, nk_strlen(str), color);
 }
 
 
@@ -23856,7 +23354,6 @@ nk_label_colored_wrap(struct nk_context *ctx, const char *str, struct nk_color c
 NK_API nk_handle
 nk_handle_ptr(void *ptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - ptr / nk_handle_ptr");
     nk_handle handle = {0};
     handle.ptr = ptr;
     return handle;
@@ -23864,59 +23361,53 @@ nk_handle_ptr(void *ptr)
 NK_API nk_handle
 nk_handle_id(int id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - id / nk_handle_id");
     nk_handle handle;
     nk_zero_struct(handle);
     handle.id = id;
     return handle;
 }
 NK_API struct nk_image
-nk_subimage_ptr(void *ptr, unsigned short w, unsigned short h, struct nk_rect r)
+nk_subimage_ptr(void *ptr, nk_ushort w, nk_ushort h, struct nk_rect r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - ptr / nk_subimage_ptr");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
     s.handle.ptr = ptr;
     s.w = w; s.h = h;
-    s.region[0] = (unsigned short)r.x;
-    s.region[1] = (unsigned short)r.y;
-    s.region[2] = (unsigned short)r.w;
-    s.region[3] = (unsigned short)r.h;
+    s.region[0] = (nk_ushort)r.x;
+    s.region[1] = (nk_ushort)r.y;
+    s.region[2] = (nk_ushort)r.w;
+    s.region[3] = (nk_ushort)r.h;
     return s;
 }
 NK_API struct nk_image
-nk_subimage_id(int id, unsigned short w, unsigned short h, struct nk_rect r)
+nk_subimage_id(int id, nk_ushort w, nk_ushort h, struct nk_rect r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - id / nk_subimage_id");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
     s.handle.id = id;
     s.w = w; s.h = h;
-    s.region[0] = (unsigned short)r.x;
-    s.region[1] = (unsigned short)r.y;
-    s.region[2] = (unsigned short)r.w;
-    s.region[3] = (unsigned short)r.h;
+    s.region[0] = (nk_ushort)r.x;
+    s.region[1] = (nk_ushort)r.y;
+    s.region[2] = (nk_ushort)r.w;
+    s.region[3] = (nk_ushort)r.h;
     return s;
 }
 NK_API struct nk_image
-nk_subimage_handle(nk_handle handle, unsigned short w, unsigned short h,
-    struct nk_rect r)
+nk_subimage_handle(nk_handle handle, nk_ushort w, nk_ushort h, struct nk_rect r)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r /     struct");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
     s.handle = handle;
     s.w = w; s.h = h;
-    s.region[0] = (unsigned short)r.x;
-    s.region[1] = (unsigned short)r.y;
-    s.region[2] = (unsigned short)r.w;
-    s.region[3] = (unsigned short)r.h;
+    s.region[0] = (nk_ushort)r.x;
+    s.region[1] = (nk_ushort)r.y;
+    s.region[2] = (nk_ushort)r.w;
+    s.region[3] = (nk_ushort)r.h;
     return s;
 }
 NK_API struct nk_image
 nk_image_handle(nk_handle handle)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - handle / nk_image_handle");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
     s.handle = handle;
@@ -23930,10 +23421,9 @@ nk_image_handle(nk_handle handle)
 NK_API struct nk_image
 nk_image_ptr(void *ptr)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - ptr / nk_image_ptr");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
-    // NK_ASSERT(ptr);
+    NK_ASSERT(ptr);
     s.handle.ptr = ptr;
     s.w = 0; s.h = 0;
     s.region[0] = 0;
@@ -23945,7 +23435,6 @@ nk_image_ptr(void *ptr)
 NK_API struct nk_image
 nk_image_id(int id)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - id / nk_image_id");
     struct nk_image s;
     nk_zero(&s, sizeof(s));
     s.handle.id = id;
@@ -23959,20 +23448,18 @@ nk_image_id(int id)
 NK_API nk_bool
 nk_image_is_subimage(const struct nk_image* img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_image_is_subimage");
-    // NK_ASSERT(img);
+    NK_ASSERT(img);
     return !(img->w == 0 && img->h == 0);
 }
 NK_API void
 nk_image(struct nk_context *ctx, struct nk_image img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_image");
     struct nk_window *win;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
 
     win = ctx->current;
@@ -23982,18 +23469,124 @@ nk_image(struct nk_context *ctx, struct nk_image img)
 NK_API void
 nk_image_color(struct nk_context *ctx, struct nk_image img, struct nk_color col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_image_color");
     struct nk_window *win;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
 
     win = ctx->current;
     if (!nk_widget(&bounds, ctx)) return;
     nk_draw_image(&win->buffer, bounds, &img, col);
+}
+
+
+
+
+
+/* ===============================================================
+ *
+ *                          9-SLICE
+ *
+ * ===============================================================*/
+NK_API struct nk_nine_slice
+nk_sub9slice_ptr(void *ptr, nk_ushort w, nk_ushort h, struct nk_rect rgn, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    i->handle.ptr = ptr;
+    i->w = w; i->h = h;
+    i->region[0] = (nk_ushort)rgn.x;
+    i->region[1] = (nk_ushort)rgn.y;
+    i->region[2] = (nk_ushort)rgn.w;
+    i->region[3] = (nk_ushort)rgn.h;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API struct nk_nine_slice
+nk_sub9slice_id(int id, nk_ushort w, nk_ushort h, struct nk_rect rgn, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    i->handle.id = id;
+    i->w = w; i->h = h;
+    i->region[0] = (nk_ushort)rgn.x;
+    i->region[1] = (nk_ushort)rgn.y;
+    i->region[2] = (nk_ushort)rgn.w;
+    i->region[3] = (nk_ushort)rgn.h;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API struct nk_nine_slice
+nk_sub9slice_handle(nk_handle handle, nk_ushort w, nk_ushort h, struct nk_rect rgn, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    i->handle = handle;
+    i->w = w; i->h = h;
+    i->region[0] = (nk_ushort)rgn.x;
+    i->region[1] = (nk_ushort)rgn.y;
+    i->region[2] = (nk_ushort)rgn.w;
+    i->region[3] = (nk_ushort)rgn.h;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API struct nk_nine_slice
+nk_nine_slice_handle(nk_handle handle, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    i->handle = handle;
+    i->w = 0; i->h = 0;
+    i->region[0] = 0;
+    i->region[1] = 0;
+    i->region[2] = 0;
+    i->region[3] = 0;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API struct nk_nine_slice
+nk_nine_slice_ptr(void *ptr, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    NK_ASSERT(ptr);
+    i->handle.ptr = ptr;
+    i->w = 0; i->h = 0;
+    i->region[0] = 0;
+    i->region[1] = 0;
+    i->region[2] = 0;
+    i->region[3] = 0;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API struct nk_nine_slice
+nk_nine_slice_id(int id, nk_ushort l, nk_ushort t, nk_ushort r, nk_ushort b)
+{
+    struct nk_nine_slice s;
+    struct nk_image *i = &s.img;
+    nk_zero(&s, sizeof(s));
+    i->handle.id = id;
+    i->w = 0; i->h = 0;
+    i->region[0] = 0;
+    i->region[1] = 0;
+    i->region[2] = 0;
+    i->region[3] = 0;
+    s.l = l; s.t = t; s.r = r; s.b = b;
+    return s;
+}
+NK_API int
+nk_nine_slice_is_sub9slice(const struct nk_nine_slice* slice)
+{
+    NK_ASSERT(slice);
+    return !(slice->img.w == 0 && slice->img.h == 0);
 }
 
 
@@ -24008,9 +23601,8 @@ nk_image_color(struct nk_context *ctx, struct nk_image img, struct nk_color col)
 NK_LIB void
 nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type,
     struct nk_rect content, struct nk_color background, struct nk_color foreground,
-    int border_width, const struct nk_user_font *font)
+    float border_width, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - border_width, /     int");
     switch (type) {
     case NK_SYMBOL_X:
     case NK_SYMBOL_UNDERSCORE:
@@ -24063,7 +23655,6 @@ NK_LIB nk_bool
 nk_button_behavior(nk_flags *state, struct nk_rect r,
     const struct nk_input *i, enum nk_button_behavior behavior)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input /     const");
     int ret = 0;
     nk_widget_state_reset(state);
     if (!i) return 0;
@@ -24092,7 +23683,6 @@ nk_draw_button(struct nk_command_buffer *out,
     const struct nk_rect *bounds, nk_flags state,
     const struct nk_style_button *style)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_button /     const");
     const struct nk_style_item *background;
     if (state & NK_WIDGET_STATE_HOVER)
         background = &style->hover;
@@ -24100,11 +23690,17 @@ nk_draw_button(struct nk_command_buffer *out,
         background = &style->active;
     else background = &style->normal;
 
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(out, *bounds, &background->data.image, nk_white);
-    } else {
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+            break;
     }
     return background;
 }
@@ -24113,9 +23709,10 @@ nk_do_button(nk_flags *state, struct nk_command_buffer *out, struct nk_rect r,
     const struct nk_style_button *style, const struct nk_input *in,
     enum nk_button_behavior behavior, struct nk_rect *content)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - behavior /     enum");
     struct nk_rect bounds;
-
+    NK_ASSERT(style);
+    NK_ASSERT(state);
+    NK_ASSERT(out);
     if (!out || !style)
         return nk_false;
 
@@ -24138,9 +23735,19 @@ nk_draw_button_text(struct nk_command_buffer *out,
     const struct nk_style_button *style, const char *txt, int len,
     nk_flags text_alignment, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_button_text");
     struct nk_text text;
-    nk_draw_button(out, bounds, state, style);
+    const struct nk_style_item *background;
+    background = nk_draw_button(out, bounds, state, style);
+
+    /* select correct colors/images */
+    if (background->type == NK_STYLE_ITEM_COLOR)
+        text.background = background->data.color;
+    else text.background = style->text_background;
+    if (state & NK_WIDGET_STATE_HOVER)
+        text.text = style->text_hover;
+    else if (state & NK_WIDGET_STATE_ACTIVED)
+        text.text = style->text_active;
+    else text.text = style->text_normal;
 
     text.padding = nk_vec2(0,0);
     nk_widget_text(out, *content, txt, len, &text, text_alignment, font);
@@ -24152,15 +23759,14 @@ nk_do_button_text(nk_flags *state,
     const struct nk_style_button *style, const struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_do_button_text");
     struct nk_rect content;
     int ret = nk_false;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
-    // NK_ASSERT(string);
-    // NK_ASSERT(font);
+    NK_ASSERT(state);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(string);
+    NK_ASSERT(font);
     if (!out || !style || !font || !string)
         return nk_false;
 
@@ -24176,7 +23782,6 @@ nk_draw_button_symbol(struct nk_command_buffer *out,
     nk_flags state, const struct nk_style_button *style,
     enum nk_symbol_type type, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_draw_button_symbol");
     struct nk_color sym, bg;
     const struct nk_style_item *background;
 
@@ -24200,14 +23805,13 @@ nk_do_button_symbol(nk_flags *state,
     const struct nk_style_button *style, const struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int ret;
     struct nk_rect content;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(style);
-    // NK_ASSERT(font);
-    // NK_ASSERT(out);
+    NK_ASSERT(state);
+    NK_ASSERT(style);
+    NK_ASSERT(font);
+    NK_ASSERT(out);
     if (!out || !style || !font || !state)
         return nk_false;
 
@@ -24222,7 +23826,6 @@ nk_draw_button_image(struct nk_command_buffer *out,
     const struct nk_rect *bounds, const struct nk_rect *content,
     nk_flags state, const struct nk_style_button *style, const struct nk_image *img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - state, /     nk_flags");
     nk_draw_button(out, bounds, state, style);
     nk_draw_image(out, *content, img, nk_white);
 }
@@ -24232,13 +23835,12 @@ nk_do_button_image(nk_flags *state,
     struct nk_image img, enum nk_button_behavior b,
     const struct nk_style_button *style, const struct nk_input *in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_button /     const");
     int ret;
     struct nk_rect content;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
+    NK_ASSERT(state);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
     if (!out || !style || !state)
         return nk_false;
 
@@ -24260,7 +23862,6 @@ nk_draw_button_text_symbol(struct nk_command_buffer *out,
     const char *str, int len, enum nk_symbol_type type,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     struct nk_color sym;
     struct nk_text text;
     const struct nk_style_item *background;
@@ -24294,14 +23895,13 @@ nk_do_button_text_symbol(nk_flags *state,
     enum nk_button_behavior behavior, const struct nk_style_button *style,
     const struct nk_user_font *font, const struct nk_input *in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int ret;
     struct nk_rect tri = {0,0,0,0};
     struct nk_rect content;
 
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
-    // NK_ASSERT(font);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(font);
     if (!out || !style || !font)
         return nk_false;
 
@@ -24327,7 +23927,6 @@ nk_draw_button_text_image(struct nk_command_buffer *out,
     const char *str, int len, const struct nk_user_font *font,
     const struct nk_image *img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_image /     const");
     struct nk_text text;
     const struct nk_style_item *background;
     background = nk_draw_button(out, bounds, state, style);
@@ -24353,15 +23952,14 @@ nk_do_button_text_image(nk_flags *state,
     enum nk_button_behavior behavior, const struct nk_style_button *style,
     const struct nk_user_font *font, const struct nk_input *in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int ret;
     struct nk_rect icon;
     struct nk_rect content;
 
-    // NK_ASSERT(style);
-    // NK_ASSERT(state);
-    // NK_ASSERT(font);
-    // NK_ASSERT(out);
+    NK_ASSERT(style);
+    NK_ASSERT(state);
+    NK_ASSERT(font);
+    NK_ASSERT(out);
     if (!out || !font || !style || !str)
         return nk_false;
 
@@ -24386,23 +23984,21 @@ nk_do_button_text_image(nk_flags *state,
 NK_API void
 nk_button_set_behavior(struct nk_context *ctx, enum nk_button_behavior behavior)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_set_behavior");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return;
     ctx->button_behavior = behavior;
 }
 NK_API nk_bool
 nk_button_push_behavior(struct nk_context *ctx, enum nk_button_behavior behavior)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_push_behavior");
     struct nk_config_stack_button_behavior *button_stack;
     struct nk_config_stack_button_behavior_element *element;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
     button_stack = &ctx->stacks.button_behaviors;
-    // NK_ASSERT(button_stack->head < (int)NK_LEN(button_stack->elements));
+    NK_ASSERT(button_stack->head < (int)NK_LEN(button_stack->elements));
     if (button_stack->head >= (int)NK_LEN(button_stack->elements))
         return 0;
 
@@ -24415,15 +24011,14 @@ nk_button_push_behavior(struct nk_context *ctx, enum nk_button_behavior behavior
 NK_API nk_bool
 nk_button_pop_behavior(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_pop_behavior");
     struct nk_config_stack_button_behavior *button_stack;
     struct nk_config_stack_button_behavior_element *element;
 
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
 
     button_stack = &ctx->stacks.button_behaviors;
-    // NK_ASSERT(button_stack->head > 0);
+    NK_ASSERT(button_stack->head > 0);
     if (button_stack->head < 1)
         return 0;
 
@@ -24435,7 +24030,6 @@ NK_API nk_bool
 nk_button_text_styled(struct nk_context *ctx,
     const struct nk_style_button *style, const char *title, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_button /     const");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24443,10 +24037,10 @@ nk_button_text_styled(struct nk_context *ctx,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(style);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(style);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!style || !ctx || !ctx->current || !ctx->current->layout) return 0;
 
     win = ctx->current;
@@ -24462,26 +24056,22 @@ nk_button_text_styled(struct nk_context *ctx,
 NK_API nk_bool
 nk_button_text(struct nk_context *ctx, const char *title, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_text");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     return nk_button_text_styled(ctx, &ctx->style.button, title, len);
 }
 NK_API nk_bool nk_button_label_styled(struct nk_context *ctx,
     const struct nk_style_button *style, const char *title)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_button /     const");
-    return nk_button_text_styled(ctx, style, title, strlen(title));
+    return nk_button_text_styled(ctx, style, title, nk_strlen(title));
 }
 NK_API nk_bool nk_button_label(struct nk_context *ctx, const char *title)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_button_label / NK_API");
-    return nk_button_text(ctx, title, strlen(title));
+    return nk_button_text(ctx, title, nk_strlen(title));
 }
 NK_API nk_bool
 nk_button_color(struct nk_context *ctx, struct nk_color color)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_color");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24492,9 +24082,9 @@ nk_button_color(struct nk_context *ctx, struct nk_color color)
     struct nk_rect content;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -24518,7 +24108,6 @@ NK_API nk_bool
 nk_button_symbol_styled(struct nk_context *ctx,
     const struct nk_style_button *style, enum nk_symbol_type symbol)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_button /     const");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24526,9 +24115,9 @@ nk_button_symbol_styled(struct nk_context *ctx,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -24543,8 +24132,7 @@ nk_button_symbol_styled(struct nk_context *ctx,
 NK_API nk_bool
 nk_button_symbol(struct nk_context *ctx, enum nk_symbol_type symbol)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_symbol");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     return nk_button_symbol_styled(ctx, &ctx->style.button, symbol);
 }
@@ -24552,7 +24140,6 @@ NK_API nk_bool
 nk_button_image_styled(struct nk_context *ctx, const struct nk_style_button *style,
     struct nk_image img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - img /     struct");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24560,9 +24147,9 @@ nk_button_image_styled(struct nk_context *ctx, const struct nk_style_button *sty
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -24578,8 +24165,7 @@ nk_button_image_styled(struct nk_context *ctx, const struct nk_style_button *sty
 NK_API nk_bool
 nk_button_image(struct nk_context *ctx, struct nk_image img)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_button_image");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     return nk_button_image_styled(ctx, &ctx->style.button, img);
 }
@@ -24588,7 +24174,6 @@ nk_button_symbol_text_styled(struct nk_context *ctx,
     const struct nk_style_button *style, enum nk_symbol_type symbol,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24596,9 +24181,9 @@ nk_button_symbol_text_styled(struct nk_context *ctx,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -24616,30 +24201,26 @@ NK_API nk_bool
 nk_button_symbol_text(struct nk_context *ctx, enum nk_symbol_type symbol,
     const char* text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - char* /     const");
-    // NK_ASSERT(ctx);
+    NK_ASSERT(ctx);
     if (!ctx) return 0;
     return nk_button_symbol_text_styled(ctx, &ctx->style.button, symbol, text, len, align);
 }
 NK_API nk_bool nk_button_symbol_label(struct nk_context *ctx, enum nk_symbol_type symbol,
     const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
-    return nk_button_symbol_text(ctx, symbol, label, strlen(label), align);
+    return nk_button_symbol_text(ctx, symbol, label, nk_strlen(label), align);
 }
 NK_API nk_bool nk_button_symbol_label_styled(struct nk_context *ctx,
     const struct nk_style_button *style, enum nk_symbol_type symbol,
     const char *title, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
-    return nk_button_symbol_text_styled(ctx, style, symbol, title, strlen(title), align);
+    return nk_button_symbol_text_styled(ctx, style, symbol, title, nk_strlen(title), align);
 }
 NK_API nk_bool
 nk_button_image_text_styled(struct nk_context *ctx,
     const struct nk_style_button *style, struct nk_image img, const char *text,
     int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - len, /     int");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24647,9 +24228,9 @@ nk_button_image_text_styled(struct nk_context *ctx,
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -24667,21 +24248,18 @@ NK_API nk_bool
 nk_button_image_text(struct nk_context *ctx, struct nk_image img,
     const char *text, int len, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     return nk_button_image_text_styled(ctx, &ctx->style.button,img, text, len, align);
 }
 NK_API nk_bool nk_button_image_label(struct nk_context *ctx, struct nk_image img,
     const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
-    return nk_button_image_text(ctx, img, label, strlen(label), align);
+    return nk_button_image_text(ctx, img, label, nk_strlen(label), align);
 }
 NK_API nk_bool nk_button_image_label_styled(struct nk_context *ctx,
     const struct nk_style_button *style, struct nk_image img,
     const char *label, nk_flags text_alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
-    return nk_button_image_text_styled(ctx, style, img, label, strlen(label), text_alignment);
+    return nk_button_image_text_styled(ctx, style, img, label, nk_strlen(label), text_alignment);
 }
 
 
@@ -24697,7 +24275,6 @@ NK_LIB nk_bool
 nk_toggle_behavior(const struct nk_input *in, struct nk_rect select,
     nk_flags *state, nk_bool active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - state, /     nk_flags");
     nk_widget_state_reset(state);
     if (nk_button_behavior(state, select, in, NK_BUTTON_DEFAULT)) {
         *state = NK_WIDGET_STATE_ACTIVE;
@@ -24716,7 +24293,6 @@ nk_draw_checkbox(struct nk_command_buffer *out,
     const struct nk_rect *cursors, const char *string, int len,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     const struct nk_style_item *background;
     const struct nk_style_item *cursor;
     struct nk_text text;
@@ -24759,7 +24335,6 @@ nk_draw_option(struct nk_command_buffer *out,
     const struct nk_rect *cursors, const char *string, int len,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     const struct nk_style_item *background;
     const struct nk_style_item *cursor;
     struct nk_text text;
@@ -24802,16 +24377,15 @@ nk_do_toggle(nk_flags *state,
     const struct nk_style_toggle *style, const struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int was_active;
     struct nk_rect bounds;
     struct nk_rect select;
     struct nk_rect cursor;
     struct nk_rect label;
 
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
-    // NK_ASSERT(font);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(font);
     if (!out || !style || !font || !active)
         return 0;
 
@@ -24866,7 +24440,6 @@ nk_do_toggle(nk_flags *state,
 NK_API nk_bool
 nk_check_text(struct nk_context *ctx, const char *text, int len, nk_bool active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_check_text");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24875,9 +24448,9 @@ nk_check_text(struct nk_context *ctx, const char *text, int len, nk_bool active)
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return active;
 
@@ -24896,10 +24469,9 @@ NK_API unsigned int
 nk_check_flags_text(struct nk_context *ctx, const char *text, int len,
     unsigned int flags, unsigned int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - flags /     unsigned");
     int old_active;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(text);
+    NK_ASSERT(ctx);
+    NK_ASSERT(text);
     if (!ctx || !text) return flags;
     old_active = (int)((flags & value) & value);
     if (nk_check_text(ctx, text, len, old_active))
@@ -24910,11 +24482,10 @@ nk_check_flags_text(struct nk_context *ctx, const char *text, int len,
 NK_API nk_bool
 nk_checkbox_text(struct nk_context *ctx, const char *text, int len, nk_bool *active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_checkbox_text");
     int old_val;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(text);
-    // NK_ASSERT(active);
+    NK_ASSERT(ctx);
+    NK_ASSERT(text);
+    NK_ASSERT(active);
     if (!ctx || !text || !active) return 0;
     old_val = *active;
     *active = nk_check_text(ctx, text, len, *active);
@@ -24924,11 +24495,10 @@ NK_API nk_bool
 nk_checkbox_flags_text(struct nk_context *ctx, const char *text, int len,
     unsigned int *flags, unsigned int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - flags /     unsigned");
     nk_bool active;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(text);
-    // NK_ASSERT(flags);
+    NK_ASSERT(ctx);
+    NK_ASSERT(text);
+    NK_ASSERT(flags);
     if (!ctx || !text || !flags) return 0;
 
     active = (int)((*flags & value) & value);
@@ -24941,25 +24511,21 @@ nk_checkbox_flags_text(struct nk_context *ctx, const char *text, int len,
 }
 NK_API nk_bool nk_check_label(struct nk_context *ctx, const char *label, nk_bool active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_check_label / NK_API");
-    return nk_check_text(ctx, label, strlen(label), active);
+    return nk_check_text(ctx, label, nk_strlen(label), active);
 }
 NK_API unsigned int nk_check_flags_label(struct nk_context *ctx, const char *label,
     unsigned int flags, unsigned int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - flags /     unsigned");
-    return nk_check_flags_text(ctx, label, strlen(label), flags, value);
+    return nk_check_flags_text(ctx, label, nk_strlen(label), flags, value);
 }
 NK_API nk_bool nk_checkbox_label(struct nk_context *ctx, const char *label, nk_bool *active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_checkbox_label / NK_API");
-    return nk_checkbox_text(ctx, label, strlen(label), active);
+    return nk_checkbox_text(ctx, label, nk_strlen(label), active);
 }
 NK_API nk_bool nk_checkbox_flags_label(struct nk_context *ctx, const char *label,
     unsigned int *flags, unsigned int value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - flags /     unsigned");
-    return nk_checkbox_flags_text(ctx, label, strlen(label), flags, value);
+    return nk_checkbox_flags_text(ctx, label, nk_strlen(label), flags, value);
 }
 /*----------------------------------------------------------------
  *
@@ -24969,7 +24535,6 @@ NK_API nk_bool nk_checkbox_flags_label(struct nk_context *ctx, const char *label
 NK_API nk_bool
 nk_option_text(struct nk_context *ctx, const char *text, int len, nk_bool is_active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_option_text");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -24978,9 +24543,9 @@ nk_option_text(struct nk_context *ctx, const char *text, int len, nk_bool is_act
     struct nk_rect bounds;
     enum nk_widget_layout_states state;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return is_active;
 
@@ -24998,11 +24563,10 @@ nk_option_text(struct nk_context *ctx, const char *text, int len, nk_bool is_act
 NK_API nk_bool
 nk_radio_text(struct nk_context *ctx, const char *text, int len, nk_bool *active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_radio_text");
     int old_value;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(text);
-    // NK_ASSERT(active);
+    NK_ASSERT(ctx);
+    NK_ASSERT(text);
+    NK_ASSERT(active);
     if (!ctx || !text || !active) return 0;
     old_value = *active;
     *active = nk_option_text(ctx, text, len, old_value);
@@ -25011,14 +24575,12 @@ nk_radio_text(struct nk_context *ctx, const char *text, int len, nk_bool *active
 NK_API nk_bool
 nk_option_label(struct nk_context *ctx, const char *label, nk_bool active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_option_label");
-    return nk_option_text(ctx, label, strlen(label), active);
+    return nk_option_text(ctx, label, nk_strlen(label), active);
 }
 NK_API nk_bool
 nk_radio_label(struct nk_context *ctx, const char *label, nk_bool *active)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_radio_label");
-    return nk_radio_text(ctx, label, strlen(label), active);
+    return nk_radio_text(ctx, label, nk_strlen(label), active);
 }
 
 
@@ -25037,7 +24599,6 @@ nk_draw_selectable(struct nk_command_buffer *out,
     const struct nk_rect *icon, const struct nk_image *img, enum nk_symbol_type sym,
     const char *string, int len, nk_flags align, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - string /     const");
     const struct nk_style_item *background;
     struct nk_text text;
     text.padding = style->padding;
@@ -25067,12 +24628,19 @@ nk_draw_selectable(struct nk_command_buffer *out,
         }
     }
     /* draw selectable background and text */
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(out, *bounds, &background->data.image, nk_white);
-        text.background = nk_rgba(0,0,0,0);
-    } else {
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        text.background = background->data.color;
+    switch (background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            text.background = background->data.color;
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            break;
     }
     if (icon) {
         if (img) nk_draw_image(out, *icon, img, nk_white);
@@ -25086,17 +24654,16 @@ nk_do_selectable(nk_flags *state, struct nk_command_buffer *out,
     const struct nk_style_selectable *style, const struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int old_value;
     struct nk_rect touch;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(out);
-    // NK_ASSERT(str);
-    // NK_ASSERT(len);
-    // NK_ASSERT(value);
-    // NK_ASSERT(style);
-    // NK_ASSERT(font);
+    NK_ASSERT(state);
+    NK_ASSERT(out);
+    NK_ASSERT(str);
+    NK_ASSERT(len);
+    NK_ASSERT(value);
+    NK_ASSERT(style);
+    NK_ASSERT(font);
 
     if (!state || !out || !str || !len || !value || !style || !font) return 0;
     old_value = *value;
@@ -25123,18 +24690,17 @@ nk_do_selectable_image(nk_flags *state, struct nk_command_buffer *out,
     const struct nk_image *img, const struct nk_style_selectable *style,
     const struct nk_input *in, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input /     const");
     nk_bool old_value;
     struct nk_rect touch;
     struct nk_rect icon;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(out);
-    // NK_ASSERT(str);
-    // NK_ASSERT(len);
-    // NK_ASSERT(value);
-    // NK_ASSERT(style);
-    // NK_ASSERT(font);
+    NK_ASSERT(state);
+    NK_ASSERT(out);
+    NK_ASSERT(str);
+    NK_ASSERT(len);
+    NK_ASSERT(value);
+    NK_ASSERT(style);
+    NK_ASSERT(font);
 
     if (!state || !out || !str || !len || !value || !style || !font) return 0;
     old_value = *value;
@@ -25171,18 +24737,17 @@ nk_do_selectable_symbol(nk_flags *state, struct nk_command_buffer *out,
     enum nk_symbol_type sym, const struct nk_style_selectable *style,
     const struct nk_input *in, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_input /     const");
     int old_value;
     struct nk_rect touch;
     struct nk_rect icon;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(out);
-    // NK_ASSERT(str);
-    // NK_ASSERT(len);
-    // NK_ASSERT(value);
-    // NK_ASSERT(style);
-    // NK_ASSERT(font);
+    NK_ASSERT(state);
+    NK_ASSERT(out);
+    NK_ASSERT(str);
+    NK_ASSERT(len);
+    NK_ASSERT(value);
+    NK_ASSERT(style);
+    NK_ASSERT(font);
 
     if (!state || !out || !str || !len || !value || !style || !font) return 0;
     old_value = *value;
@@ -25218,7 +24783,6 @@ NK_API nk_bool
 nk_selectable_text(struct nk_context *ctx, const char *str, int len,
     nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - align, /     nk_flags");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -25227,10 +24791,10 @@ nk_selectable_text(struct nk_context *ctx, const char *str, int len,
     enum nk_widget_layout_states state;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(value);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(value);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !value)
         return 0;
 
@@ -25248,7 +24812,6 @@ NK_API nk_bool
 nk_selectable_image_text(struct nk_context *ctx, struct nk_image img,
     const char *str, int len, nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - str /     const");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -25257,10 +24820,10 @@ nk_selectable_image_text(struct nk_context *ctx, struct nk_image img,
     enum nk_widget_layout_states state;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(value);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(value);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !value)
         return 0;
 
@@ -25278,7 +24841,6 @@ NK_API nk_bool
 nk_selectable_symbol_text(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *str, int len, nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - str /     const");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_input *in;
@@ -25287,10 +24849,10 @@ nk_selectable_symbol_text(struct nk_context *ctx, enum nk_symbol_type sym,
     enum nk_widget_layout_states state;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(value);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(value);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !value)
         return 0;
 
@@ -25308,56 +24870,47 @@ NK_API nk_bool
 nk_selectable_symbol_label(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *title, nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
-    return nk_selectable_symbol_text(ctx, sym, title, strlen(title), align, value);
+    return nk_selectable_symbol_text(ctx, sym, title, nk_strlen(title), align, value);
 }
 NK_API nk_bool nk_select_text(struct nk_context *ctx, const char *str, int len,
     nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - align, /     nk_flags");
     nk_selectable_text(ctx, str, len, align, &value);return value;
 }
 NK_API nk_bool nk_selectable_label(struct nk_context *ctx, const char *str, nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_selectable_label / NK_API");
-    return nk_selectable_text(ctx, str, strlen(str), align, value);
+    return nk_selectable_text(ctx, str, nk_strlen(str), align, value);
 }
 NK_API nk_bool nk_selectable_image_label(struct nk_context *ctx,struct nk_image img,
     const char *str, nk_flags align, nk_bool *value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - str /     const");
-    return nk_selectable_image_text(ctx, img, str, strlen(str), align, value);
+    return nk_selectable_image_text(ctx, img, str, nk_strlen(str), align, value);
 }
 NK_API nk_bool nk_select_label(struct nk_context *ctx, const char *str, nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_select_label / NK_API");
-    nk_selectable_text(ctx, str, strlen(str), align, &value);return value;
+    nk_selectable_text(ctx, str, nk_strlen(str), align, &value);return value;
 }
 NK_API nk_bool nk_select_image_label(struct nk_context *ctx, struct nk_image img,
     const char *str, nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - str /     const");
-    nk_selectable_image_text(ctx, img, str, strlen(str), align, &value);return value;
+    nk_selectable_image_text(ctx, img, str, nk_strlen(str), align, &value);return value;
 }
 NK_API nk_bool nk_select_image_text(struct nk_context *ctx, struct nk_image img,
     const char *str, int len, nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - str /     const");
     nk_selectable_image_text(ctx, img, str, len, align, &value);return value;
 }
 NK_API nk_bool
 nk_select_symbol_text(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *title, int title_len, nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
     nk_selectable_symbol_text(ctx, sym, title, title_len, align, &value);return value;
 }
 NK_API nk_bool
 nk_select_symbol_label(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *title, nk_flags align, nk_bool value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - title /     const");
-    return nk_select_symbol_text(ctx, sym, title, strlen(title), align, value);
+    return nk_select_symbol_text(ctx, sym, title, nk_strlen(title), align, value);
 }
 
 
@@ -25369,13 +24922,12 @@ nk_select_symbol_label(struct nk_context *ctx, enum nk_symbol_type sym,
  *                              SLIDER
  *
  * ===============================================================*/
-NK_LIB int
+NK_LIB float
 nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor,
     struct nk_rect *visual_cursor, struct nk_input *in,
-    struct nk_rect bounds, int slider_min, int slider_max, int slider_value,
-    int slider_step, int slider_steps)
+    struct nk_rect bounds, float slider_min, float slider_max, float slider_value,
+    float slider_step, float slider_steps)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - slider_step, /     int");
     int left_mouse_down;
     int left_mouse_click_in_cursor;
 
@@ -25386,14 +24938,14 @@ nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor,
             NK_BUTTON_LEFT, *visual_cursor, nk_true);
 
     if (left_mouse_down && left_mouse_click_in_cursor) {
-        int ratio = 0;
-        const int d = in->mouse.pos.x - (visual_cursor->x+visual_cursor->w*0.5f);
-        const int pxstep = bounds.w / slider_steps;
+        float ratio = 0;
+        const float d = in->mouse.pos.x - (visual_cursor->x+visual_cursor->w*0.5f);
+        const float pxstep = bounds.w / slider_steps;
 
         /* only update value if the next slider step is reached */
         *state = NK_WIDGET_STATE_ACTIVE;
         if (NK_ABS(d) >= pxstep) {
-            const int steps = (int)((int)(NK_ABS(d) / pxstep));
+            const float steps = (float)((int)(NK_ABS(d) / pxstep));
             slider_value += (d > 0) ? (slider_step*steps) : -(slider_step*steps);
             slider_value = NK_CLAMP(slider_min, slider_value, slider_max);
             ratio = (slider_value - slider_min)/slider_step;
@@ -25405,7 +24957,8 @@ nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor,
     /* slider widget state */
     if (nk_input_is_mouse_hovering_rect(in, bounds))
         *state = NK_WIDGET_STATE_HOVERED;
-    if (*state & NK_WIDGET_STATE_HOVER &&        !nk_input_is_mouse_prev_hovering_rect(in, bounds))
+    if (*state & NK_WIDGET_STATE_HOVER &&
+        !nk_input_is_mouse_prev_hovering_rect(in, bounds))
         *state |= NK_WIDGET_STATE_ENTERED;
     else if (nk_input_is_mouse_prev_hovering_rect(in, bounds))
         *state |= NK_WIDGET_STATE_LEFT;
@@ -25414,9 +24967,8 @@ nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor,
 NK_LIB void
 nk_draw_slider(struct nk_command_buffer *out, nk_flags state,
     const struct nk_style_slider *style, const struct nk_rect *bounds,
-    const struct nk_rect *visual_cursor, int min, int value, int max)
+    const struct nk_rect *visual_cursor, float min, float value, float max)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect /     const");
     struct nk_rect fill;
     struct nk_rect bar;
     const struct nk_style_item *background;
@@ -25455,11 +25007,17 @@ nk_draw_slider(struct nk_command_buffer *out, nk_flags state,
     fill.h = bar.h;
 
     /* draw background */
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(out, *bounds, &background->data.image, nk_white);
-    } else {
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+            break;
     }
 
     /* draw slider bar */
@@ -25469,28 +25027,28 @@ nk_draw_slider(struct nk_command_buffer *out, nk_flags state,
     /* draw cursor */
     if (cursor->type == NK_STYLE_ITEM_IMAGE)
         nk_draw_image(out, *visual_cursor, &cursor->data.image, nk_white);
-    else nk_fill_circle(out, *visual_cursor, cursor->data.color);
+    else
+        nk_fill_circle(out, *visual_cursor, cursor->data.color);
 }
-NK_LIB int
+NK_LIB float
 nk_do_slider(nk_flags *state,
     struct nk_command_buffer *out, struct nk_rect bounds,
-    int min, int val, int max, int step,
+    float min, float val, float max, float step,
     const struct nk_style_slider *style, struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
-    int slider_range;
-    int slider_min;
-    int slider_max;
-    int slider_value;
-    int slider_steps;
-    int cursor_offset;
+    float slider_range;
+    float slider_min;
+    float slider_max;
+    float slider_value;
+    float slider_steps;
+    float cursor_offset;
 
     struct nk_rect visual_cursor;
     struct nk_rect logical_cursor;
 
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
     if (!out || !style)
         return 0;
 
@@ -25561,60 +25119,58 @@ nk_do_slider(nk_flags *state,
     if (style->draw_end) style->draw_end(out, style->userdata);
     return slider_value;
 }
-// NK_API nk_bool
-// nk_slider_int(struct nk_context *ctx, int min_value, int *value, int max_value,
-//     int value_step)
-// {
-//     struct nk_window *win;
-//     struct nk_panel *layout;
-//     struct nk_input *in;
-//     const struct nk_style *style;
+NK_API nk_bool
+nk_slider_float(struct nk_context *ctx, float min_value, float *value, float max_value,
+    float value_step)
+{
+    struct nk_window *win;
+    struct nk_panel *layout;
+    struct nk_input *in;
+    const struct nk_style *style;
 
-//     int ret = 0;
-//     int old_value;
-//     struct nk_rect bounds;
-//     enum nk_widget_layout_states state;
+    int ret = 0;
+    float old_value;
+    struct nk_rect bounds;
+    enum nk_widget_layout_states state;
 
-//     // NK_ASSERT(ctx);
-//     // NK_ASSERT(ctx->current);
-//     // NK_ASSERT(ctx->current->layout);
-//     // NK_ASSERT(value);
-//     if (!ctx || !ctx->current || !ctx->current->layout || !value)
-//         return ret;
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(value);
+    if (!ctx || !ctx->current || !ctx->current->layout || !value)
+        return ret;
 
-//     win = ctx->current;
-//     style = &ctx->style;
-//     layout = win->layout;
+    win = ctx->current;
+    style = &ctx->style;
+    layout = win->layout;
 
-//     state = nk_widget(&bounds, ctx);
-//     if (!state) return ret;
-//     in = (/*state == NK_WIDGET_ROM || */ layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
+    state = nk_widget(&bounds, ctx);
+    if (!state) return ret;
+    in = (/*state == NK_WIDGET_ROM || */ layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
 
-//     old_value = *value;
-//     *value = nk_do_slider(&ctx->last_widget_state, &win->buffer, bounds, min_value,
-//                 old_value, max_value, value_step, &style->slider, in, style->font);
-//     return (old_value > *value || old_value < *value);
-// }
+    old_value = *value;
+    *value = nk_do_slider(&ctx->last_widget_state, &win->buffer, bounds, min_value,
+                old_value, max_value, value_step, &style->slider, in, style->font);
+    return (old_value > *value || old_value < *value);
+}
+NK_API float
+nk_slide_float(struct nk_context *ctx, float min, float val, float max, float step)
+{
+    nk_slider_float(ctx, min, &val, max, step); return val;
+}
 NK_API int
 nk_slide_int(struct nk_context *ctx, int min, int val, int max, int step)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_slide_int");
-    nk_slider_int(ctx, min, &val, max, step); return val;
+    float value = (float)val;
+    nk_slider_float(ctx, (float)min, &value, (float)max, (float)step);
+    return (int)value;
 }
-// NK_API int
-// nk_slide_int(struct nk_context *ctx, int min, int val, int max, int step)
-// {
-//     int value = (int)val;
-//     nk_slider_int(ctx, (int)min, &value, (int)max, (int)step);
-//     return (int)value;
-// }
 NK_API nk_bool
 nk_slider_int(struct nk_context *ctx, int min, int *val, int max, int step)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_slider_int");
     int ret;
-    int value = (int)*val;
-    ret = nk_slider_int(ctx, (int)min, &value, (int)max, (int)step);
+    float value = (float)*val;
+    ret = nk_slider_float(ctx, (float)min, &value, (float)max, (float)step);
     *val =  (int)value;
     return ret;
 }
@@ -25632,7 +25188,6 @@ NK_LIB nk_size
 nk_progress_behavior(nk_flags *state, struct nk_input *in,
     struct nk_rect r, struct nk_rect cursor, nk_size max, nk_size value, nk_bool modifiable)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - r /     struct");
     int left_mouse_down = 0;
     int left_mouse_click_in_cursor = 0;
 
@@ -25646,8 +25201,8 @@ nk_progress_behavior(nk_flags *state, struct nk_input *in,
 
     if (in && left_mouse_down && left_mouse_click_in_cursor) {
         if (left_mouse_down && left_mouse_click_in_cursor) {
-            int ratio = NK_MAX(0, (int)(in->mouse.pos.x - cursor.x)) / (int)cursor.w;
-            value = (nk_size)NK_CLAMP(0, (int)max * ratio, (int)max);
+            float ratio = NK_MAX(0, (float)(in->mouse.pos.x - cursor.x)) / (float)cursor.w;
+            value = (nk_size)NK_CLAMP(0, (float)max * ratio, (float)max);
             in->mouse.buttons[NK_BUTTON_LEFT].clicked_pos.x = cursor.x + cursor.w/2.0f;
             *state |= NK_WIDGET_STATE_ACTIVE;
         }
@@ -25664,7 +25219,6 @@ nk_draw_progress(struct nk_command_buffer *out, nk_flags state,
     const struct nk_style_progress *style, const struct nk_rect *bounds,
     const struct nk_rect *scursor, nk_size value, nk_size max)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect /     const");
     const struct nk_style_item *background;
     const struct nk_style_item *cursor;
 
@@ -25684,16 +25238,32 @@ nk_draw_progress(struct nk_command_buffer *out, nk_flags state,
     }
 
     /* draw background */
-    if (background->type == NK_STYLE_ITEM_COLOR) {
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
-    } else nk_draw_image(out, *bounds, &background->data.image, nk_white);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+            break;
+    }
 
     /* draw cursor */
-    if (cursor->type == NK_STYLE_ITEM_COLOR) {
-        nk_fill_rect(out, *scursor, style->rounding, cursor->data.color);
-        nk_stroke_rect(out, *scursor, style->rounding, style->border, style->border_color);
-    } else nk_draw_image(out, *scursor, &cursor->data.image, nk_white);
+    switch(cursor->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *scursor, &cursor->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *scursor, &cursor->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *scursor, style->rounding, cursor->data.color);
+            nk_stroke_rect(out, *scursor, style->rounding, style->border, style->border_color);
+            break;
+    }
 }
 NK_LIB nk_size
 nk_do_progress(nk_flags *state,
@@ -25701,20 +25271,19 @@ nk_do_progress(nk_flags *state,
     nk_size value, nk_size max, nk_bool modifiable,
     const struct nk_style_progress *style, struct nk_input *in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_style_progress /     const");
-    int prog_scale;
+    float prog_scale;
     nk_size prog_value;
     struct nk_rect cursor;
 
-    // NK_ASSERT(style);
-    // NK_ASSERT(out);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
     if (!out || !style) return 0;
 
     /* calculate progressbar cursor */
     cursor.w = NK_MAX(bounds.w, 2 * style->padding.x + 2 * style->border);
     cursor.h = NK_MAX(bounds.h, 2 * style->padding.y + 2 * style->border);
     cursor = nk_pad_rect(bounds, nk_vec2(style->padding.x + style->border, style->padding.y + style->border));
-    prog_scale = (int)value / (int)max;
+    prog_scale = (float)value / (float)max;
 
     /* update progressbar */
     prog_value = NK_MIN(value, max);
@@ -25730,7 +25299,6 @@ nk_do_progress(nk_flags *state,
 NK_API nk_bool
 nk_progress(struct nk_context *ctx, nk_size *cur, nk_size max, nk_bool is_modifyable)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_progress");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_style *style;
@@ -25740,10 +25308,10 @@ nk_progress(struct nk_context *ctx, nk_size *cur, nk_size max, nk_bool is_modify
     enum nk_widget_layout_states state;
     nk_size old_value;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(cur);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(cur);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !cur)
         return 0;
 
@@ -25762,7 +25330,6 @@ nk_progress(struct nk_context *ctx, nk_size *cur, nk_size max, nk_bool is_modify
 NK_API nk_size
 nk_prog(struct nk_context *ctx, nk_size cur, nk_size max, nk_bool modifyable)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_prog");
     nk_progress(ctx, &cur, max, modifyable);
     return cur;
 }
@@ -25776,19 +25343,18 @@ nk_prog(struct nk_context *ctx, nk_size cur, nk_size max, nk_bool modifyable)
  *                              SCROLLBAR
  *
  * ===============================================================*/
-NK_LIB int
+NK_LIB float
 nk_scrollbar_behavior(nk_flags *state, struct nk_input *in,
     int has_scrolling, const struct nk_rect *scroll,
     const struct nk_rect *cursor, const struct nk_rect *empty0,
-    const struct nk_rect *empty1, int scroll_offset,
-    int target, int scroll_step, enum nk_orientation o)
+    const struct nk_rect *empty1, float scroll_offset,
+    float target, float scroll_step, enum nk_orientation o)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - target, /     int");
     nk_flags ws = 0;
     int left_mouse_down;
-    int left_mouse_clicked;
+    unsigned int left_mouse_clicked;
     int left_mouse_click_in_cursor;
-    int scroll_delta;
+    float scroll_delta;
 
     nk_widget_state_reset(state);
     if (!in) return scroll_offset;
@@ -25803,17 +25369,17 @@ nk_scrollbar_behavior(nk_flags *state, struct nk_input *in,
     scroll_delta = (o == NK_VERTICAL) ? in->mouse.scroll_delta.y: in->mouse.scroll_delta.x;
     if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
         /* update cursor by mouse dragging */
-        int pixel, delta;
+        float pixel, delta;
         *state = NK_WIDGET_STATE_ACTIVE;
         if (o == NK_VERTICAL) {
-            int cursor_y;
+            float cursor_y;
             pixel = in->mouse.delta.y;
             delta = (pixel / scroll->h) * target;
             scroll_offset = NK_CLAMP(0, scroll_offset + delta, target - scroll->h);
             cursor_y = scroll->y + ((scroll_offset/target) * scroll->h);
             in->mouse.buttons[NK_BUTTON_LEFT].clicked_pos.y = cursor_y + cursor->h/2.0f;
         } else {
-            int cursor_x;
+            float cursor_x;
             pixel = in->mouse.delta.x;
             delta = (pixel / scroll->w) * target;
             scroll_offset = NK_CLAMP(0, scroll_offset + delta, target - scroll->w);
@@ -25858,7 +25424,6 @@ nk_draw_scrollbar(struct nk_command_buffer *out, nk_flags state,
     const struct nk_style_scrollbar *style, const struct nk_rect *bounds,
     const struct nk_rect *scroll)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_rect /     const");
     const struct nk_style_item *background;
     const struct nk_style_item *cursor;
 
@@ -25875,39 +25440,52 @@ nk_draw_scrollbar(struct nk_command_buffer *out, nk_flags state,
     }
 
     /* draw background */
-   //if (background->type == NK_STYLE_ITEM_COLOR) {
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
-    //} else {
-    //    nk_draw_image(out, *bounds, &background->data.image, nk_white);
-    //}
+    switch (background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, *bounds, style->rounding, style->border, style->border_color);
+            break;
+    }
 
     /* draw cursor */
-    // if (cursor->type == NK_STYLE_ITEM_COLOR) {
-        nk_fill_rect(out, *scroll, style->rounding_cursor, cursor->data.color);
-        nk_stroke_rect(out, *scroll, style->rounding_cursor, style->border_cursor, style->cursor_border_color);
-    // } else nk_draw_image(out, *scroll, &cursor->data.image, nk_white);
+    switch (cursor->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, *scroll, &cursor->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, *scroll, &cursor->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, *scroll, style->rounding_cursor, cursor->data.color);
+            nk_stroke_rect(out, *scroll, style->rounding_cursor, style->border_cursor, style->cursor_border_color);
+            break;
+    }
 }
-NK_LIB int
+NK_LIB float
 nk_do_scrollbarv(nk_flags *state,
     struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling,
-    int offset, int target, int step, int button_pixel_inc,
+    float offset, float target, float step, float button_pixel_inc,
     const struct nk_style_scrollbar *style, struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     struct nk_rect empty_north;
     struct nk_rect empty_south;
     struct nk_rect cursor;
 
-    int scroll_step;
-    int scroll_offset;
-    int scroll_off;
-    int scroll_ratio;
+    float scroll_step;
+    float scroll_offset;
+    float scroll_off;
+    float scroll_ratio;
 
-    // NK_ASSERT(out);
-    // NK_ASSERT(style);
-    // NK_ASSERT(state);
+    NK_ASSERT(out);
+    NK_ASSERT(style);
+    NK_ASSERT(state);
     if (!out || !style) return 0;
 
     scroll.w = NK_MAX(scroll.w, 1);
@@ -25915,9 +25493,9 @@ nk_do_scrollbarv(nk_flags *state,
     if (target <= scroll.h) return 0;
 
     /* optional scrollbar buttons */
-    // if (style->show_buttons) {
+    if (style->show_buttons) {
         nk_flags ws;
-        int scroll_h;
+        float scroll_h;
         struct nk_rect button;
 
         button.x = scroll.x;
@@ -25941,7 +25519,7 @@ nk_do_scrollbarv(nk_flags *state,
 
         scroll.y = scroll.y + button.h;
         scroll.h = scroll_h;
-    // }
+    }
 
     /* calculate scrollbar constants */
     scroll_step = NK_MIN(step, scroll.h);
@@ -25978,25 +25556,24 @@ nk_do_scrollbarv(nk_flags *state,
     if (style->draw_end) style->draw_end(out, style->userdata);
     return scroll_offset;
 }
-NK_LIB int
+NK_LIB float
 nk_do_scrollbarh(nk_flags *state,
     struct nk_command_buffer *out, struct nk_rect scroll, int has_scrolling,
-    int offset, int target, int step, int button_pixel_inc,
+    float offset, float target, float step, float button_pixel_inc,
     const struct nk_style_scrollbar *style, struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     struct nk_rect cursor;
     struct nk_rect empty_west;
     struct nk_rect empty_east;
 
-    int scroll_step;
-    int scroll_offset;
-    int scroll_off;
-    int scroll_ratio;
+    float scroll_step;
+    float scroll_offset;
+    float scroll_off;
+    float scroll_ratio;
 
-    // NK_ASSERT(out);
-    // NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(style);
     if (!out || !style) return 0;
 
     /* scrollbar background */
@@ -26005,9 +25582,9 @@ nk_do_scrollbarh(nk_flags *state,
     if (target <= scroll.w) return 0;
 
     /* optional scrollbar buttons */
-    // if (style->show_buttons) {
+    if (style->show_buttons) {
         nk_flags ws;
-        int scroll_w;
+        float scroll_w;
         struct nk_rect button;
         button.y = scroll.y;
         button.w = scroll.h;
@@ -26030,7 +25607,7 @@ nk_do_scrollbarh(nk_flags *state,
 
         scroll.x = scroll.x + button.w;
         scroll.w = scroll_w;
-    // }
+    }
 
     /* calculate scrollbar constants */
     scroll_step = NK_MIN(step, scroll.w);
@@ -26079,18 +25656,18 @@ nk_do_scrollbarh(nk_flags *state,
  * ===============================================================*/
 /* stb_textedit.h - v1.8  - public domain - Sean Barrett */
 struct nk_text_find {
-   int x,y;    /* position of n'th character */
-   int height; /* height of line */
+   float x,y;    /* position of n'th character */
+   float height; /* height of line */
    int first_char, length; /* first char of row, and length */
    int prev_first;  /*_ first char of previous row */
 };
 
 struct nk_text_edit_row {
-   int x0,x1;
+   float x0,x1;
    /* starting x location, end x location (allows for align=right, etc) */
-   int baseline_y_delta;
+   float baseline_y_delta;
    /* position of baseline relative to previous row's baseline*/
-   int ymin,ymax;
+   float ymin,ymax;
    /* height of row above and below baseline */
    int num_chars;
 };
@@ -26101,11 +25678,10 @@ NK_INTERN void nk_textedit_makeundo_insert(struct nk_text_edit*, int, int);
 NK_INTERN void nk_textedit_makeundo_replace(struct nk_text_edit*, int, int, int);
 #define NK_TEXT_HAS_SELECTION(s)   ((s)->select_start != (s)->select_end)
 
-NK_INTERN int
+NK_INTERN float
 nk_textedit_get_width(const struct nk_text_edit *edit, int line_start, int char_id,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int len = 0;
     nk_rune unicode = 0;
     const char *str = nk_str_at_const(&edit->string, line_start + char_id, &unicode, &len);
@@ -26113,9 +25689,8 @@ nk_textedit_get_width(const struct nk_text_edit *edit, int line_start, int char_
 }
 NK_INTERN void
 nk_textedit_layout_row(struct nk_text_edit_row *r, struct nk_text_edit *edit,
-    int line_start_id, int row_height, const struct nk_user_font *font)
+    int line_start_id, float row_height, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - line_start_id, /     int");
     int l;
     int glyphs = 0;
     nk_rune unicode;
@@ -26134,13 +25709,12 @@ nk_textedit_layout_row(struct nk_text_edit_row *r, struct nk_text_edit *edit,
     r->num_chars = glyphs;
 }
 NK_INTERN int
-nk_textedit_locate_coord(struct nk_text_edit *edit, int x, int y,
-    const struct nk_user_font *font, int row_height)
+nk_textedit_locate_coord(struct nk_text_edit *edit, float x, float y,
+    const struct nk_user_font *font, float row_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     struct nk_text_edit_row r;
     int n = edit->string.len;
-    int base_y = 0, prev_x;
+    float base_y = 0, prev_x;
     int i=0, k;
 
     r.x0 = r.x1 = 0;
@@ -26177,7 +25751,7 @@ nk_textedit_locate_coord(struct nk_text_edit *edit, int x, int y,
         k = i;
         prev_x = r.x0;
         for (i=0; i < r.num_chars; ++i) {
-            int w = nk_textedit_get_width(edit, k, i, font);
+            float w = nk_textedit_get_width(edit, k, i, font);
             if (x < prev_x+w) {
                 if (x < prev_x+w/2)
                     return k+i;
@@ -26195,10 +25769,9 @@ nk_textedit_locate_coord(struct nk_text_edit *edit, int x, int y,
     else return i+r.num_chars;
 }
 NK_LIB void
-nk_textedit_click(struct nk_text_edit *state, int x, int y,
-    const struct nk_user_font *font, int row_height)
+nk_textedit_click(struct nk_text_edit *state, float x, float y,
+    const struct nk_user_font *font, float row_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     /* API click: on mouse down, move the cursor to the clicked location,
      * and reset the selection */
     state->cursor = nk_textedit_locate_coord(state, x, y, font, row_height);
@@ -26207,10 +25780,9 @@ nk_textedit_click(struct nk_text_edit *state, int x, int y,
     state->has_preferred_x = 0;
 }
 NK_LIB void
-nk_textedit_drag(struct nk_text_edit *state, int x, int y,
-    const struct nk_user_font *font, int row_height)
+nk_textedit_drag(struct nk_text_edit *state, float x, float y,
+    const struct nk_user_font *font, float row_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     /* API drag: on mouse drag, move the cursor and selection endpoint
      * to the clicked location */
     int p = nk_textedit_locate_coord(state, x, y, font, row_height);
@@ -26220,9 +25792,8 @@ nk_textedit_drag(struct nk_text_edit *state, int x, int y,
 }
 NK_INTERN void
 nk_textedit_find_charpos(struct nk_text_find *find, struct nk_text_edit *state,
-    int n, int single_line, const struct nk_user_font *font, int row_height)
+    int n, int single_line, const struct nk_user_font *font, float row_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - n, /     int");
     /* find the x/y location of a character, and remember info about the previous
      * row in case we get a move-up event (for page up, we'll have to rescan) */
     struct nk_text_edit_row r;
@@ -26279,7 +25850,6 @@ nk_textedit_find_charpos(struct nk_text_find *find, struct nk_text_edit *state,
 NK_INTERN void
 nk_textedit_clamp(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_clamp");
     /* make the selection/cursor state valid if client altered the string */
     int n = state->string.len;
     if (NK_TEXT_HAS_SELECTION(state)) {
@@ -26294,7 +25864,6 @@ nk_textedit_clamp(struct nk_text_edit *state)
 NK_API void
 nk_textedit_delete(struct nk_text_edit *state, int where, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_delete");
     /* delete characters while updating undo */
     nk_textedit_makeundo_delete(state, where, len);
     nk_str_delete_runes(&state->string, where, len);
@@ -26303,7 +25872,6 @@ nk_textedit_delete(struct nk_text_edit *state, int where, int len)
 NK_API void
 nk_textedit_delete_selection(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_delete_selection");
     /* delete the section */
     nk_textedit_clamp(state);
     if (NK_TEXT_HAS_SELECTION(state)) {
@@ -26322,7 +25890,6 @@ nk_textedit_delete_selection(struct nk_text_edit *state)
 NK_INTERN void
 nk_textedit_sortselection(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_sortselection");
     /* canonicalize the selection so start <= end */
     if (state->select_end < state->select_start) {
         int temp = state->select_end;
@@ -26333,7 +25900,6 @@ nk_textedit_sortselection(struct nk_text_edit *state)
 NK_INTERN void
 nk_textedit_move_to_first(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_move_to_first");
     /* move cursor to first character of selection */
     if (NK_TEXT_HAS_SELECTION(state)) {
         nk_textedit_sortselection(state);
@@ -26345,7 +25911,6 @@ nk_textedit_move_to_first(struct nk_text_edit *state)
 NK_INTERN void
 nk_textedit_move_to_last(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_move_to_last");
     /* move cursor to last character of selection */
     if (NK_TEXT_HAS_SELECTION(state)) {
         nk_textedit_sortselection(state);
@@ -26358,7 +25923,6 @@ nk_textedit_move_to_last(struct nk_text_edit *state)
 NK_INTERN int
 nk_is_word_boundary( struct nk_text_edit *state, int idx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_is_word_boundary");
     int len;
     nk_rune c;
     if (idx <= 0) return 1;
@@ -26370,7 +25934,6 @@ nk_is_word_boundary( struct nk_text_edit *state, int idx)
 NK_INTERN int
 nk_textedit_move_to_word_previous(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_move_to_word_previous");
    int c = state->cursor - 1;
    while( c >= 0 && !nk_is_word_boundary(state, c))
       --c;
@@ -26383,7 +25946,6 @@ nk_textedit_move_to_word_previous(struct nk_text_edit *state)
 NK_INTERN int
 nk_textedit_move_to_word_next(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_move_to_word_next");
    const int len = state->string.len;
    int c = state->cursor+1;
    while( c < len && !nk_is_word_boundary(state, c))
@@ -26397,7 +25959,6 @@ nk_textedit_move_to_word_next(struct nk_text_edit *state)
 NK_INTERN void
 nk_textedit_prep_selection_at_cursor(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_prep_selection_at_cursor");
     /* update selection and cursor to match each other */
     if (!NK_TEXT_HAS_SELECTION(state))
         state->select_start = state->select_end = state->cursor;
@@ -26406,7 +25967,6 @@ nk_textedit_prep_selection_at_cursor(struct nk_text_edit *state)
 NK_API nk_bool
 nk_textedit_cut(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_cut");
     /* API cut: delete selection */
     if (state->mode == NK_TEXT_EDIT_MODE_VIEW)
         return 0;
@@ -26420,7 +25980,6 @@ nk_textedit_cut(struct nk_text_edit *state)
 NK_API nk_bool
 nk_textedit_paste(struct nk_text_edit *state, char const *ctext, int len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_paste");
     /* API paste: replace existing selection with passed-in text */
     int glyphs;
     const char *text = (const char *) ctext;
@@ -26446,13 +26005,12 @@ nk_textedit_paste(struct nk_text_edit *state, char const *ctext, int len)
 NK_API void
 nk_textedit_text(struct nk_text_edit *state, const char *text, int total_len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_text");
     nk_rune unicode;
     int glyph_len;
     int text_len = 0;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(text);
+    NK_ASSERT(state);
+    NK_ASSERT(text);
     if (!text || !total_len || state->mode == NK_TEXT_EDIT_MODE_VIEW) return;
 
     glyph_len = nk_utf_decode(text, &unicode, total_len);
@@ -26465,7 +26023,8 @@ nk_textedit_text(struct nk_text_edit *state, const char *text, int total_len)
         /* filter incoming text */
         if (state->filter && !state->filter(state, unicode)) goto next;
 
-        if (!NK_TEXT_HAS_SELECTION(state) &&            state->cursor < state->string.len)
+        if (!NK_TEXT_HAS_SELECTION(state) &&
+            state->cursor < state->string.len)
         {
             if (state->mode == NK_TEXT_EDIT_MODE_REPLACE) {
                 nk_textedit_makeundo_replace(state, state->cursor, 1, 1);
@@ -26494,9 +26053,8 @@ nk_textedit_text(struct nk_text_edit *state, const char *text, int total_len)
 }
 NK_LIB void
 nk_textedit_key(struct nk_text_edit *state, enum nk_keys key, int shift_mod,
-    const struct nk_user_font *font, int row_height)
+    const struct nk_user_font *font, float row_height)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
 retry:
     switch (key)
     {
@@ -26632,8 +26190,8 @@ retry:
         /* now find character position down a row */
         if (find.length)
         {
-            int x;
-            int goal_x = state->has_preferred_x ? state->preferred_x : find.x;
+            float x;
+            float goal_x = state->has_preferred_x ? state->preferred_x : find.x;
             int start = find.first_char + find.length;
 
             state->cursor = start;
@@ -26641,7 +26199,7 @@ retry:
             x = row.x0;
 
             for (i=0; i < row.num_chars && x < row.x1; ++i) {
-                int dx = nk_textedit_get_width(state, start, i, font);
+                float dx = nk_textedit_get_width(state, start, i, font);
                 x += dx;
                 if (x > goal_x)
                     break;
@@ -26680,15 +26238,15 @@ retry:
          /* can only go up if there's a previous row */
          if (find.prev_first != find.first_char) {
             /* now find character position up a row */
-            int x;
-            int goal_x = state->has_preferred_x ? state->preferred_x : find.x;
+            float x;
+            float goal_x = state->has_preferred_x ? state->preferred_x : find.x;
 
             state->cursor = find.prev_first;
             nk_textedit_layout_row(&row, state, state->cursor, row_height, font);
             x = row.x0;
 
             for (i=0; i < row.num_chars && x < row.x1; ++i) {
-                int dx = nk_textedit_get_width(state, find.prev_first, i, font);
+                float dx = nk_textedit_get_width(state, find.prev_first, i, font);
                 x += dx;
                 if (x > goal_x)
                     break;
@@ -26806,14 +26364,12 @@ retry:
 NK_INTERN void
 nk_textedit_flush_redo(struct nk_text_undo_state *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_undo_state / nk_textedit_flush_redo");
     state->redo_point = NK_TEXTEDIT_UNDOSTATECOUNT;
     state->redo_char_point = NK_TEXTEDIT_UNDOCHARCOUNT;
 }
 NK_INTERN void
 nk_textedit_discard_undo(struct nk_text_undo_state *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_undo_state / nk_textedit_discard_undo");
     /* discard the oldest entry in the undo list */
     if (state->undo_point > 0) {
         /* if the 0th undo state has characters, clean those up */
@@ -26837,7 +26393,6 @@ nk_textedit_discard_undo(struct nk_text_undo_state *state)
 NK_INTERN void
 nk_textedit_discard_redo(struct nk_text_undo_state *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_undo_state / nk_textedit_discard_redo");
 /*  discard the oldest entry in the redo list--it's bad if this
     ever happens, but because undo & redo have to store the actual
     characters in different cases, the redo character buffer can
@@ -26869,7 +26424,6 @@ nk_textedit_discard_redo(struct nk_text_undo_state *state)
 NK_INTERN struct nk_text_undo_record*
 nk_textedit_create_undo_record(struct nk_text_undo_state *state, int numchars)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_undo_state / nk_textedit_create_undo_record");
     /* any time we create a new undo record, we discard redo*/
     nk_textedit_flush_redo(state);
 
@@ -26896,7 +26450,6 @@ NK_INTERN nk_rune*
 nk_textedit_createundo(struct nk_text_undo_state *state, int pos,
     int insert_len, int delete_len)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - insert_len, /     int");
     struct nk_text_undo_record *r = nk_textedit_create_undo_record(state, insert_len);
     if (r == 0)
         return 0;
@@ -26917,7 +26470,6 @@ nk_textedit_createundo(struct nk_text_undo_state *state, int pos,
 NK_API void
 nk_textedit_undo(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_undo");
     struct nk_text_undo_state *s = &state->undo;
     struct nk_text_undo_record u, *r;
     if (s->undo_point == 0)
@@ -26985,7 +26537,6 @@ nk_textedit_undo(struct nk_text_edit *state)
 NK_API void
 nk_textedit_redo(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_redo");
     struct nk_text_undo_state *s = &state->undo;
     struct nk_text_undo_record *u, r;
     if (s->redo_point == NK_TEXTEDIT_UNDOSTATECOUNT)
@@ -27035,13 +26586,11 @@ nk_textedit_redo(struct nk_text_edit *state)
 NK_INTERN void
 nk_textedit_makeundo_insert(struct nk_text_edit *state, int where, int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_makeundo_insert");
     nk_textedit_createundo(&state->undo, where, 0, length);
 }
 NK_INTERN void
 nk_textedit_makeundo_delete(struct nk_text_edit *state, int where, int length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_makeundo_delete");
     int i;
     nk_rune *p = nk_textedit_createundo(&state->undo, where, length, 0);
     if (p) {
@@ -27053,7 +26602,6 @@ NK_INTERN void
 nk_textedit_makeundo_replace(struct nk_text_edit *state, int where,
     int old_length, int new_length)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - old_length, /     int");
     int i;
     nk_rune *p = nk_textedit_createundo(&state->undo, where, old_length, new_length);
     if (p) {
@@ -27065,7 +26613,6 @@ NK_LIB void
 nk_textedit_clear_state(struct nk_text_edit *state, enum nk_text_edit_type type,
     nk_plugin_filter filter)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - filter) /     nk_plugin_filter");
     /* reset the state to default */
    state->undo.undo_point = 0;
    state->undo.undo_char_point = 0;
@@ -27085,9 +26632,8 @@ nk_textedit_clear_state(struct nk_text_edit *state, enum nk_text_edit_type type,
 NK_API void
 nk_textedit_init_fixed(struct nk_text_edit *state, void *memory, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_init_fixed");
-    // NK_ASSERT(state);
-    // NK_ASSERT(memory);
+    NK_ASSERT(state);
+    NK_ASSERT(memory);
     if (!state || !memory || !size) return;
     NK_MEMSET(state, 0, sizeof(struct nk_text_edit));
     nk_textedit_clear_state(state, NK_TEXT_EDIT_SINGLE_LINE, 0);
@@ -27096,9 +26642,8 @@ nk_textedit_init_fixed(struct nk_text_edit *state, void *memory, nk_size size)
 NK_API void
 nk_textedit_init(struct nk_text_edit *state, struct nk_allocator *alloc, nk_size size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_init");
-    // NK_ASSERT(state);
-    // NK_ASSERT(alloc);
+    NK_ASSERT(state);
+    NK_ASSERT(alloc);
     if (!state || !alloc) return;
     NK_MEMSET(state, 0, sizeof(struct nk_text_edit));
     nk_textedit_clear_state(state, NK_TEXT_EDIT_SINGLE_LINE, 0);
@@ -27108,8 +26653,7 @@ nk_textedit_init(struct nk_text_edit *state, struct nk_allocator *alloc, nk_size
 NK_API void
 nk_textedit_init_default(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_init_default");
-    // NK_ASSERT(state);
+    NK_ASSERT(state);
     if (!state) return;
     NK_MEMSET(state, 0, sizeof(struct nk_text_edit));
     nk_textedit_clear_state(state, NK_TEXT_EDIT_SINGLE_LINE, 0);
@@ -27119,16 +26663,14 @@ nk_textedit_init_default(struct nk_text_edit *state)
 NK_API void
 nk_textedit_select_all(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_select_all");
-    // NK_ASSERT(state);
+    NK_ASSERT(state);
     state->select_start = 0;
     state->select_end = state->string.len;
 }
 NK_API void
 nk_textedit_free(struct nk_text_edit *state)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_text_edit / nk_textedit_free");
-    // NK_ASSERT(state);
+    NK_ASSERT(state);
     if (!state) return;
     nk_str_free(&state->string);
 }
@@ -27145,7 +26687,6 @@ nk_textedit_free(struct nk_text_edit *state)
 NK_API nk_bool
 nk_filter_default(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_default");
     NK_UNUSED(unicode);
     NK_UNUSED(box);
     return nk_true;
@@ -27153,15 +26694,13 @@ nk_filter_default(const struct nk_text_edit *box, nk_rune unicode)
 NK_API nk_bool
 nk_filter_ascii(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_ascii");
     NK_UNUSED(box);
     if (unicode > 128) return nk_false;
     else return nk_true;
 }
 NK_API nk_bool
-nk_filter_int(const struct nk_text_edit *box, nk_rune unicode)
+nk_filter_float(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_int");
     NK_UNUSED(box);
     if ((unicode < '0' || unicode > '9') && unicode != '.' && unicode != '-')
         return nk_false;
@@ -27170,7 +26709,6 @@ nk_filter_int(const struct nk_text_edit *box, nk_rune unicode)
 NK_API nk_bool
 nk_filter_decimal(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_decimal");
     NK_UNUSED(box);
     if ((unicode < '0' || unicode > '9') && unicode != '-')
         return nk_false;
@@ -27179,16 +26717,16 @@ nk_filter_decimal(const struct nk_text_edit *box, nk_rune unicode)
 NK_API nk_bool
 nk_filter_hex(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_hex");
     NK_UNUSED(box);
-    if ((unicode < '0' || unicode > '9') &&        (unicode < 'a' || unicode > 'f') &&        (unicode < 'A' || unicode > 'F'))
+    if ((unicode < '0' || unicode > '9') &&
+        (unicode < 'a' || unicode > 'f') &&
+        (unicode < 'A' || unicode > 'F'))
         return nk_false;
     else return nk_true;
 }
 NK_API nk_bool
 nk_filter_oct(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_oct");
     NK_UNUSED(box);
     if (unicode < '0' || unicode > '7')
         return nk_false;
@@ -27197,7 +26735,6 @@ nk_filter_oct(const struct nk_text_edit *box, nk_rune unicode)
 NK_API nk_bool
 nk_filter_binary(const struct nk_text_edit *box, nk_rune unicode)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - struct / nk_filter_binary");
     NK_UNUSED(box);
     if (unicode != '0' && unicode != '1')
         return nk_false;
@@ -27211,24 +26748,23 @@ nk_filter_binary(const struct nk_text_edit *box, nk_rune unicode)
  * ===============================================================*/
 NK_LIB void
 nk_edit_draw_text(struct nk_command_buffer *out,
-    const struct nk_style_edit *style, int pos_x, int pos_y,
-    int x_offset, const char *text, int byte_len, int row_height,
+    const struct nk_style_edit *style, float pos_x, float pos_y,
+    float x_offset, const char *text, int byte_len, float row_height,
     const struct nk_user_font *font, struct nk_color background,
     struct nk_color foreground, nk_bool is_selected)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - foreground /     struct");
-    // NK_ASSERT(out);
-    // NK_ASSERT(font);
-    // NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(font);
+    NK_ASSERT(style);
     if (!text || !byte_len || !out || !style) return;
 
     {int glyph_len = 0;
     nk_rune unicode = 0;
     int text_len = 0;
-    int line_width = 0;
-    int glyph_width;
+    float line_width = 0;
+    float glyph_width;
     const char *line = text;
-    int line_offset = 0;
+    float line_offset = 0;
     int line_count = 0;
 
     struct nk_text txt;
@@ -27269,7 +26805,7 @@ nk_edit_draw_text(struct nk_command_buffer *out,
             continue;
         }
         glyph_width = font->width(font->userdata, font->height, text+text_len, glyph_len);
-        line_width += (int)glyph_width;
+        line_width += (float)glyph_width;
         text_len += glyph_len;
         glyph_len = nk_utf_decode(text + text_len, &unicode, byte_len-text_len);
         continue;
@@ -27296,10 +26832,9 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
     struct nk_text_edit *edit, const struct nk_style_edit *style,
     struct nk_input *in, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - in /     struct");
     struct nk_rect area;
     nk_flags ret = 0;
-    int row_height;
+    float row_height;
     char prev_state = 0;
     char is_hovered = 0;
     char select_all = 0;
@@ -27307,9 +26842,9 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
     struct nk_rect old_clip;
     struct nk_rect clip;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(out);
-    // NK_ASSERT(style);
+    NK_ASSERT(state);
+    NK_ASSERT(out);
+    NK_ASSERT(style);
     if (!state || !out || !style)
         return ret;
 
@@ -27362,45 +26897,47 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
     if (edit->active && in)
     {
         int shift_mod = in->keyboard.keys[NK_KEY_SHIFT].down;
-        const int mouse_x = (in->mouse.pos.x - area.x) + edit->scrollbar.x;
-        const int mouse_y = (in->mouse.pos.y - area.y) + edit->scrollbar.y;
+        const float mouse_x = (in->mouse.pos.x - area.x) + edit->scrollbar.x;
+        const float mouse_y = (in->mouse.pos.y - area.y) + edit->scrollbar.y;
 
         /* mouse click handler */
         is_hovered = (char)nk_input_is_mouse_hovering_rect(in, area);
         if (select_all) {
             nk_textedit_select_all(edit);
-        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_LEFT].down &&            in->mouse.buttons[NK_BUTTON_LEFT].clicked) {
+        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_LEFT].down &&
+            in->mouse.buttons[NK_BUTTON_LEFT].clicked) {
             nk_textedit_click(edit, mouse_x, mouse_y, font, row_height);
-        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_LEFT].down &&            (in->mouse.delta.x != 0.0f || in->mouse.delta.y != 0.0f)) {
+        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_LEFT].down &&
+            (in->mouse.delta.x != 0.0f || in->mouse.delta.y != 0.0f)) {
             nk_textedit_drag(edit, mouse_x, mouse_y, font, row_height);
             cursor_follow = nk_true;
-        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_RIGHT].clicked &&            in->mouse.buttons[NK_BUTTON_RIGHT].down) {
+        } else if (is_hovered && in->mouse.buttons[NK_BUTTON_RIGHT].clicked &&
+            in->mouse.buttons[NK_BUTTON_RIGHT].down) {
             nk_textedit_key(edit, NK_KEY_TEXT_WORD_LEFT, nk_false, font, row_height);
             nk_textedit_key(edit, NK_KEY_TEXT_WORD_RIGHT, nk_true, font, row_height);
             cursor_follow = nk_true;
         }
 
-        // {int i; /* keyboard input */
-        // int old_mode = edit->mode;
-        // for (i = 0; i < NK_KEY_MAX; ++i) {
-        //     if (i == NK_KEY_ENTER || i == NK_KEY_TAB) continue; /* special case */
-        //     if (nk_input_is_key_pressed(in, (enum nk_keys)i)) {
-        //         nk_textedit_key(edit, (enum nk_keys)i, shift_mod, font, row_height);
-        //         cursor_follow = nk_true;
-        //     }
-        // }
-        // if (old_mode != edit->mode) {
-        //     in->keyboard.text_len = 0;
-        // }}
+        {int i; /* keyboard input */
+        int old_mode = edit->mode;
+        for (i = 0; i < NK_KEY_MAX; ++i) {
+            if (i == NK_KEY_ENTER || i == NK_KEY_TAB) continue; /* special case */
+            if (nk_input_is_key_pressed(in, (enum nk_keys)i)) {
+                nk_textedit_key(edit, (enum nk_keys)i, shift_mod, font, row_height);
+                cursor_follow = nk_true;
+            }
+        }
+        if (old_mode != edit->mode) {
+            in->keyboard.text_len = 0;
+        }}
 
-        // /* text input */
-        // edit->filter = filter;
+        /* text input */
+        edit->filter = filter;
         if (in->keyboard.text_len) {
             nk_textedit_text(edit, in->keyboard.text, in->keyboard.text_len);
             cursor_follow = nk_true;
             in->keyboard.text_len = 0;
         }
-        // cursor_follow = nk_true;
 
         /* enter key handler */
         if (nk_input_is_key_pressed(in, NK_KEY_ENTER)) {
@@ -27413,40 +26950,40 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         }
 
         /* cut & copy handler */
-        // {int copy= nk_input_is_key_pressed(in, NK_KEY_COPY);
-        // int cut = nk_input_is_key_pressed(in, NK_KEY_CUT);
-        // if ((copy || cut) && (flags & NK_EDIT_CLIPBOARD))
-        // {
-        //     int glyph_len;
-        //     nk_rune unicode;
-        //     const char *text;
-        //     int b = edit->select_start;
-        //     int e = edit->select_end;
+        {int copy= nk_input_is_key_pressed(in, NK_KEY_COPY);
+        int cut = nk_input_is_key_pressed(in, NK_KEY_CUT);
+        if ((copy || cut) && (flags & NK_EDIT_CLIPBOARD))
+        {
+            int glyph_len;
+            nk_rune unicode;
+            const char *text;
+            int b = edit->select_start;
+            int e = edit->select_end;
 
-        //     int begin = NK_MIN(b, e);
-        //     int end = NK_MAX(b, e);
-        //     text = nk_str_at_const(&edit->string, begin, &unicode, &glyph_len);
-        //     if (edit->clip.copy)
-        //         edit->clip.copy(edit->clip.userdata, text, end - begin);
-        //     if (cut && !(flags & NK_EDIT_READ_ONLY)){
-        //         nk_textedit_cut(edit);
-        //         cursor_follow = nk_true;
-        //     }
-        // }}
+            int begin = NK_MIN(b, e);
+            int end = NK_MAX(b, e);
+            text = nk_str_at_const(&edit->string, begin, &unicode, &glyph_len);
+            if (edit->clip.copy)
+                edit->clip.copy(edit->clip.userdata, text, end - begin);
+            if (cut && !(flags & NK_EDIT_READ_ONLY)){
+                nk_textedit_cut(edit);
+                cursor_follow = nk_true;
+            }
+        }}
 
-        // /* paste handler */
-        // {int paste = nk_input_is_key_pressed(in, NK_KEY_PASTE);
-        // if (paste && (flags & NK_EDIT_CLIPBOARD) && edit->clip.paste) {
-        //     edit->clip.paste(edit->clip.userdata, edit);
-        //     cursor_follow = nk_true;
-        // }}
+        /* paste handler */
+        {int paste = nk_input_is_key_pressed(in, NK_KEY_PASTE);
+        if (paste && (flags & NK_EDIT_CLIPBOARD) && edit->clip.paste) {
+            edit->clip.paste(edit->clip.userdata, edit);
+            cursor_follow = nk_true;
+        }}
 
-        // /* tab handler */
-        // {int tab = nk_input_is_key_pressed(in, NK_KEY_TAB);
-        // if (tab && (flags & NK_EDIT_ALLOW_TAB)) {
-        //     nk_textedit_text(edit, "    ", 4);
-        //     cursor_follow = nk_true;
-        // }}
+        /* tab handler */
+        {int tab = nk_input_is_key_pressed(in, NK_KEY_TAB);
+        if (tab && (flags & NK_EDIT_ALLOW_TAB)) {
+            nk_textedit_text(edit, "    ", 4);
+            cursor_follow = nk_true;
+        }}
     }
 
     /* set widget state */
@@ -27461,22 +26998,31 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
     {const char *text = nk_str_get_const(&edit->string);
     int len = nk_str_len_char(&edit->string);
 
-    // {/* select background colors/images  */
-    // const struct nk_style_item *background;
-    // if (*state & NK_WIDGET_STATE_ACTIVED)
-    //     background = &style->active;
-    // else if (*state & NK_WIDGET_STATE_HOVER)
-    //     background = &style->hover;
-    // else background = &style->normal;
+    {/* select background colors/images  */
+    const struct nk_style_item *background;
+    if (*state & NK_WIDGET_STATE_ACTIVED)
+        background = &style->active;
+    else if (*state & NK_WIDGET_STATE_HOVER)
+        background = &style->hover;
+    else background = &style->normal;
 
-    //  draw background frame 
-    // if (background->type == NK_STYLE_ITEM_COLOR) {
-    //     nk_fill_rect(out, bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, bounds, style->rounding, style->border, style->border_color);
-    // } else nk_draw_image(out, bounds, &background->data.image, nk_white);}
+    /* draw background frame */
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(out, bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(out, bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(out, bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, bounds, style->rounding, style->border, style->border_color);
+            break;
+    }}
+
 
     area.w = NK_MAX(0, area.w - style->cursor_size);
-    if (edit->active ) // TODO
+    if (edit->active)
     {
         int total_lines = 1;
         struct nk_vec2 text_size = nk_vec2(0,0);
@@ -27495,11 +27041,11 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         int selection_end = NK_MAX(edit->select_start, edit->select_end);
 
         /* calculate total line count + total space + cursor/selection position */
-        int line_width = 0.0f;
+        float line_width = 0.0f;
         if (text && len)
         {
             /* utf8 encoding */
-            int glyph_width;
+            float glyph_width;
             int glyph_len = 0;
             nk_rune unicode = 0;
             int text_len = 0;
@@ -27522,7 +27068,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                     const char *remaining;
 
                     /* calculate 2d position */
-                    cursor_pos.y = (int)(total_lines-1) * row_height;
+                    cursor_pos.y = (float)(total_lines-1) * row_height;
                     row_size = nk_text_calculate_text_bounds(font, text+row_begin,
                                 text_len-row_begin, row_height, &remaining,
                                 &out_offset, &glyph_offset, NK_STOP_ON_NEW_LINE);
@@ -27531,7 +27077,8 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 }
 
                 /* set start selection 2D position and line */
-                if (!select_begin_ptr && edit->select_start != edit->select_end &&                    glyphs == selection_begin)
+                if (!select_begin_ptr && edit->select_start != edit->select_end &&
+                    glyphs == selection_begin)
                 {
                     int glyph_offset;
                     struct nk_vec2 out_offset;
@@ -27539,7 +27086,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                     const char *remaining;
 
                     /* calculate 2d position */
-                    selection_offset_start.y = (int)(NK_MAX(total_lines-1,0)) * row_height;
+                    selection_offset_start.y = (float)(NK_MAX(total_lines-1,0)) * row_height;
                     row_size = nk_text_calculate_text_bounds(font, text+row_begin,
                                 text_len-row_begin, row_height, &remaining,
                                 &out_offset, &glyph_offset, NK_STOP_ON_NEW_LINE);
@@ -27548,7 +27095,8 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 }
 
                 /* set end selection 2D position and line */
-                if (!select_end_ptr && edit->select_start != edit->select_end &&                    glyphs == selection_end)
+                if (!select_end_ptr && edit->select_start != edit->select_end &&
+                    glyphs == selection_end)
                 {
                     int glyph_offset;
                     struct nk_vec2 out_offset;
@@ -27556,7 +27104,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                     const char *remaining;
 
                     /* calculate 2d position */
-                    selection_offset_end.y = (int)(total_lines-1) * row_height;
+                    selection_offset_end.y = (float)(total_lines-1) * row_height;
                     row_size = nk_text_calculate_text_bounds(font, text+row_begin,
                                 text_len-row_begin, row_height, &remaining,
                                 &out_offset, &glyph_offset, NK_STOP_ON_NEW_LINE);
@@ -27577,14 +27125,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
 
                 glyphs++;
                 text_len += glyph_len;
-                line_width += (int)glyph_width;
+                line_width += (float)glyph_width;
 
                 glyph_len = nk_utf_decode(text + text_len, &unicode, len-text_len);
                 glyph_width = font->width(font->userdata, font->height,
                     text+text_len, glyph_len);
                 continue;
             }
-            text_size.y = (int)total_lines * row_height;
+            text_size.y = (float)total_lines * row_height;
 
             /* handle case when cursor is at end of text buffer */
             if (!cursor_ptr && edit->cursor == edit->string.len) {
@@ -27599,18 +27147,18 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 /* update scrollbar to follow cursor */
                 if (!(flags & NK_EDIT_NO_HORIZONTAL_SCROLL)) {
                     /* horizontal scroll */
-                    const int scroll_increment = area.w * 0.25f;
+                    const float scroll_increment = area.w * 0.25f;
                     if (cursor_pos.x < edit->scrollbar.x)
-                        edit->scrollbar.x = (int)(int)NK_MAX(0.0f, cursor_pos.x - scroll_increment);
+                        edit->scrollbar.x = (float)(int)NK_MAX(0.0f, cursor_pos.x - scroll_increment);
                     if (cursor_pos.x >= edit->scrollbar.x + area.w)
-                        edit->scrollbar.x = (int)(int)NK_MAX(0.0f, cursor_pos.x - area.w + scroll_increment);
+                        edit->scrollbar.x = (float)(int)NK_MAX(0.0f, cursor_pos.x - area.w + scroll_increment);
                 } else edit->scrollbar.x = 0;
 
                 if (flags & NK_EDIT_MULTILINE) {
                     /* vertical scroll */
                     if (cursor_pos.y < edit->scrollbar.y)
                         edit->scrollbar.y = NK_MAX(0.0f, cursor_pos.y - row_height);
-                    if (cursor_pos.y >= edit->scrollbar.y + area.h)
+                    if (cursor_pos.y >= edit->scrollbar.y + row_height)
                         edit->scrollbar.y = edit->scrollbar.y + row_height;
                 } else edit->scrollbar.y = 0;
             }
@@ -27620,10 +27168,10 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             {
                 nk_flags ws;
                 struct nk_rect scroll;
-                int scroll_target;
-                int scroll_offset;
-                int scroll_step;
-                int scroll_inc;
+                float scroll_target;
+                float scroll_offset;
+                float scroll_step;
+                float scroll_inc;
 
                 scroll = area;
                 scroll.x = (bounds.x + bounds.w - style->border) - style->scrollbar_size.x;
@@ -27647,7 +27195,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         struct nk_color cursor_color;
         struct nk_color cursor_text_color;
         const struct nk_style_item *background;
-        // nk_push_scissor(out, clip);
+        nk_push_scissor(out, clip);
 
         /* select correct colors to draw */
         if (*state & NK_WIDGET_STATE_ACTIVED) {
@@ -27674,7 +27222,8 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         }
         if (background->type == NK_STYLE_ITEM_IMAGE)
             background_color = nk_rgba(0,0,0,0);
-        else background_color = background->data.color;
+        else
+            background_color = background->data.color;
 
 
         if (edit->select_start == edit->select_end) {
@@ -27689,14 +27238,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             if (edit->select_start != edit->select_end && selection_begin > 0){
                 /* draw unselected text before selection */
                 const char *begin = nk_str_get_const(&edit->string);
-                // NK_ASSERT(select_begin_ptr);
+                NK_ASSERT(select_begin_ptr);
                 nk_edit_draw_text(out, style, area.x - edit->scrollbar.x,
                     area.y - edit->scrollbar.y, 0, begin, (int)(select_begin_ptr - begin),
                     row_height, font, background_color, text_color, nk_false);
             }
             if (edit->select_start != edit->select_end) {
                 /* draw selected text */
-                // NK_ASSERT(select_begin_ptr);
+                NK_ASSERT(select_begin_ptr);
                 if (!select_end_ptr) {
                     const char *begin = nk_str_get_const(&edit->string);
                     select_end_ptr = begin + nk_str_len_char(&edit->string);
@@ -27708,13 +27257,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                     select_begin_ptr, (int)(select_end_ptr - select_begin_ptr),
                     row_height, font, sel_background_color, sel_text_color, nk_true);
             }
-            if ((edit->select_start != edit->select_end &&                selection_end < edit->string.len))
+            if ((edit->select_start != edit->select_end &&
+                selection_end < edit->string.len))
             {
                 /* draw unselected text after selected text */
                 const char *begin = select_end_ptr;
                 const char *end = nk_str_get_const(&edit->string) +
                                     nk_str_len_char(&edit->string);
-                // NK_ASSERT(select_end_ptr);
+                NK_ASSERT(select_end_ptr);
                 nk_edit_draw_text(out, style,
                     area.x - edit->scrollbar.x,
                     area.y + selection_offset_end.y - edit->scrollbar.y,
@@ -27744,7 +27294,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 struct nk_text txt;
 
                 nk_rune unicode;
-                // NK_ASSERT(cursor_ptr);
+                NK_ASSERT(cursor_ptr);
                 glyph_len = nk_utf_decode(cursor_ptr, &unicode, 4);
 
                 label.x = area.x + cursor_pos.x - edit->scrollbar.x;
@@ -27767,27 +27317,36 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         const struct nk_style_item *background;
         struct nk_color background_color;
         struct nk_color text_color;
-        // nk_push_scissor(out, clip);
-        background = &style->normal;
-        text_color = style->text_normal;
-        background_color = background->data.color;
+        nk_push_scissor(out, clip);
+        if (*state & NK_WIDGET_STATE_ACTIVED) {
+            background = &style->active;
+            text_color = style->text_active;
+        } else if (*state & NK_WIDGET_STATE_HOVER) {
+            background = &style->hover;
+            text_color = style->text_hover;
+        } else {
+            background = &style->normal;
+            text_color = style->text_normal;
+        }
+        if (background->type == NK_STYLE_ITEM_IMAGE)
+            background_color = nk_rgba(0,0,0,0);
+        else
+            background_color = background->data.color;
         nk_edit_draw_text(out, style, area.x - edit->scrollbar.x,
             area.y - edit->scrollbar.y, 0, begin, l, row_height, font,
             background_color, text_color, nk_false);
     }
-    // nk_push_scissor(out, old_clip);}
-  }
+    nk_push_scissor(out, old_clip);}
     return ret;
 }
 NK_API void
 nk_edit_focus(struct nk_context *ctx, nk_flags flags)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_edit_focus");
     nk_hash hash;
     struct nk_window *win;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return;
 
     win = ctx->current;
@@ -27800,10 +27359,9 @@ nk_edit_focus(struct nk_context *ctx, nk_flags flags)
 NK_API void
 nk_edit_unfocus(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_edit_unfocus");
     struct nk_window *win;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return;
 
     win = ctx->current;
@@ -27814,27 +27372,14 @@ NK_API nk_flags
 nk_edit_string(struct nk_context *ctx, nk_flags flags,
     char *memory, int *len, int max, nk_plugin_filter filter)
 {
-
-      long start;
-      long end;
-      long total;
-      long eventTime0;
-      long eventTime1;
-      long eventTime2;
-      long eventTime3;
-      long eventTime4;
-
-      start = TickCount();
-
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - memory, /     char");
     nk_hash hash;
     nk_flags state;
     struct nk_text_edit *edit;
     struct nk_window *win;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(memory);
-    // NK_ASSERT(len);
+    NK_ASSERT(ctx);
+    NK_ASSERT(memory);
+    NK_ASSERT(len);
     if (!ctx || !memory || !len)
         return 0;
 
@@ -27844,16 +27389,6 @@ nk_edit_string(struct nk_context *ctx, nk_flags flags,
     edit = &ctx->text_edit;
     nk_textedit_clear_state(&ctx->text_edit, (flags & NK_EDIT_MULTILINE)?
         NK_TEXT_EDIT_MULTI_LINE: NK_TEXT_EDIT_SINGLE_LINE, filter);
-
-
-
-    total = end - start;
-
-
-      end = TickCount();
-      eventTime1 = total;// / 60.0;
-
-      start = TickCount();
 
     if (win->edit.active && hash == win->edit.name) {
         if (flags & NK_EDIT_NO_CURSOR)
@@ -27867,36 +27402,16 @@ nk_edit_string(struct nk_context *ctx, nk_flags flags,
             edit->select_end = win->edit.sel_end;
         }
         edit->mode = win->edit.mode;
-        edit->scrollbar.x = (int)win->edit.scrollbar.x;
-        edit->scrollbar.y = (int)win->edit.scrollbar.y;
+        edit->scrollbar.x = (float)win->edit.scrollbar.x;
+        edit->scrollbar.y = (float)win->edit.scrollbar.y;
         edit->active = nk_true;
     } else edit->active = nk_false;
 
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime2 = total;// / 60.0;
-
     max = NK_MAX(1, max);
     *len = NK_MIN(*len, max-1);
-
-      start = TickCount();
-
     nk_str_init_fixed(&edit->string, memory, (nk_size)max);
-
     edit->string.buffer.allocated = (nk_size)*len;
     edit->string.len = nk_utf_len(memory, *len);
-
-
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime3 = total;// / 60.0;
-      start = TickCount();
-
-
     state = nk_edit_buffer(ctx, flags, edit, filter);
     *len = (int)edit->string.buffer.allocated;
 
@@ -27907,40 +27422,12 @@ nk_edit_string(struct nk_context *ctx, nk_flags flags,
         win->edit.mode = edit->mode;
         win->edit.scrollbar.x = (nk_uint)edit->scrollbar.x;
         win->edit.scrollbar.y = (nk_uint)edit->scrollbar.y;
-    } 
-
-
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime0 = total;// / 60.0;
-
-    
-        //char logx[255];
-        //sprintf(logx, "nk_edit_string() eventTime0 (edit string) %ld, eventTime1 (edit string) %ld, eventTime2 (edit string) %ld, eventTime3 (edit string) %ld ticks to execute\n", eventTime0, eventTime1, eventTime2, eventTime3);
-        //writeSerialPort(boutRefNum, logx);
-    return state;
+    } return state;
 }
 NK_API nk_flags
 nk_edit_buffer(struct nk_context *ctx, nk_flags flags,
     struct nk_text_edit *edit, nk_plugin_filter filter)
 {
-
-
-
-      long start;
-      long end;
-      long total;
-      long eventTime0 = 0;
-      long eventTime1 = 0;
-      long eventTime2 = 0;
-      long eventTime3 = 0;
-      long eventTime4 = 0;
-
-
-      start = TickCount();
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - edit /     struct");
     struct nk_window *win;
     struct nk_style *style;
     struct nk_input *in;
@@ -27953,10 +27440,10 @@ nk_edit_buffer(struct nk_context *ctx, nk_flags flags,
     nk_hash hash;
 
     /* make sure correct values */
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(edit);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(edit);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -27984,14 +27471,6 @@ nk_edit_buffer(struct nk_context *ctx, nk_flags flags,
     filter = (!filter) ? nk_filter_default: filter;
     prev_state = (unsigned char)edit->active;
     in = (flags & NK_EDIT_READ_ONLY) ? 0: in;
-
-
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime1 = total;// / 60.0;
-      start = TickCount();
     ret_flags = nk_do_edit(&ctx->last_widget_state, &win->buffer, bounds, flags,
                     filter, edit, &style->edit, in, style->font);
 
@@ -28004,30 +27483,14 @@ nk_edit_buffer(struct nk_context *ctx, nk_flags flags,
     } else if (prev_state && !edit->active) {
         /* current edit is now cold */
         win->edit.active = nk_false;
-    } 
-
-
-
-
-      end = TickCount();
-
-    total = end - start;
-      eventTime2 = total;// / 60.0;
-
-    
-        // char logx[255];
-        // sprintf(logx, "nk_edit_buffer() eventTime0 (edit string) %ld, eventTime1 (edit string) %ld, eventTime2 (edit string) %ld, eventTime3 (edit string) %ld ticks to execute\n", eventTime0, eventTime1, eventTime2, eventTime3);
-        // writeSerialPort(boutRefNum, logx);
-
-    return ret_flags;
+    } return ret_flags;
 }
 NK_API nk_flags
 nk_edit_string_zero_terminated(struct nk_context *ctx, nk_flags flags,
     char *buffer, int max, nk_plugin_filter filter)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - buffer, /     char");
     nk_flags result;
-    int len = strlen(buffer);
+    int len = nk_strlen(buffer);
     result = nk_edit_string(ctx, flags, buffer, &len, max, filter);
     buffer[NK_MIN(NK_MAX(max-1,0), len)] = '\0';
     return result;
@@ -28045,18 +27508,18 @@ nk_edit_string_zero_terminated(struct nk_context *ctx, nk_flags flags,
 NK_LIB void
 nk_drag_behavior(nk_flags *state, const struct nk_input *in,
     struct nk_rect drag, struct nk_property_variant *variant,
-    int inc_per_pixel)
+    float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - inc_per_pixel) /     int");
     int left_mouse_down = in && in->mouse.buttons[NK_BUTTON_LEFT].down;
-    int left_mouse_click_in_cursor = in &&        nk_input_has_mouse_click_down_in_rect(in, NK_BUTTON_LEFT, drag, nk_true);
+    int left_mouse_click_in_cursor = in &&
+        nk_input_has_mouse_click_down_in_rect(in, NK_BUTTON_LEFT, drag, nk_true);
 
     nk_widget_state_reset(state);
     if (nk_input_is_mouse_hovering_rect(in, drag))
         *state = NK_WIDGET_STATE_HOVERED;
 
     if (left_mouse_down && left_mouse_click_in_cursor) {
-        int delta, pixels;
+        float delta, pixels;
         pixels = in->mouse.delta.x;
         delta = pixels * inc_per_pixel;
         switch (variant->kind) {
@@ -28065,10 +27528,10 @@ nk_drag_behavior(nk_flags *state, const struct nk_input *in,
             variant->value.i = variant->value.i + (int)delta;
             variant->value.i = NK_CLAMP(variant->min_value.i, variant->value.i, variant->max_value.i);
             break;
-        // case NK_PROPERTY_int:
-        //     variant->value.f = variant->value.f + (int)delta;
-        //     variant->value.f = NK_CLAMP(variant->min_value.f, variant->value.f, variant->max_value.f);
-        //     break;
+        case NK_PROPERTY_FLOAT:
+            variant->value.f = variant->value.f + (float)delta;
+            variant->value.f = NK_CLAMP(variant->min_value.f, variant->value.f, variant->max_value.f);
+            break;
         case NK_PROPERTY_DOUBLE:
             variant->value.d = variant->value.d + (double)delta;
             variant->value.d = NK_CLAMP(variant->min_value.d, variant->value.d, variant->max_value.d);
@@ -28085,9 +27548,8 @@ NK_LIB void
 nk_property_behavior(nk_flags *ws, const struct nk_input *in,
     struct nk_rect property,  struct nk_rect label, struct nk_rect edit,
     struct nk_rect empty, int *state, struct nk_property_variant *variant,
-    int inc_per_pixel)
+    float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - inc_per_pixel) /     int");
     nk_widget_state_reset(ws);
     if (in && *state == NK_PROPERTY_DEFAULT) {
         if (nk_button_behavior(ws, edit, in, NK_BUTTON_DEFAULT))
@@ -28107,7 +27569,6 @@ nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *
     const struct nk_rect *bounds, const struct nk_rect *label, nk_flags state,
     const char *name, int len, const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - name /     const");
     struct nk_text text;
     const struct nk_style_item *background;
 
@@ -28124,13 +27585,20 @@ nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *
     }
 
     /* draw background */
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(out, *bounds, &background->data.image, nk_white);
-        text.background = nk_rgba(0,0,0,0);
-    } else {
-        text.background = background->data.color;
-        nk_fill_rect(out, *bounds, style->rounding, background->data.color);
-        nk_stroke_rect(out, *bounds, style->rounding, style->border, background->data.color);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(out, *bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(out, *bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            text.background = background->data.color;
+            nk_fill_rect(out, *bounds, style->rounding, background->data.color);
+            nk_stroke_rect(out, *bounds, style->rounding, style->border, background->data.color);
+            break;
     }
 
     /* draw label */
@@ -28141,22 +27609,21 @@ NK_LIB void
 nk_do_property(nk_flags *ws,
     struct nk_command_buffer *out, struct nk_rect property,
     const char *name, struct nk_property_variant *variant,
-    int inc_per_pixel, char *buffer, int *len,
+    float inc_per_pixel, char *buffer, int *len,
     int *state, int *cursor, int *select_begin, int *select_end,
     const struct nk_style_property *style,
     enum nk_property_filter filter, struct nk_input *in,
     const struct nk_user_font *font, struct nk_text_edit *text_edit,
     enum nk_button_behavior behavior)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - behavior /     enum");
     const nk_plugin_filter filters[] = {
         nk_filter_decimal,
-        nk_filter_int
+        nk_filter_float
     };
     nk_bool active, old;
-    int num_len, name_len;
+    int num_len = 0, name_len;
     char string[NK_MAX_NUMBER_BUFFER];
-    int size;
+    float size;
 
     char *dst = 0;
     int *length;
@@ -28174,10 +27641,10 @@ nk_do_property(nk_flags *ws,
     left.y = property.y + style->border + property.h/2.0f - left.h/2;
 
     /* text label */
-    name_len = strlen(name);
+    name_len = nk_strlen(name);
     size = font->width(font->userdata, font->height, name, name_len);
     label.x = left.x + left.w + style->padding.x;
-    label.w = (int)size + 2 * style->padding.x;
+    label.w = (float)size + 2 * style->padding.x;
     label.y = property.y + style->border + style->padding.y;
     label.h = property.h - (2 * style->border + 2 * style->padding.y);
 
@@ -28198,15 +27665,15 @@ nk_do_property(nk_flags *ws,
         default: break;
         case NK_PROPERTY_INT:
             nk_itoa(string, variant->value.i);
-            num_len = strlen(string);
+            num_len = nk_strlen(string);
             break;
-        case NK_PROPERTY_int:
+        case NK_PROPERTY_FLOAT:
             NK_DTOA(string, (double)variant->value.f);
-            num_len = nk_string_int_limit(string, NK_MAX_int_PRECISION);
+            num_len = nk_string_float_limit(string, NK_MAX_FLOAT_PRECISION);
             break;
         case NK_PROPERTY_DOUBLE:
             NK_DTOA(string, variant->value.d);
-            num_len = nk_string_int_limit(string, NK_MAX_int_PRECISION);
+            num_len = nk_string_float_limit(string, NK_MAX_FLOAT_PRECISION);
             break;
         }
         size = font->width(font->userdata, font->height, string, num_len);
@@ -28214,7 +27681,7 @@ nk_do_property(nk_flags *ws,
         length = &num_len;
     }
 
-    edit.w =  (int)size + 2 * style->padding.x;
+    edit.w =  (float)size + 2 * style->padding.x;
     edit.w = NK_MIN(edit.w, right.x - (label.x + label.w));
     edit.x = right.x - (edit.w + style->padding.x);
     edit.y = property.y + style->border;
@@ -28241,7 +27708,7 @@ nk_do_property(nk_flags *ws,
         default: break;
         case NK_PROPERTY_INT:
             variant->value.i = NK_CLAMP(variant->min_value.i, variant->value.i - variant->step.i, variant->max_value.i); break;
-        case NK_PROPERTY_int:
+        case NK_PROPERTY_FLOAT:
             variant->value.f = NK_CLAMP(variant->min_value.f, variant->value.f - variant->step.f, variant->max_value.f); break;
         case NK_PROPERTY_DOUBLE:
             variant->value.d = NK_CLAMP(variant->min_value.d, variant->value.d - variant->step.d, variant->max_value.d); break;
@@ -28253,7 +27720,7 @@ nk_do_property(nk_flags *ws,
         default: break;
         case NK_PROPERTY_INT:
             variant->value.i = NK_CLAMP(variant->min_value.i, variant->value.i + variant->step.i, variant->max_value.i); break;
-        case NK_PROPERTY_int:
+        case NK_PROPERTY_FLOAT:
             variant->value.f = NK_CLAMP(variant->min_value.f, variant->value.f + variant->step.f, variant->max_value.f); break;
         case NK_PROPERTY_DOUBLE:
             variant->value.d = NK_CLAMP(variant->min_value.d, variant->value.d + variant->step.d, variant->max_value.d); break;
@@ -28301,13 +27768,13 @@ nk_do_property(nk_flags *ws,
             variant->value.i = nk_strtoi(buffer, 0);
             variant->value.i = NK_CLAMP(variant->min_value.i, variant->value.i, variant->max_value.i);
             break;
-        case NK_PROPERTY_int:
-            nk_string_int_limit(buffer, NK_MAX_int_PRECISION);
+        case NK_PROPERTY_FLOAT:
+            nk_string_float_limit(buffer, NK_MAX_FLOAT_PRECISION);
             variant->value.f = nk_strtof(buffer, 0);
             variant->value.f = NK_CLAMP(variant->min_value.f, variant->value.f, variant->max_value.f);
             break;
         case NK_PROPERTY_DOUBLE:
-            nk_string_int_limit(buffer, NK_MAX_int_PRECISION);
+            nk_string_float_limit(buffer, NK_MAX_FLOAT_PRECISION);
             variant->value.d = nk_strtod(buffer, 0);
             variant->value.d = NK_CLAMP(variant->min_value.d, variant->value.d, variant->max_value.d);
             break;
@@ -28317,7 +27784,6 @@ nk_do_property(nk_flags *ws,
 NK_LIB struct nk_property_variant
 nk_property_variant_int(int value, int min_value, int max_value, int step)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - value / nk_property_variant_int");
     struct nk_property_variant result;
     result.kind = NK_PROPERTY_INT;
     result.value.i = value;
@@ -28326,22 +27792,21 @@ nk_property_variant_int(int value, int min_value, int max_value, int step)
     result.step.i = step;
     return result;
 }
-// NK_LIB struct nk_property_variant
-// nk_property_variant_int(int value, int min_value, int max_value, int step)
-// {
-//     struct nk_property_variant result;
-//     result.kind = NK_PROPERTY_int;
-//     result.value.f = value;
-//     result.min_value.f = min_value;
-//     result.max_value.f = max_value;
-//     result.step.f = step;
-//     return result;
-// }
+NK_LIB struct nk_property_variant
+nk_property_variant_float(float value, float min_value, float max_value, float step)
+{
+    struct nk_property_variant result;
+    result.kind = NK_PROPERTY_FLOAT;
+    result.value.f = value;
+    result.min_value.f = min_value;
+    result.max_value.f = max_value;
+    result.step.f = step;
+    return result;
+}
 NK_LIB struct nk_property_variant
 nk_property_variant_double(double value, double min_value, double max_value,
     double step)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - step) /     double");
     struct nk_property_variant result;
     result.kind = NK_PROPERTY_DOUBLE;
     result.value.d = value;
@@ -28352,9 +27817,8 @@ nk_property_variant_double(double value, double min_value, double max_value,
 }
 NK_LIB void
 nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant,
-    int inc_per_pixel, const enum nk_property_filter filter)
+    float inc_per_pixel, const enum nk_property_filter filter)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - inc_per_pixel, /     int");
     struct nk_window *win;
     struct nk_panel *layout;
     struct nk_input *in;
@@ -28379,9 +27843,9 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
     int dummy_select_begin = 0;
     int dummy_select_end = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return;
 
@@ -28393,9 +27857,9 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
 
     /* calculate hash from name */
     if (name[0] == '#') {
-        hash = nk_murmur_hash(name, (int)strlen(name), win->property.seq++);
+        hash = nk_murmur_hash(name, (int)nk_strlen(name), win->property.seq++);
         name++; /* special number hash */
-    } else hash = nk_murmur_hash(name, (int)strlen(name), 42);
+    } else hash = nk_murmur_hash(name, (int)nk_strlen(name), 42);
 
     /* check if property is currently hot item */
     if (win->property.active && hash == win->property.name) {
@@ -28453,56 +27917,53 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
 }
 NK_API void
 nk_property_int(struct nk_context *ctx, const char *name,
-    int min, int *val, int max, int step, int inc_per_pixel)
+    int min, int *val, int max, int step, float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - min, /     int");
     struct nk_property_variant variant;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
-    // NK_ASSERT(val);
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(val);
 
     if (!ctx || !ctx->current || !name || !val) return;
     variant = nk_property_variant_int(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_INT);
     *val = variant.value.i;
 }
-// NK_API void
-// nk_property_int(struct nk_context *ctx, const char *name,
-//     int min, int *val, int max, int step, int inc_per_pixel)
-// {
-//     struct nk_property_variant variant;
-//     // NK_ASSERT(ctx);
-//     // NK_ASSERT(name);
-//     // NK_ASSERT(val);
+NK_API void
+nk_property_float(struct nk_context *ctx, const char *name,
+    float min, float *val, float max, float step, float inc_per_pixel)
+{
+    struct nk_property_variant variant;
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(val);
 
-//     if (!ctx || !ctx->current || !name || !val) return;
-//     variant = nk_property_variant_int(*val, min, max, step);
-//     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_int);
-//     *val = variant.value.f;
-// }
+    if (!ctx || !ctx->current || !name || !val) return;
+    variant = nk_property_variant_float(*val, min, max, step);
+    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
+    *val = variant.value.f;
+}
 NK_API void
 nk_property_double(struct nk_context *ctx, const char *name,
-    double min, double *val, double max, double step, int inc_per_pixel)
+    double min, double *val, double max, double step, float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - min, /     double");
     struct nk_property_variant variant;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
-    // NK_ASSERT(val);
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(val);
 
     if (!ctx || !ctx->current || !name || !val) return;
     variant = nk_property_variant_double(*val, min, max, step);
-    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_int);
+    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
     *val = variant.value.d;
 }
 NK_API int
 nk_propertyi(struct nk_context *ctx, const char *name, int min, int val,
-    int max, int step, int inc_per_pixel)
+    int max, int step, float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - max, /     int");
     struct nk_property_variant variant;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
 
     if (!ctx || !ctx->current || !name) return val;
     variant = nk_property_variant_int(val, min, max, step);
@@ -28510,33 +27971,31 @@ nk_propertyi(struct nk_context *ctx, const char *name, int min, int val,
     val = variant.value.i;
     return val;
 }
-NK_API int
-nk_propertyf(struct nk_context *ctx, const char *name, int min,
-    int val, int max, int step, int inc_per_pixel)
+NK_API float
+nk_propertyf(struct nk_context *ctx, const char *name, float min,
+    float val, float max, float step, float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - val, /     int");
     struct nk_property_variant variant;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
 
     if (!ctx || !ctx->current || !name) return val;
-    variant = nk_property_variant_int(val, min, max, step);
-    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_int);
+    variant = nk_property_variant_float(val, min, max, step);
+    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
     val = variant.value.f;
     return val;
 }
 NK_API double
 nk_propertyd(struct nk_context *ctx, const char *name, double min,
-    double val, double max, double step, int inc_per_pixel)
+    double val, double max, double step, float inc_per_pixel)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - val, /     double");
     struct nk_property_variant variant;
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(name);
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
 
     if (!ctx || !ctx->current || !name) return val;
     variant = nk_property_variant_double(val, min, max, step);
-    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_int);
+    nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
     val = variant.value.d;
     return val;
 }
@@ -28553,9 +28012,8 @@ nk_propertyd(struct nk_context *ctx, const char *name, double min,
 NK_API nk_bool
 nk_chart_begin_colored(struct nk_context *ctx, enum nk_chart_type type,
     struct nk_color color, struct nk_color highlight,
-    int count, int min_value, int max_value)
+    int count, float min_value, float max_value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - count, /     int");
     struct nk_window *win;
     struct nk_chart *chart;
     const struct nk_style *config;
@@ -28564,9 +28022,9 @@ nk_chart_begin_colored(struct nk_context *ctx, enum nk_chart_type type,
     const struct nk_style_item *background;
     struct nk_rect bounds = {0, 0, 0, 0};
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
 
     if (!ctx || !ctx->current || !ctx->current->layout) return 0;
     if (!nk_widget(&bounds, ctx)) {
@@ -28601,33 +28059,38 @@ nk_chart_begin_colored(struct nk_context *ctx, enum nk_chart_type type,
 
     /* draw chart background */
     background = &style->background;
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(&win->buffer, bounds, &background->data.image, nk_white);
-    } else {
-        nk_fill_rect(&win->buffer, bounds, style->rounding, style->border_color);
-        nk_fill_rect(&win->buffer, nk_shrink_rect(bounds, style->border),
-            style->rounding, style->background.data.color);
+
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(&win->buffer, bounds, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(&win->buffer, bounds, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(&win->buffer, bounds, style->rounding, style->border_color);
+            nk_fill_rect(&win->buffer, nk_shrink_rect(bounds, style->border),
+                style->rounding, style->background.data.color);
+            break;
     }
     return 1;
 }
 NK_API nk_bool
 nk_chart_begin(struct nk_context *ctx, const enum nk_chart_type type,
-    int count, int min_value, int max_value)
+    int count, float min_value, float max_value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - count, /     int");
     return nk_chart_begin_colored(ctx, type, ctx->style.chart.color,
                 ctx->style.chart.selected_color, count, min_value, max_value);
 }
 NK_API void
 nk_chart_add_slot_colored(struct nk_context *ctx, const enum nk_chart_type type,
     struct nk_color color, struct nk_color highlight,
-    int count, int min_value, int max_value)
+    int count, float min_value, float max_value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - count, /     int");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
-    // NK_ASSERT(ctx->current->layout->chart.slot < NK_CHART_MAX_SLOT);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx->current->layout->chart.slot < NK_CHART_MAX_SLOT);
     if (!ctx || !ctx->current || !ctx->current->layout) return;
     if (ctx->current->layout->chart.slot >= NK_CHART_MAX_SLOT) return;
 
@@ -28644,17 +28107,15 @@ nk_chart_add_slot_colored(struct nk_context *ctx, const enum nk_chart_type type,
 }
 NK_API void
 nk_chart_add_slot(struct nk_context *ctx, const enum nk_chart_type type,
-    int count, int min_value, int max_value)
+    int count, float min_value, float max_value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - count, /     int");
     nk_chart_add_slot_colored(ctx, type, ctx->style.chart.color,
         ctx->style.chart.selected_color, count, min_value, max_value);
 }
 NK_INTERN nk_flags
 nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
-    struct nk_chart *g, int value, int slot)
+    struct nk_chart *g, float value, int slot)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - g /     struct");
     struct nk_panel *layout = win->layout;
     const struct nk_input *i = &ctx->input;
     struct nk_command_buffer *out = &win->buffer;
@@ -28663,28 +28124,30 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
     struct nk_vec2 cur;
     struct nk_rect bounds;
     struct nk_color color;
-    int step;
-    int range;
-    int ratio;
+    float step;
+    float range;
+    float ratio;
 
-    // NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
-    step = g->w / (int)g->slots[slot].count;
+    NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
+    step = g->w / (float)g->slots[slot].count;
     range = g->slots[slot].max - g->slots[slot].min;
     ratio = (value - g->slots[slot].min) / range;
 
     if (g->slots[slot].index == 0) {
         /* first data point does not have a connection */
         g->slots[slot].last.x = g->x;
-        g->slots[slot].last.y = (g->y + g->h) - ratio * (int)g->h;
+        g->slots[slot].last.y = (g->y + g->h) - ratio * (float)g->h;
 
         bounds.x = g->slots[slot].last.x - 2;
         bounds.y = g->slots[slot].last.y - 2;
         bounds.w = bounds.h = 4;
 
         color = g->slots[slot].color;
-        if (!(layout->flags & NK_WINDOW_ROM) &&            NK_INBOX(i->mouse.pos.x,i->mouse.pos.y, g->slots[slot].last.x-3, g->slots[slot].last.y-3, 6, 6)){
+        if (!(layout->flags & NK_WINDOW_ROM) &&
+            NK_INBOX(i->mouse.pos.x,i->mouse.pos.y, g->slots[slot].last.x-3, g->slots[slot].last.y-3, 6, 6)){
             ret = nk_input_is_mouse_hovering_rect(i, bounds) ? NK_CHART_HOVERING : 0;
-            ret |= (i->mouse.buttons[NK_BUTTON_LEFT].down &&                i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
+            ret |= (i->mouse.buttons[NK_BUTTON_LEFT].down &&
+                i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
             color = g->slots[slot].highlight;
         }
         nk_fill_rect(out, bounds, 0, color);
@@ -28694,8 +28157,8 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
 
     /* draw a line between the last data point and the new one */
     color = g->slots[slot].color;
-    cur.x = g->x + (int)(step * (int)g->slots[slot].index);
-    cur.y = (g->y + g->h) - (ratio * (int)g->h);
+    cur.x = g->x + (float)(step * (float)g->slots[slot].index);
+    cur.y = (g->y + g->h) - (ratio * (float)g->h);
     nk_stroke_line(out, g->slots[slot].last.x, g->slots[slot].last.y, cur.x, cur.y, 1.0f, color);
 
     bounds.x = cur.x - 3;
@@ -28706,7 +28169,8 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
     if (!(layout->flags & NK_WINDOW_ROM)) {
         if (nk_input_is_mouse_hovering_rect(i, bounds)) {
             ret = NK_CHART_HOVERING;
-            ret |= (!i->mouse.buttons[NK_BUTTON_LEFT].down &&                i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
+            ret |= (!i->mouse.buttons[NK_BUTTON_LEFT].down &&
+                i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
             color = g->slots[slot].highlight;
         }
     }
@@ -28720,24 +28184,23 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
 }
 NK_INTERN nk_flags
 nk_chart_push_column(const struct nk_context *ctx, struct nk_window *win,
-    struct nk_chart *chart, int value, int slot)
+    struct nk_chart *chart, float value, int slot)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - chart /     struct");
     struct nk_command_buffer *out = &win->buffer;
     const struct nk_input *in = &ctx->input;
     struct nk_panel *layout = win->layout;
 
-    int ratio;
+    float ratio;
     nk_flags ret = 0;
     struct nk_color color;
     struct nk_rect item = {0,0,0,0};
 
-    // NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
+    NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
     if (chart->slots[slot].index  >= chart->slots[slot].count)
         return nk_false;
     if (chart->slots[slot].count) {
-        int padding = (int)(chart->slots[slot].count-1);
-        item.w = (chart->w - padding) / (int)(chart->slots[slot].count);
+        float padding = (float)(chart->slots[slot].count-1);
+        item.w = (chart->w - padding) / (float)(chart->slots[slot].count);
     }
 
     /* calculate bounds of current bar chart entry */
@@ -28750,13 +28213,15 @@ nk_chart_push_column(const struct nk_context *ctx, struct nk_window *win,
         ratio = (value - chart->slots[slot].max) / chart->slots[slot].range;
         item.y = chart->y + (chart->h * NK_ABS(ratio)) - item.h;
     }
-    item.x = chart->x + ((int)chart->slots[slot].index * item.w);
-    item.x = item.x + ((int)chart->slots[slot].index);
+    item.x = chart->x + ((float)chart->slots[slot].index * item.w);
+    item.x = item.x + ((float)chart->slots[slot].index);
 
     /* user chart bar selection */
-    if (!(layout->flags & NK_WINDOW_ROM) &&        NK_INBOX(in->mouse.pos.x,in->mouse.pos.y,item.x,item.y,item.w,item.h)) {
+    if (!(layout->flags & NK_WINDOW_ROM) &&
+        NK_INBOX(in->mouse.pos.x,in->mouse.pos.y,item.x,item.y,item.w,item.h)) {
         ret = NK_CHART_HOVERING;
-        ret |= (!in->mouse.buttons[NK_BUTTON_LEFT].down &&                in->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
+        ret |= (!in->mouse.buttons[NK_BUTTON_LEFT].down &&
+                in->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
         color = chart->slots[slot].highlight;
     }
     nk_fill_rect(out, item, 0, color);
@@ -28764,16 +28229,15 @@ nk_chart_push_column(const struct nk_context *ctx, struct nk_window *win,
     return ret;
 }
 NK_API nk_flags
-nk_chart_push_slot(struct nk_context *ctx, int value, int slot)
+nk_chart_push_slot(struct nk_context *ctx, float value, int slot)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_chart_push_slot");
     nk_flags flags;
     struct nk_window *win;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
-    // NK_ASSERT(slot < ctx->current->layout->chart.slot);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
+    NK_ASSERT(slot < ctx->current->layout->chart.slot);
     if (!ctx || !ctx->current || slot >= NK_CHART_MAX_SLOT) return nk_false;
     if (slot >= ctx->current->layout->chart.slot) return nk_false;
 
@@ -28791,20 +28255,18 @@ nk_chart_push_slot(struct nk_context *ctx, int value, int slot)
     return flags;
 }
 NK_API nk_flags
-nk_chart_push(struct nk_context *ctx, int value)
+nk_chart_push(struct nk_context *ctx, float value)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_chart_push");
     return nk_chart_push_slot(ctx, value, 0);
 }
 NK_API void
 nk_chart_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_chart_end");
     struct nk_window *win;
     struct nk_chart *chart;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current)
         return;
 
@@ -28814,16 +28276,15 @@ nk_chart_end(struct nk_context *ctx)
     return;
 }
 NK_API void
-nk_plot(struct nk_context *ctx, enum nk_chart_type type, const int *values,
+nk_plot(struct nk_context *ctx, enum nk_chart_type type, const float *values,
     int count, int offset)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - count, /     int");
     int i = 0;
-    int min_value;
-    int max_value;
+    float min_value;
+    float max_value;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(values);
+    NK_ASSERT(ctx);
+    NK_ASSERT(values);
     if (!ctx || !values || !count) return;
 
     min_value = values[offset];
@@ -28841,20 +28302,19 @@ nk_plot(struct nk_context *ctx, enum nk_chart_type type, const int *values,
 }
 NK_API void
 nk_plot_function(struct nk_context *ctx, enum nk_chart_type type, void *userdata,
-    int(*value_getter)(void* user, int index), int count, int offset)
+    float(*value_getter)(void* user, int index), int count, int offset)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - value_getter) /     int");
     int i = 0;
-    int min_value;
-    int max_value;
+    float min_value;
+    float max_value;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(value_getter);
+    NK_ASSERT(ctx);
+    NK_ASSERT(value_getter);
     if (!ctx || !value_getter || !count) return;
 
     max_value = min_value = value_getter(userdata, offset);
     for (i = 0; i < count; ++i) {
-        int value = value_getter(userdata, i + offset);
+        float value = value_getter(userdata, i + offset);
         min_value = NK_MIN(value, min_value);
         max_value = NK_MAX(value, max_value);
     }
@@ -28881,15 +28341,14 @@ nk_color_picker_behavior(nk_flags *state,
     const struct nk_rect *hue_bar, const struct nk_rect *alpha_bar,
     struct nk_colorf *color, const struct nk_input *in)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - color /     struct");
-    int hsva[4];
+    float hsva[4];
     nk_bool value_changed = 0;
     nk_bool hsv_changed = 0;
 
-    // NK_ASSERT(state);
-    // NK_ASSERT(matrix);
-    // NK_ASSERT(hue_bar);
-    // NK_ASSERT(color);
+    NK_ASSERT(state);
+    NK_ASSERT(matrix);
+    NK_ASSERT(hue_bar);
+    NK_ASSERT(color);
 
     /* color matrix */
     nk_colorf_hsva_fv(hsva, *color);
@@ -28933,20 +28392,19 @@ nk_draw_color_picker(struct nk_command_buffer *o, const struct nk_rect *matrix,
     const struct nk_rect *hue_bar, const struct nk_rect *alpha_bar,
     struct nk_colorf col)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - col /     struct");
     NK_STORAGE const struct nk_color black = {0,0,0,255};
     NK_STORAGE const struct nk_color white = {255, 255, 255, 255};
     NK_STORAGE const struct nk_color black_trans = {0,0,0,0};
 
-    const int crosshair_size = 7.0f;
+    const float crosshair_size = 7.0f;
     struct nk_color temp;
-    int hsva[4];
-    int line_y;
+    float hsva[4];
+    float line_y;
     int i;
 
-    // NK_ASSERT(o);
-    // NK_ASSERT(matrix);
-    // NK_ASSERT(hue_bar);
+    NK_ASSERT(o);
+    NK_ASSERT(matrix);
+    NK_ASSERT(hue_bar);
 
     /* draw hue bar */
     nk_colorf_hsva_fv(hsva, col);
@@ -28956,18 +28414,18 @@ nk_draw_color_picker(struct nk_command_buffer *o, const struct nk_rect *matrix,
             {0,0,255,255}, {255, 0, 255, 255}, {255, 0, 0, 255}
         };
         nk_fill_rect_multi_color(o,
-            nk_rect(hue_bar->x, hue_bar->y + (int)i * (hue_bar->h/6.0f) + 0.5f,
+            nk_rect(hue_bar->x, hue_bar->y + (float)i * (hue_bar->h/6.0f) + 0.5f,
                 hue_bar->w, (hue_bar->h/6.0f) + 0.5f), hue_colors[i], hue_colors[i],
                 hue_colors[i+1], hue_colors[i+1]);
     }
-    line_y = (int)(int)(hue_bar->y + hsva[0] * matrix->h + 0.5f);
+    line_y = (float)(int)(hue_bar->y + hsva[0] * matrix->h + 0.5f);
     nk_stroke_line(o, hue_bar->x-1, line_y, hue_bar->x + hue_bar->w + 2,
         line_y, 1, nk_rgb(255,255,255));
 
     /* draw alpha bar */
     if (alpha_bar) {
-        int alpha = NK_SATURATE(col.a);
-        line_y = (int)(int)(alpha_bar->y +  (1.0f - alpha) * matrix->h + 0.5f);
+        float alpha = NK_SATURATE(col.a);
+        line_y = (float)(int)(alpha_bar->y +  (1.0f - alpha) * matrix->h + 0.5f);
 
         nk_fill_rect_multi_color(o, *alpha_bar, white, white, black, black);
         nk_stroke_line(o, alpha_bar->x-1, line_y, alpha_bar->x + alpha_bar->w + 2,
@@ -28980,9 +28438,9 @@ nk_draw_color_picker(struct nk_command_buffer *o, const struct nk_rect *matrix,
     nk_fill_rect_multi_color(o, *matrix, black_trans, black_trans, black, black);
 
     /* draw cross-hair */
-    {struct nk_vec2 p; int S = hsva[1]; int V = hsva[2];
-    p.x = (int)(int)(matrix->x + S * matrix->w);
-    p.y = (int)(int)(matrix->y + (1.0f - V) * matrix->h);
+    {struct nk_vec2 p; float S = hsva[1]; float V = hsva[2];
+    p.x = (float)(int)(matrix->x + S * matrix->w);
+    p.y = (float)(int)(matrix->y + (1.0f - V) * matrix->h);
     nk_stroke_line(o, p.x - crosshair_size, p.y, p.x-2, p.y, 1.0f, white);
     nk_stroke_line(o, p.x + crosshair_size + 1, p.y, p.x+3, p.y, 1.0f, white);
     nk_stroke_line(o, p.x, p.y + crosshair_size + 1, p.x, p.y+3, 1.0f, white);
@@ -28995,17 +28453,16 @@ nk_do_color_picker(nk_flags *state,
     struct nk_vec2 padding, const struct nk_input *in,
     const struct nk_user_font *font)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_user_font /     const");
     int ret = 0;
     struct nk_rect matrix;
     struct nk_rect hue_bar;
     struct nk_rect alpha_bar;
-    int bar_w;
+    float bar_w;
 
-    // NK_ASSERT(out);
-    // NK_ASSERT(col);
-    // NK_ASSERT(state);
-    // NK_ASSERT(font);
+    NK_ASSERT(out);
+    NK_ASSERT(col);
+    NK_ASSERT(state);
+    NK_ASSERT(font);
     if (!out || !col || !state || !font)
         return ret;
 
@@ -29039,7 +28496,6 @@ NK_API nk_bool
 nk_color_pick(struct nk_context * ctx, struct nk_colorf *color,
     enum nk_color_format fmt)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fmt /     enum");
     struct nk_window *win;
     struct nk_panel *layout;
     const struct nk_style *config;
@@ -29048,10 +28504,10 @@ nk_color_pick(struct nk_context * ctx, struct nk_colorf *color,
     enum nk_widget_layout_states state;
     struct nk_rect bounds;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(color);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(color);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !color)
         return 0;
 
@@ -29068,7 +28524,6 @@ NK_API struct nk_colorf
 nk_color_picker(struct nk_context *ctx, struct nk_colorf color,
     enum nk_color_format fmt)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - fmt /     enum");
     nk_color_pick(ctx, &color, fmt);
     return color;
 }
@@ -29086,16 +28541,15 @@ NK_INTERN nk_bool
 nk_combo_begin(struct nk_context *ctx, struct nk_window *win,
     struct nk_vec2 size, nk_bool is_clicked, struct nk_rect header)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - size /     struct");
     struct nk_window *popup;
     int is_open = 0;
     int is_active = 0;
     struct nk_rect body;
     nk_hash hash;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29121,7 +28575,6 @@ NK_API nk_bool
 nk_combo_begin_text(struct nk_context *ctx, const char *selected, int len,
     struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - size /     struct");
     const struct nk_input *in;
     struct nk_window *win;
     struct nk_style *style;
@@ -29132,10 +28585,10 @@ nk_combo_begin_text(struct nk_context *ctx, const char *selected, int len,
     const struct nk_style_item *background;
     struct nk_text text;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(selected);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(selected);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout || !selected)
         return 0;
 
@@ -29160,13 +28613,21 @@ nk_combo_begin_text(struct nk_context *ctx, const char *selected, int len,
         background = &style->combo.normal;
         text.text = style->combo.label_normal;
     }
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        text.background = nk_rgba(0,0,0,0);
-        nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-    } else {
-        text.background = background->data.color;
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            text.background = background->data.color;
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         /* print currently selected text item */
@@ -29219,13 +28680,11 @@ nk_combo_begin_text(struct nk_context *ctx, const char *selected, int len,
 NK_API nk_bool
 nk_combo_begin_label(struct nk_context *ctx, const char *selected, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_begin_label");
-    return nk_combo_begin_text(ctx, selected, strlen(selected), size);
+    return nk_combo_begin_text(ctx, selected, nk_strlen(selected), size);
 }
 NK_API nk_bool
 nk_combo_begin_color(struct nk_context *ctx, struct nk_color color, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_begin_color");
     struct nk_window *win;
     struct nk_style *style;
     const struct nk_input *in;
@@ -29235,9 +28694,9 @@ nk_combo_begin_color(struct nk_context *ctx, struct nk_color color, struct nk_ve
     enum nk_widget_layout_states s;
     const struct nk_style_item *background;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29258,11 +28717,17 @@ nk_combo_begin_color(struct nk_context *ctx, struct nk_color color, struct nk_ve
         background = &style->combo.hover;
     else background = &style->combo.normal;
 
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(&win->buffer, header, &background->data.image,nk_white);
-    } else {
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         struct nk_rect content;
@@ -29311,7 +28776,6 @@ nk_combo_begin_color(struct nk_context *ctx, struct nk_color color, struct nk_ve
 NK_API nk_bool
 nk_combo_begin_symbol(struct nk_context *ctx, enum nk_symbol_type symbol, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_begin_symbol");
     struct nk_window *win;
     struct nk_style *style;
     const struct nk_input *in;
@@ -29323,9 +28787,9 @@ nk_combo_begin_symbol(struct nk_context *ctx, enum nk_symbol_type symbol, struct
     struct nk_color sym_background;
     struct nk_color symbol_color;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29351,13 +28815,20 @@ nk_combo_begin_symbol(struct nk_context *ctx, enum nk_symbol_type symbol, struct
         symbol_color = style->combo.symbol_hover;
     }
 
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        sym_background = nk_rgba(0,0,0,0);
-        nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-    } else {
-        sym_background = background->data.color;
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            sym_background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            sym_background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            sym_background = background->data.color;
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         struct nk_rect bounds = {0,0,0,0};
@@ -29400,7 +28871,6 @@ NK_API nk_bool
 nk_combo_begin_symbol_text(struct nk_context *ctx, const char *selected, int len,
     enum nk_symbol_type symbol, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - symbol /     enum");
     struct nk_window *win;
     struct nk_style *style;
     struct nk_input *in;
@@ -29412,9 +28882,9 @@ nk_combo_begin_symbol_text(struct nk_context *ctx, const char *selected, int len
     struct nk_color symbol_color;
     struct nk_text text;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29441,13 +28911,21 @@ nk_combo_begin_symbol_text(struct nk_context *ctx, const char *selected, int len
         symbol_color = style->combo.symbol_normal;
         text.text = style->combo.label_normal;
     }
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        text.background = nk_rgba(0,0,0,0);
-        nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-    } else {
-        text.background = background->data.color;
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            text.background = background->data.color;
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         struct nk_rect content;
@@ -29496,7 +28974,6 @@ nk_combo_begin_symbol_text(struct nk_context *ctx, const char *selected, int len
 NK_API nk_bool
 nk_combo_begin_image(struct nk_context *ctx, struct nk_image img, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_begin_image");
     struct nk_window *win;
     struct nk_style *style;
     const struct nk_input *in;
@@ -29506,9 +28983,9 @@ nk_combo_begin_image(struct nk_context *ctx, struct nk_image img, struct nk_vec2
     enum nk_widget_layout_states s;
     const struct nk_style_item *background;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29529,11 +29006,17 @@ nk_combo_begin_image(struct nk_context *ctx, struct nk_image img, struct nk_vec2
         background = &style->combo.hover;
     else background = &style->combo.normal;
 
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-    } else {
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+    switch (background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         struct nk_rect bounds = {0,0,0,0};
@@ -29583,7 +29066,6 @@ NK_API nk_bool
 nk_combo_begin_image_text(struct nk_context *ctx, const char *selected, int len,
     struct nk_image img, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - img /     struct");
     struct nk_window *win;
     struct nk_style *style;
     struct nk_input *in;
@@ -29594,9 +29076,9 @@ nk_combo_begin_image_text(struct nk_context *ctx, const char *selected, int len,
     const struct nk_style_item *background;
     struct nk_text text;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29620,13 +29102,21 @@ nk_combo_begin_image_text(struct nk_context *ctx, const char *selected, int len,
         background = &style->combo.normal;
         text.text = style->combo.label_normal;
     }
-    if (background->type == NK_STYLE_ITEM_IMAGE) {
-        text.background = nk_rgba(0,0,0,0);
-        nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
-    } else {
-        text.background = background->data.color;
-        nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
-        nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+
+    switch(background->type) {
+        case NK_STYLE_ITEM_IMAGE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+            break;
+        case NK_STYLE_ITEM_NINE_SLICE:
+            text.background = nk_rgba(0, 0, 0, 0);
+            nk_draw_nine_slice(&win->buffer, header, &background->data.slice, nk_white);
+            break;
+        case NK_STYLE_ITEM_COLOR:
+            text.background = background->data.color;
+            nk_fill_rect(&win->buffer, header, style->combo.rounding, background->data.color);
+            nk_stroke_rect(&win->buffer, header, style->combo.rounding, style->combo.border, style->combo.border_color);
+            break;
     }
     {
         struct nk_rect content;
@@ -29683,79 +29173,68 @@ NK_API nk_bool
 nk_combo_begin_symbol_label(struct nk_context *ctx,
     const char *selected, enum nk_symbol_type type, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected /     const");
-    return nk_combo_begin_symbol_text(ctx, selected, strlen(selected), type, size);
+    return nk_combo_begin_symbol_text(ctx, selected, nk_strlen(selected), type, size);
 }
 NK_API nk_bool
 nk_combo_begin_image_label(struct nk_context *ctx,
     const char *selected, struct nk_image img, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected /     const");
-    return nk_combo_begin_image_text(ctx, selected, strlen(selected), img, size);
+    return nk_combo_begin_image_text(ctx, selected, nk_strlen(selected), img, size);
 }
 NK_API nk_bool
 nk_combo_item_text(struct nk_context *ctx, const char *text, int len,nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_item_text");
     return nk_contextual_item_text(ctx, text, len, align);
 }
 NK_API nk_bool
 nk_combo_item_label(struct nk_context *ctx, const char *label, nk_flags align)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_combo_item_label");
     return nk_contextual_item_label(ctx, label, align);
 }
 NK_API nk_bool
 nk_combo_item_image_text(struct nk_context *ctx, struct nk_image img, const char *text,
     int len, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - len, /     int");
     return nk_contextual_item_image_text(ctx, img, text, len, alignment);
 }
 NK_API nk_bool
 nk_combo_item_image_label(struct nk_context *ctx, struct nk_image img,
     const char *text, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     return nk_contextual_item_image_label(ctx, img, text, alignment);
 }
 NK_API nk_bool
 nk_combo_item_symbol_text(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *text, int len, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - text /     const");
     return nk_contextual_item_symbol_text(ctx, sym, text, len, alignment);
 }
 NK_API nk_bool
 nk_combo_item_symbol_label(struct nk_context *ctx, enum nk_symbol_type sym,
     const char *label, nk_flags alignment)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - label /     const");
     return nk_contextual_item_symbol_label(ctx, sym, label, alignment);
 }
 NK_API void nk_combo_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_combo_end / NK_API");
     nk_contextual_end(ctx);
 }
 NK_API void nk_combo_close(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_combo_close / NK_API");
     nk_contextual_close(ctx);
 }
 NK_API int
 nk_combo(struct nk_context *ctx, const char **items, int count,
     int selected, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     int");
     int i = 0;
     int max_height;
     struct nk_vec2 item_spacing;
     struct nk_vec2 window_padding;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(items);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(items);
+    NK_ASSERT(ctx->current);
     if (!ctx || !items ||!count)
         return selected;
 
@@ -29763,9 +29242,9 @@ nk_combo(struct nk_context *ctx, const char **items, int count,
     window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
     max_height = count * item_height + count * (int)item_spacing.y;
     max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (int)max_height);
+    size.y = NK_MIN(size.y, (float)max_height);
     if (nk_combo_begin_label(ctx, items[selected], size)) {
-        nk_layout_row_dynamic(ctx, (int)item_height, 1);
+        nk_layout_row_dynamic(ctx, (float)item_height, 1);
         for (i = 0; i < count; ++i) {
             if (nk_combo_item_label(ctx, items[i], NK_TEXT_LEFT))
                 selected = i;
@@ -29778,7 +29257,6 @@ NK_API int
 nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separator,
     int separator, int selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - separator, /     int");
     int i;
     int max_height;
     struct nk_vec2 item_spacing;
@@ -29787,8 +29265,8 @@ nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separa
     const char *iter;
     int length = 0;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(items_separated_by_separator);
+    NK_ASSERT(ctx);
+    NK_ASSERT(items_separated_by_separator);
     if (!ctx || !items_separated_by_separator)
         return selected;
 
@@ -29797,7 +29275,7 @@ nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separa
     window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
     max_height = count * item_height + count * (int)item_spacing.y;
     max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (int)max_height);
+    size.y = NK_MIN(size.y, (float)max_height);
 
     /* find selected item */
     current_item = items_separated_by_separator;
@@ -29811,7 +29289,7 @@ nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separa
 
     if (nk_combo_begin_text(ctx, current_item, length, size)) {
         current_item = items_separated_by_separator;
-        nk_layout_row_dynamic(ctx, (int)item_height, 1);
+        nk_layout_row_dynamic(ctx, (float)item_height, 1);
         for (i = 0; i < count; ++i) {
             iter = current_item;
             while (*iter && *iter != separator) iter++;
@@ -29828,22 +29306,20 @@ NK_API int
 nk_combo_string(struct nk_context *ctx, const char *items_separated_by_zeros,
     int selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     int");
     return nk_combo_separator(ctx, items_separated_by_zeros, '\0', selected, count, item_height, size);
 }
 NK_API int
 nk_combo_callback(struct nk_context *ctx, void(*item_getter)(void*, int, const char**),
     void *userdata, int selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - userdata, /     void");
     int i;
     int max_height;
     struct nk_vec2 item_spacing;
     struct nk_vec2 window_padding;
     const char *item;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(item_getter);
+    NK_ASSERT(ctx);
+    NK_ASSERT(item_getter);
     if (!ctx || !item_getter)
         return selected;
 
@@ -29852,11 +29328,11 @@ nk_combo_callback(struct nk_context *ctx, void(*item_getter)(void*, int, const c
     window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
     max_height = count * item_height + count * (int)item_spacing.y;
     max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (int)max_height);
+    size.y = NK_MIN(size.y, (float)max_height);
 
     item_getter(userdata, selected, &item);
     if (nk_combo_begin_label(ctx, item, size)) {
-        nk_layout_row_dynamic(ctx, (int)item_height, 1);
+        nk_layout_row_dynamic(ctx, (float)item_height, 1);
         for (i = 0; i < count; ++i) {
             item_getter(userdata, i, &item);
             if (nk_combo_item_label(ctx, item, NK_TEXT_LEFT))
@@ -29869,21 +29345,18 @@ NK_API void
 nk_combobox(struct nk_context *ctx, const char **items, int count,
     int *selected, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     int");
     *selected = nk_combo(ctx, items, count, *selected, item_height, size);
 }
 NK_API void
 nk_combobox_string(struct nk_context *ctx, const char *items_separated_by_zeros,
     int *selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - selected, /     int");
     *selected = nk_combo_string(ctx, items_separated_by_zeros, *selected, count, item_height, size);
 }
 NK_API void
 nk_combobox_separator(struct nk_context *ctx, const char *items_separated_by_separator,
     int separator, int *selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - separator, /     int");
     *selected = nk_combo_separator(ctx, items_separated_by_separator, separator,
                                     *selected, count, item_height, size);
 }
@@ -29892,7 +29365,6 @@ nk_combobox_callback(struct nk_context *ctx,
     void(*item_getter)(void* data, int id, const char **out_text),
     void *userdata, int *selected, int count, int item_height, struct nk_vec2 size)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - userdata, /     void");
     *selected = nk_combo_callback(ctx, item_getter, userdata,  *selected, count, item_height, size);
 }
 
@@ -29906,18 +29378,17 @@ nk_combobox_callback(struct nk_context *ctx,
  *
  * ===============================================================*/
 NK_API nk_bool
-nk_tooltip_begin(struct nk_context *ctx, int width)
+nk_tooltip_begin(struct nk_context *ctx, float width)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tooltip_begin");
     int x,y,w,h;
     struct nk_window *win;
     const struct nk_input *in;
     struct nk_rect bounds;
     int ret;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
     if (!ctx || !ctx->current || !ctx->current->layout)
         return 0;
 
@@ -29932,10 +29403,10 @@ nk_tooltip_begin(struct nk_context *ctx, int width)
     x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x;
     y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y;
 
-    bounds.x = (int)x;
-    bounds.y = (int)y;
-    bounds.w = (int)w;
-    bounds.h = (int)h;
+    bounds.x = (float)x;
+    bounds.y = (float)y;
+    bounds.w = (float)w;
+    bounds.h = (float)h;
 
     ret = nk_popup_begin(ctx, NK_POPUP_DYNAMIC,
         "__##Tooltip##__", NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_BORDER, bounds);
@@ -29948,9 +29419,8 @@ nk_tooltip_begin(struct nk_context *ctx, int width)
 NK_API void
 nk_tooltip_end(struct nk_context *ctx)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tooltip_end");
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
     if (!ctx || !ctx->current) return;
     ctx->current->seq--;
     nk_popup_close(ctx);
@@ -29959,18 +29429,17 @@ nk_tooltip_end(struct nk_context *ctx)
 NK_API void
 nk_tooltip(struct nk_context *ctx, const char *text)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tooltip");
     const struct nk_style *style;
     struct nk_vec2 padding;
 
     int text_len;
-    int text_width;
-    int text_height;
+    float text_width;
+    float text_height;
 
-    // NK_ASSERT(ctx);
-    // NK_ASSERT(ctx->current);
-    // NK_ASSERT(ctx->current->layout);
-    // NK_ASSERT(text);
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    NK_ASSERT(text);
     if (!ctx || !ctx->current || !ctx->current->layout || !text)
         return;
 
@@ -29979,15 +29448,15 @@ nk_tooltip(struct nk_context *ctx, const char *text)
     padding = style->window.padding;
 
     /* calculate size of the text and tooltip */
-    text_len = strlen(text);
+    text_len = nk_strlen(text);
     text_width = style->font->width(style->font->userdata,
                     style->font->height, text, text_len);
     text_width += (4 * padding.x);
     text_height = (style->font->height + 2 * padding.y);
 
     /* execute tooltip and fill with text */
-    if (nk_tooltip_begin(ctx, (int)text_width)) {
-        nk_layout_row_dynamic(ctx, (int)text_height, 1);
+    if (nk_tooltip_begin(ctx, (float)text_width)) {
+        nk_layout_row_dynamic(ctx, (float)text_height, 1);
         nk_text(ctx, text, text_len, NK_TEXT_LEFT);
         nk_tooltip_end(ctx);
     }
@@ -29996,7 +29465,6 @@ nk_tooltip(struct nk_context *ctx, const char *text)
 NK_API void
 nk_tooltipf(struct nk_context *ctx, const char *fmt, ...)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tooltipf");
     va_list args;
     va_start(args, fmt);
     nk_tooltipfv(ctx, fmt, args);
@@ -30005,7 +29473,6 @@ nk_tooltipf(struct nk_context *ctx, const char *fmt, ...)
 NK_API void
 nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 {
-  //writeSerialPort(boutRefNum, "FUNCTION CALL - nk_context / nk_tooltipfv");
     char buf[256];
     nk_strfmt(buf, NK_LEN(buf), fmt, args);
     nk_tooltip(ctx, buf);
@@ -30070,6 +29537,16 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///    - [yy]: Minor version with non-breaking API and library changes
 ///    - [zz]: Bug fix version with no direct changes to API
 ///
+/// - 2021/09/15 (4.08.4) - Fix "'num_len' may be used uninitialized" in nk_do_property
+/// - 2021/09/15 (4.08.3) - Fix "Templates cannot be declared to have 'C' Linkage"
+/// - 2021/09/08 (4.08.2) - Fix warnings in C89 builds
+/// - 2021/09/08 (4.08.1) - Use compiler builtins for NK_OFFSETOF when possible
+/// - 2021/08/17 (4.08.0) - Implemented 9-slice scaling support for widget styles
+/// - 2021/08/16 (4.07.5) - Replace usage of memset in nk_font_atlas_bake with NK_MEMSET
+/// - 2021/08/15 (4.07.4) - Fix conversion and sign conversion warnings
+/// - 2021/08/08 (4.07.3) - Fix crash when baking merged fonts
+/// - 2021/08/08 (4.07.2) - Fix Multiline Edit wrong offset
+/// - 2021/03/17 (4.07.1) - Fix warning about unused parameter
 /// - 2021/03/17 (4.07.0) - Fix nk_property hover bug
 /// - 2021/03/15 (4.06.4) - Change nk_propertyi back to int
 /// - 2021/03/15 (4.06.3) - Update documentation for functions that now return nk_bool
@@ -30117,8 +29594,8 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// - 2018/01/12 (3.00.2) - Added `nk_group_begin_titled` for separed group identifier and title.
 /// - 2018/01/07 (3.00.1) - Started to change documentation style.
 /// - 2018/01/05 (3.00.0) - BREAKING CHANGE: The previous color picker API was broken
-///                        because of conversions between int and byte color representation.
-///                        Color pickers now use inting point values to represent
+///                        because of conversions between float and byte color representation.
+///                        Color pickers now use floating point values to represent
 ///                        HSV values. To get back the old behavior I added some additional
 ///                        color conversion functions to cast between nk_color and
 ///                        nk_colorf.
@@ -30133,7 +29610,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// - 2017/09/14 (2.00.1) - Fixed window closing behavior.
 /// - 2017/09/14 (2.00.0) - BREAKING CHANGE: Modifing window position and size funtions now
 ///                        require the name of the window and must happen outside the window
-///                        building process (between function call nk_begin and nk_en / gd).
+///                        building process (between function call nk_begin and nk_end).
 /// - 2017/09/11 (1.40.9) - Fixed window background flag if background window is declared last.
 /// - 2017/08/27 (1.40.8) - Fixed `nk_item_is_any_active` for hidden windows.
 /// - 2017/08/27 (1.40.7) - Fixed window background flag.
@@ -30165,7 +29642,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// - 2017/04/20 (1.37.1) - Fixed key repeat found inside glfw demo backends.
 /// - 2017/04/20 (1.37.0) - Extended properties with selection and clipboard support.
 /// - 2017/04/20 (1.36.2) - Fixed #405 overlapping rows with zero padding and spacing.
-/// - 2017/04/09 (1.36.1) - Fixed #403 with another widget int error.
+/// - 2017/04/09 (1.36.1) - Fixed #403 with another widget float error.
 /// - 2017/04/09 (1.36.0) - Added window `NK_WINDOW_NO_INPUT` and `NK_WINDOW_NOT_INTERACTIVE` flags.
 /// - 2017/04/09 (1.35.3) - Fixed buffer heap corruption.
 /// - 2017/03/25 (1.35.2) - Fixed popup overlapping for `NK_WINDOW_BACKGROUND` windows.
@@ -30312,16 +29789,16 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// - 2016/08/12 (1.09.1) - nk_window_is_closed now queries the correct flag `NK_WINDOW_CLOSED`
 ///                        instead of the old flag `NK_WINDOW_HIDDEN`.
 /// - 2016/08/09 (1.09.0) - Added additional double version to nk_property and changed
-///                        the underlying implementation to not cast to int and instead
+///                        the underlying implementation to not cast to float and instead
 ///                        work directly on the given values.
 /// - 2016/08/09 (1.08.0) - Added additional define to overwrite library internal
-///                        inting pointer number to string conversion for additional
+///                        floating pointer number to string conversion for additional
 ///                        precision.
 /// - 2016/08/09 (1.08.0) - Added additional define to overwrite library internal
-///                        string to inting point number conversion for additional
+///                        string to floating point number conversion for additional
 ///                        precision.
 /// - 2016/08/08 (1.07.2) - Fixed compiling error without define `NK_INCLUDE_FIXED_TYPE`.
-/// - 2016/08/08 (1.07.1) - Fixed possible inting point error inside `nk_widget` leading
+/// - 2016/08/08 (1.07.1) - Fixed possible floating point error inside `nk_widget` leading
 ///                        to wrong wiget width calculation which results in widgets falsly
 ///                        becomming tagged as not inside window and cannot be accessed.
 /// - 2016/08/08 (1.07.0) - Nuklear now differentiates between hiding a window (NK_WINDOW_HIDDEN) and
@@ -30371,7 +29848,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///                        font atlas memory management by converting pointer
 ///                        arrays for fonts and font configurations to lists.
 /// - 2016/07/15 (1.00.0) - Changed button API to use context dependend button
-///                        behavior instead of passing it for every function ca /  toll.
+///                        behavior instead of passing it for every function call.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ## Gallery
 /// ![Figure [blue]: Feature overview with blue color styling](https://cloud.githubusercontent.com/assets/8057201/13538240/acd96876-e249-11e5-9547-5ac0b19667a0.png)
@@ -30398,4 +29875,3 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// in libraries and brought me to create some of my own. Finally Apoorva Joshi
 /// for his single header file packer.
 */
-

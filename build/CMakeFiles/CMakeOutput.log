@@ -33,13 +33,13 @@ The CXX compiler identification is GNU, found in "/home/camh/Documents/Retro68kA
 Determining if the C compiler works passed with the following output:
 Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_f9066/fast && /usr/bin/make -f CMakeFiles/cmTC_f9066.dir/build.make CMakeFiles/cmTC_f9066.dir/build
+Run Build Command(s):/usr/bin/make cmTC_c3aac/fast && /usr/bin/make -f CMakeFiles/cmTC_c3aac.dir/build.make CMakeFiles/cmTC_c3aac.dir/build
 make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_f9066.dir/testCCompiler.c.obj
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc    -o CMakeFiles/cmTC_f9066.dir/testCCompiler.c.obj   -c /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp/testCCompiler.c
-Linking C executable cmTC_f9066
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f9066.dir/link.txt --verbose=1
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc      CMakeFiles/cmTC_f9066.dir/testCCompiler.c.obj  -o cmTC_f9066 
+Building C object CMakeFiles/cmTC_c3aac.dir/testCCompiler.c.obj
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc    -o CMakeFiles/cmTC_c3aac.dir/testCCompiler.c.obj   -c /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_c3aac
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c3aac.dir/link.txt --verbose=1
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc      CMakeFiles/cmTC_c3aac.dir/testCCompiler.c.obj  -o cmTC_c3aac 
 make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
 
 
@@ -47,18 +47,18 @@ make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/b
 Detecting C compiler ABI info compiled with the following output:
 Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_107ff/fast && /usr/bin/make -f CMakeFiles/cmTC_107ff.dir/build.make CMakeFiles/cmTC_107ff.dir/build
+Run Build Command(s):/usr/bin/make cmTC_98fa6/fast && /usr/bin/make -f CMakeFiles/cmTC_98fa6.dir/build.make CMakeFiles/cmTC_98fa6.dir/build
 make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc   -v -o CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c
+Building C object CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc   -v -o CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c
 Using built-in specs.
 COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc
 Target: m68k-apple-macos
 Configured with: /home/camh/Retro68/gcc/configure --target=m68k-apple-macos --prefix=/home/camh/Retro68-build/toolchain/ --enable-languages=c,c++ --with-arch=m68k --with-cpu=m68000 --disable-libssp MAKEINFO=missing
 Thread model: single
 gcc version 9.1.0 (GCC) 
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1 -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj -version -o /tmp/ccgl7NCi.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1 -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj -version -o /tmp/ccSgyjPG.s
 GNU C17 (GCC) version 9.1.0 (m68k-apple-macos)
 	compiled by GNU C version 9.3.0, GMP version 6.2.0, MPFR version 4.0.2, MPC version 1.1.0, isl version none
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
@@ -73,14 +73,14 @@ GNU C17 (GCC) version 9.1.0 (m68k-apple-macos)
 	compiled by GNU C version 9.3.0, GMP version 6.2.0, MPFR version 4.0.2, MPC version 1.1.0, isl version none
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
 Compiler executable checksum: 68baab70957df643ffb4605a09112146
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj /tmp/ccgl7NCi.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj /tmp/ccSgyjPG.s
 COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/
 LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
-Linking C executable cmTC_107ff
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_107ff.dir/link.txt --verbose=1
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc     -v CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj  -o cmTC_107ff 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000'
+Linking C executable cmTC_98fa6
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98fa6.dir/link.txt --verbose=1
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc     -v CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj  -o cmTC_98fa6 
 Using built-in specs.
 COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc
 COLLECT_LTO_WRAPPER=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper
@@ -90,9 +90,9 @@ Thread model: single
 gcc version 9.1.0 (GCC) 
 COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/
 LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_107ff' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPghIrK.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_107ff -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj --start-group -lgcc -lc -lretrocrt -lInterface --end-group
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_107ff' '-mcpu=68000'
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_98fa6' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccDIqVY8.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_98fa6 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj --start-group -lgcc -lc -lretrocrt -lInterface --end-group
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_98fa6' '-mcpu=68000'
 make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
 
 
@@ -114,18 +114,18 @@ Parsed C implicit link information from above output:
   link line regex: [^( *|.*[/\])(m68k-apple-macos-ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command(s):/usr/bin/make cmTC_107ff/fast && /usr/bin/make -f CMakeFiles/cmTC_107ff.dir/build.make CMakeFiles/cmTC_107ff.dir/build]
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_98fa6/fast && /usr/bin/make -f CMakeFiles/cmTC_98fa6.dir/build.make CMakeFiles/cmTC_98fa6.dir/build]
   ignore line: [make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building C object CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj]
-  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc   -v -o CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
+  ignore line: [Building C object CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj]
+  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc   -v -o CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc]
   ignore line: [Target: m68k-apple-macos]
   ignore line: [Configured with: /home/camh/Retro68/gcc/configure --target=m68k-apple-macos --prefix=/home/camh/Retro68-build/toolchain/ --enable-languages=c c++ --with-arch=m68k --with-cpu=m68000 --disable-libssp MAKEINFO=missing]
   ignore line: [Thread model: single]
   ignore line: [gcc version 9.1.0 (GCC) ]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
-  ignore line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1 -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj -version -o /tmp/ccgl7NCi.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
+  ignore line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1 -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj -version -o /tmp/ccSgyjPG.s]
   ignore line: [GNU C17 (GCC) version 9.1.0 (m68k-apple-macos)]
   ignore line: [	compiled by GNU C version 9.3.0  GMP version 6.2.0  MPFR version 4.0.2  MPC version 1.1.0  isl version none]
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
@@ -140,14 +140,14 @@ Parsed C implicit link information from above output:
   ignore line: [	compiled by GNU C version 9.3.0  GMP version 6.2.0  MPFR version 4.0.2  MPC version 1.1.0  isl version none]
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
   ignore line: [Compiler executable checksum: 68baab70957df643ffb4605a09112146]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
-  ignore line: [ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj /tmp/ccgl7NCi.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
+  ignore line: [ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj /tmp/ccSgyjPG.s]
   ignore line: [COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/]
   ignore line: [LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
-  ignore line: [Linking C executable cmTC_107ff]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_107ff.dir/link.txt --verbose=1]
-  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc     -v CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj  -o cmTC_107ff ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj' '-c' '-mcpu=68000']
+  ignore line: [Linking C executable cmTC_98fa6]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98fa6.dir/link.txt --verbose=1]
+  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc     -v CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj  -o cmTC_98fa6 ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc]
   ignore line: [COLLECT_LTO_WRAPPER=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper]
@@ -157,13 +157,13 @@ Parsed C implicit link information from above output:
   ignore line: [gcc version 9.1.0 (GCC) ]
   ignore line: [COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/]
   ignore line: [LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_107ff' '-mcpu=68000']
-  link line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPghIrK.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_107ff -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj --start-group -lgcc -lc -lretrocrt -lInterface --end-group]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_98fa6' '-mcpu=68000']
+  link line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccDIqVY8.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_98fa6 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj --start-group -lgcc -lc -lretrocrt -lInterface --end-group]
     arg [/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/ccPghIrK.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccDIqVY8.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
     arg [-plugin-opt=-pass-through=-lretrocrt] ==> ignore
@@ -172,10 +172,10 @@ Parsed C implicit link information from above output:
     arg [-q] ==> ignore
     arg [-undefined=_consolewrite] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_107ff] ==> ignore
+    arg [cmTC_98fa6] ==> ignore
     arg [-L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0] ==> dir [/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0]
     arg [-L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib] ==> dir [/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib]
-    arg [CMakeFiles/cmTC_107ff.dir/CMakeCCompilerABI.c.obj] ==> ignore
+    arg [CMakeFiles/cmTC_98fa6.dir/CMakeCCompilerABI.c.obj] ==> ignore
     arg [--start-group] ==> ignore
     arg [-lgcc] ==> lib [gcc]
     arg [-lc] ==> lib [c]
@@ -192,13 +192,13 @@ Parsed C implicit link information from above output:
 Determining if the CXX compiler works passed with the following output:
 Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_677d8/fast && /usr/bin/make -f CMakeFiles/cmTC_677d8.dir/build.make CMakeFiles/cmTC_677d8.dir/build
+Run Build Command(s):/usr/bin/make cmTC_49b41/fast && /usr/bin/make -f CMakeFiles/cmTC_49b41.dir/build.make CMakeFiles/cmTC_49b41.dir/build
 make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_677d8.dir/testCXXCompiler.cxx.obj
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++     -o CMakeFiles/cmTC_677d8.dir/testCXXCompiler.cxx.obj -c /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
-Linking CXX executable cmTC_677d8
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_677d8.dir/link.txt --verbose=1
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++       CMakeFiles/cmTC_677d8.dir/testCXXCompiler.cxx.obj  -o cmTC_677d8 
+Building CXX object CMakeFiles/cmTC_49b41.dir/testCXXCompiler.cxx.obj
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++     -o CMakeFiles/cmTC_49b41.dir/testCXXCompiler.cxx.obj -c /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_49b41
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_49b41.dir/link.txt --verbose=1
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++       CMakeFiles/cmTC_49b41.dir/testCXXCompiler.cxx.obj  -o cmTC_49b41 
 make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
 
 
@@ -206,18 +206,18 @@ make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/b
 Detecting CXX compiler ABI info compiled with the following output:
 Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_5348b/fast && /usr/bin/make -f CMakeFiles/cmTC_5348b.dir/build.make CMakeFiles/cmTC_5348b.dir/build
+Run Build Command(s):/usr/bin/make cmTC_bcaf5/fast && /usr/bin/make -f CMakeFiles/cmTC_bcaf5.dir/build.make CMakeFiles/cmTC_bcaf5.dir/build
 make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++    -v -o CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp
+Building CXX object CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++    -v -o CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp
 Using built-in specs.
 COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++
 Target: m68k-apple-macos
 Configured with: /home/camh/Retro68/gcc/configure --target=m68k-apple-macos --prefix=/home/camh/Retro68-build/toolchain/ --enable-languages=c,c++ --with-arch=m68k --with-cpu=m68000 --disable-libssp MAKEINFO=missing
 Thread model: single
 gcc version 9.1.0 (GCC) 
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1plus -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -version -o /tmp/ccH3vlkx.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1plus -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -version -o /tmp/cccLolkV.s
 GNU C++14 (GCC) version 9.1.0 (m68k-apple-macos)
 	compiled by GNU C version 9.3.0, GMP version 6.2.0, MPFR version 4.0.2, MPC version 1.1.0, isl version none
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
@@ -235,14 +235,14 @@ GNU C++14 (GCC) version 9.1.0 (m68k-apple-macos)
 	compiled by GNU C version 9.3.0, GMP version 6.2.0, MPFR version 4.0.2, MPC version 1.1.0, isl version none
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
 Compiler executable checksum: 5b31867a30cfa7e65d4bce12c39f8a21
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj /tmp/ccH3vlkx.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj /tmp/cccLolkV.s
 COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/
 LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
-Linking CXX executable cmTC_5348b
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5348b.dir/link.txt --verbose=1
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++      -v CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj  -o cmTC_5348b 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000'
+Linking CXX executable cmTC_bcaf5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bcaf5.dir/link.txt --verbose=1
+/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++      -v CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj  -o cmTC_bcaf5 
 Using built-in specs.
 COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++
 COLLECT_LTO_WRAPPER=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper
@@ -252,9 +252,9 @@ Thread model: single
 gcc version 9.1.0 (GCC) 
 COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/
 LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_5348b' '-mcpu=68000'
- /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccOl6zb4.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_5348b -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -lstdc++ -lm --start-group -lgcc -lc -lretrocrt -lInterface --end-group
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_5348b' '-mcpu=68000'
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bcaf5' '-mcpu=68000'
+ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc25gP8p.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_bcaf5 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -lstdc++ -lm --start-group -lgcc -lc -lretrocrt -lInterface --end-group
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bcaf5' '-mcpu=68000'
 make[1]: Leaving directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp'
 
 
@@ -282,18 +282,18 @@ Parsed CXX implicit link information from above output:
   link line regex: [^( *|.*[/\])(m68k-apple-macos-ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command(s):/usr/bin/make cmTC_5348b/fast && /usr/bin/make -f CMakeFiles/cmTC_5348b.dir/build.make CMakeFiles/cmTC_5348b.dir/build]
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_bcaf5/fast && /usr/bin/make -f CMakeFiles/cmTC_bcaf5.dir/build.make CMakeFiles/cmTC_bcaf5.dir/build]
   ignore line: [make[1]: Entering directory '/home/camh/Documents/Retro68kApps/NuklearQuickDraw/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building CXX object CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj]
-  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++    -v -o CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Building CXX object CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj]
+  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++    -v -o CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++]
   ignore line: [Target: m68k-apple-macos]
   ignore line: [Configured with: /home/camh/Retro68/gcc/configure --target=m68k-apple-macos --prefix=/home/camh/Retro68-build/toolchain/ --enable-languages=c c++ --with-arch=m68k --with-cpu=m68000 --disable-libssp MAKEINFO=missing]
   ignore line: [Thread model: single]
   ignore line: [gcc version 9.1.0 (GCC) ]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
-  ignore line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1plus -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -version -o /tmp/ccH3vlkx.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
+  ignore line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/cc1plus -quiet -v -Wno-trigraphs /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mcpu=68000 -auxbase-strip CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -version -o /tmp/cccLolkV.s]
   ignore line: [GNU C++14 (GCC) version 9.1.0 (m68k-apple-macos)]
   ignore line: [	compiled by GNU C version 9.3.0  GMP version 6.2.0  MPFR version 4.0.2  MPC version 1.1.0  isl version none]
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
@@ -311,14 +311,14 @@ Parsed CXX implicit link information from above output:
   ignore line: [	compiled by GNU C version 9.3.0  GMP version 6.2.0  MPFR version 4.0.2  MPC version 1.1.0  isl version none]
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
   ignore line: [Compiler executable checksum: 5b31867a30cfa7e65d4bce12c39f8a21]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
-  ignore line: [ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj /tmp/ccH3vlkx.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
+  ignore line: [ /home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/as -mcpu=68000 -o CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj /tmp/cccLolkV.s]
   ignore line: [COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/]
   ignore line: [LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
-  ignore line: [Linking CXX executable cmTC_5348b]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5348b.dir/link.txt --verbose=1]
-  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++      -v CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj  -o cmTC_5348b ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj' '-c' '-mcpu=68000']
+  ignore line: [Linking CXX executable cmTC_bcaf5]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bcaf5.dir/link.txt --verbose=1]
+  ignore line: [/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++      -v CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj  -o cmTC_bcaf5 ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-g++]
   ignore line: [COLLECT_LTO_WRAPPER=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper]
@@ -328,13 +328,13 @@ Parsed CXX implicit link information from above output:
   ignore line: [gcc version 9.1.0 (GCC) ]
   ignore line: [COMPILER_PATH=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/bin/]
   ignore line: [LIBRARY_PATH=/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/:/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_5348b' '-mcpu=68000']
-  link line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccOl6zb4.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_5348b -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj -lstdc++ -lm --start-group -lgcc -lc -lretrocrt -lInterface --end-group]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bcaf5' '-mcpu=68000']
+  link line: [ /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2 -plugin /home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so -plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc25gP8p.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lretrocrt -plugin-opt=-pass-through=-lInterface -elf2mac -q -undefined=_consolewrite -o cmTC_bcaf5 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0 -L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj -lstdc++ -lm --start-group -lgcc -lc -lretrocrt -lInterface --end-group]
     arg [/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/home/camh/Retro68-build/toolchain/libexec/gcc/m68k-apple-macos/9.1.0/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/ccOl6zb4.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/cc25gP8p.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
     arg [-plugin-opt=-pass-through=-lretrocrt] ==> ignore
@@ -343,10 +343,10 @@ Parsed CXX implicit link information from above output:
     arg [-q] ==> ignore
     arg [-undefined=_consolewrite] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_5348b] ==> ignore
+    arg [cmTC_bcaf5] ==> ignore
     arg [-L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0] ==> dir [/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0]
     arg [-L/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib] ==> dir [/home/camh/Retro68-build/toolchain/lib/gcc/m68k-apple-macos/9.1.0/../../../../m68k-apple-macos/lib]
-    arg [CMakeFiles/cmTC_5348b.dir/CMakeCXXCompilerABI.cpp.obj] ==> ignore
+    arg [CMakeFiles/cmTC_bcaf5.dir/CMakeCXXCompilerABI.cpp.obj] ==> ignore
     arg [-lstdc++] ==> lib [stdc++]
     arg [-lm] ==> lib [m]
     arg [--start-group] ==> ignore

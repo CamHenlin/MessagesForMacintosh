@@ -139,18 +139,18 @@ void getMessagesFromjsFunctionResponse() {
 
 	activeMessageCounter = 0;
 
-	writeSerialPortDebug(boutRefNum, "BEGIN");
+	// writeSerialPortDebug(boutRefNum, "BEGIN");
 
-	writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+	// writeSerialPortDebug(boutRefNum, jsFunctionResponse);
 	char *token = strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
 	// loop through the string to extract all other tokens
 	while (token != NULL) {
 
-    	writeSerialPortDebug(boutRefNum, "LOAD VALUE TO TOKEN");
-    	writeSerialPortDebug(boutRefNum, token);
+    	// writeSerialPortDebug(boutRefNum, "LOAD VALUE TO TOKEN");
+    	// writeSerialPortDebug(boutRefNum, token);
 		sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
-    	writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
-    	writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
+    	// writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
+    	// writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
 		token = strtokm(NULL, "ENDLASTMESSAGE");
 		activeMessageCounter++;
 	}
@@ -175,10 +175,10 @@ void getMessages(char *thread, int page) {
 
 	char output[62];
 	sprintf(output, "%s&&&%d", thread, page);
-    writeSerialPortDebug(boutRefNum, output);
+    // writeSerialPortDebug(boutRefNum, output);
 
 	callFunctionOnCoprocessor("getMessages", output, jsFunctionResponse);
-    writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
     getMessagesFromjsFunctionResponse();
 
 	return;
@@ -210,21 +210,25 @@ static void boxTest(struct nk_context *ctx) {
 
     if (nk_begin(ctx, "Chats",  nk_rect(0, 0, 200, WINDOW_HEIGHT), NK_WINDOW_BORDER)) {
 
-        nk_layout_row_dynamic(ctx, 25, 1);
-
         getChats();
 
-        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
+		nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
+		{
+	        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-	        if (nk_button_label(ctx, chatFriendlyNames[i])) {
+				nk_layout_row_push(ctx, 175); // 40% wide
 
-	            writeSerialPortDebug(boutRefNum, "CLICK!");
-	            writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
-	            sprintf(activeChat, "%s", chatFriendlyNames[i]);
-	            getMessages(activeChat, 0);
-	            writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
+		        if (nk_button_label(ctx, chatFriendlyNames[i])) {
+
+		            // writeSerialPortDebug(boutRefNum, "CLICK!");
+		            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
+		            sprintf(activeChat, "%s", chatFriendlyNames[i]);
+		            getMessages(activeChat, 0);
+		            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
+		        }
 	        }
-        }
+		}
+		nk_layout_row_end(ctx);
 
     	nk_end(ctx);
     }
@@ -254,10 +258,10 @@ static void boxTest(struct nk_context *ctx) {
 		{
 		    for (int i = 0; i < activeMessageCounter; i++) {
 		        
-				nk_layout_row_push(ctx, 290); // 40% wide
+				nk_layout_row_push(ctx, 285); // 40% wide
 				// message label
-	            writeSerialPortDebug(boutRefNum, "create label!");
-	            writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
+	            // writeSerialPortDebug(boutRefNum, "create label!");
+	            // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
 
 				nk_label_wrap(ctx, activeChatMessages[i]);
 		    }
@@ -289,14 +293,14 @@ void main()
 
     #ifdef MAC_APP_DEBUGGING
     
-    	writeSerialPortDebug(boutRefNum, "call nk_init");
+    	// writeSerialPortDebug(boutRefNum, "call nk_init");
     #endif
 
     ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     #ifdef MAC_APP_DEBUGGING
 
-	    writeSerialPortDebug(boutRefNum, "call into event loop");
+	    // writeSerialPortDebug(boutRefNum, "call into event loop");
 	#endif
 
 	EventLoop(ctx);					/* call the main event loop */
@@ -322,12 +326,12 @@ void EventLoop(struct nk_context *ctx)
 
 		#ifdef MAC_APP_DEBUGGING
 
-	        writeSerialPortDebug(boutRefNum, "nk_input_begin");
+	        // writeSerialPortDebug(boutRefNum, "nk_input_begin");
 	    #endif
 
         #ifdef MAC_APP_DEBUGGING
 
-        	writeSerialPortDebug(boutRefNum, "nk_input_begin complete");
+        	// writeSerialPortDebug(boutRefNum, "nk_input_begin complete");
         #endif
 
 
@@ -343,7 +347,7 @@ void EventLoop(struct nk_context *ctx)
 
         	#ifdef MAC_APP_DEBUGGING
 
-        		writeSerialPortDebug(boutRefNum, "nk_input_motion!");
+        		// writeSerialPortDebug(boutRefNum, "nk_input_motion!");
         	#endif
 
         	firstOrMouseMove = true;
@@ -382,7 +386,7 @@ void EventLoop(struct nk_context *ctx)
 
 			#ifdef MAC_APP_DEBUGGING
 
-        		writeSerialPortDebug(boutRefNum, "calling to DoEvent");
+        		// writeSerialPortDebug(boutRefNum, "calling to DoEvent");
         	#endif
 
         	if (!beganInput) {
@@ -396,7 +400,7 @@ void EventLoop(struct nk_context *ctx)
 
 			#ifdef MAC_APP_DEBUGGING
 
-        		writeSerialPortDebug(boutRefNum, "done with DoEvent");
+        		// writeSerialPortDebug(boutRefNum, "done with DoEvent");
         	#endif
 		}
 
@@ -407,7 +411,7 @@ void EventLoop(struct nk_context *ctx)
 	    start = TickCount();
 		#ifdef MAC_APP_DEBUGGING
 
-        	writeSerialPortDebug(boutRefNum, "nk_input_end");
+        	// writeSerialPortDebug(boutRefNum, "nk_input_end");
         #endif
 
         if (beganInput) {
@@ -417,7 +421,7 @@ void EventLoop(struct nk_context *ctx)
 
         #ifdef MAC_APP_DEBUGGING
         	
-        	writeSerialPortDebug(boutRefNum, "nk_input_end complete");
+        	// writeSerialPortDebug(boutRefNum, "nk_input_end complete");
         #endif
 
         // only re-render if there is an event, prevents screen flickering
@@ -427,7 +431,7 @@ void EventLoop(struct nk_context *ctx)
 
 	        #ifdef MAC_APP_DEBUGGING
 
-		        writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
+		        // writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
 		    #endif
 
 
@@ -459,13 +463,13 @@ void EventLoop(struct nk_context *ctx)
     
 		    // char logx[255];
 		    // sprintf(logx, "EventLoop() eventTime0 (handle event) %ld, eventTime1 (nuklear UI) %ld, eventTime2 (render function) %ld, eventTime3 (clear) %ld ticks to execute\n", eventTime0, eventTime1, eventTime2, eventTime3);
-		    // writeSerialPortDebug(boutRefNum, logx);
+		    // // writeSerialPortDebug(boutRefNum, logx);
         }
 
 
     	#ifdef MAC_APP_DEBUGGING
 
-        	writeSerialPortDebug(boutRefNum, "nk_input_render complete");
+        	// writeSerialPortDebug(boutRefNum, "nk_input_render complete");
         #endif
 	} while ( true );	/* loop forever; we quit via ExitToShell */
 } /*EventLoop*/
@@ -489,7 +493,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
         case mouseUp:
 
 	    	#ifdef MAC_APP_DEBUGGING
-	        	writeSerialPortDebug(boutRefNum, "mouseup");
+	        	// writeSerialPortDebug(boutRefNum, "mouseup");
         	#endif
 
             part = FindWindow(event->where, &window);
@@ -506,7 +510,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 
 
 	    	#ifdef MAC_APP_DEBUGGING
-	        	writeSerialPortDebug(boutRefNum, "mousedown");
+	        	// writeSerialPortDebug(boutRefNum, "mousedown");
 	        #endif
 
 			part = FindWindow(event->where, &window);
@@ -547,7 +551,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
         	
 
 	    	#ifdef MAC_APP_DEBUGGING
-	        	writeSerialPortDebug(boutRefNum, "key");
+	        	// writeSerialPortDebug(boutRefNum, "key");
 	        #endif
 
 			key = event->message & charCodeMask;
@@ -563,14 +567,14 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 		case activateEvt:
 			
     		#ifdef MAC_APP_DEBUGGING
-        		writeSerialPortDebug(boutRefNum, "activate");
+        		// writeSerialPortDebug(boutRefNum, "activate");
         	#endif
 			DoActivate((WindowPtr) event->message, (event->modifiers & activeFlag) != 0);
 			break;
 		case updateEvt:
 			
 			#ifdef MAC_APP_DEBUGGING
-        		writeSerialPortDebug(boutRefNum, "update");
+        		// writeSerialPortDebug(boutRefNum, "update");
         	#endif
 			DoUpdate((WindowPtr) event->message);
 			break;
@@ -579,7 +583,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 		case diskEvt:
 			
     		#ifdef MAC_APP_DEBUGGING
-        		writeSerialPortDebug(boutRefNum, "disk");
+        		// writeSerialPortDebug(boutRefNum, "disk");
         	#endif
 			if ( HiWord(event->message) != noErr ) {
 				SetPt(&aPoint, kDILeft, kDITop);
@@ -590,7 +594,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 		case osEvt:
 			
     		#ifdef MAC_APP_DEBUGGING
-        		writeSerialPortDebug(boutRefNum, "os");
+        		// writeSerialPortDebug(boutRefNum, "os");
         	#endif
 
 			// this should be trigger on mousemove but does not -- if we can figure that out, we should call through to 
@@ -791,7 +795,7 @@ void DoMenuCommand(menuResult)
                     // write data to serial port
                     // Configure PCE/macplus to map serial port to ser_b.out. This port can then be used for debug output
                     // by using: tail -f ser_b.out
-                    // OSErr res = writeSerialPortDebug(boutRefNum, "Hello World");
+                    // // OSErr res = writeSerialPortDebug(boutRefNum, "Hello World");
                     // if (res < 0)
                     //    AlertUser();
 
@@ -804,7 +808,7 @@ void DoMenuCommand(menuResult)
 
                     char str2[255];
                     sprintf(str2, "ROM85: %d - SysVersion: %d - VRes: %d - HRes: %d - Time: %lu", *ROM85, *SysVersion, *ScrVRes, *ScrHRes, *Time);
-                    // writeSerialPortDebug(boutRefNum, str2);               
+                    // // writeSerialPortDebug(boutRefNum, str2);               
 
                     Boolean is128KROM = ((*ROM85) > 0);
                     Boolean hasSysEnvirons = false;
@@ -824,7 +828,7 @@ void DoMenuCommand(menuResult)
                     
                     sprintf(str2, "is128KROM: %d - hasSysEnvirons: %d - hasStripAddr: %d - hasSetDefaultStartup - %d", 
                                     is128KROM, hasSysEnvirons, hasStripAddr, hasSetDefaultStartup);
-                    // writeSerialPortDebug(boutRefNum, str2);               
+                    // // writeSerialPortDebug(boutRefNum, str2);               
 
 					break;
                 }
