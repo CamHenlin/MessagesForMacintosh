@@ -556,7 +556,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         if (lastEventWasKey && cmd->type == NK_COMMAND_TEXT) {
 
 
-                // //writeSerialPortDebug(boutRefNum, "FAST INPUT");
+            writeSerialPortDebug(boutRefNum, "FAST INPUT");
 
 
             const struct nk_command_text *t = (const struct nk_command_text*)cmd;
@@ -569,7 +569,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                 // writeSerialPortDebug(boutRefNum, log);
             #endif
 
-            MoveTo((int)t->x + _get_text_width(&t->string, (int)t->length - 1), (int)t->y + (int)t->height);
+            MoveTo((int)t->x + _get_text_width(t->string, (int)t->length - 1), (int)t->y + (int)t->height);
 
             // DrawText((const char*)t->string, 0, (int)t->length);
 
@@ -578,7 +578,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         } else if (!lastEventWasKey) {
 
 
-                // // writeSerialPortDebug(boutRefNum, "SLOW INPUT");
+            writeSerialPortDebug(boutRefNum, "SLOW INPUT");
             switch (cmd->type) {
 
                 case NK_COMMAND_NOP:
@@ -1138,14 +1138,14 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                 int key = (int)charKey;
 
 
-                #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
+                // #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                    // writeSerialPortDebug(boutRefNum, "keyDown/autoKey");
+                    writeSerialPortDebug(boutRefNum, "keyDown/autoKey");
 
                     char logy[255];
                     sprintf(logy, "key pressed: key: '%c', 02x: '%02X', return: '%02X', %d == %d ??", key, key, returnKey, (int)(key), (int)(returnKey));
-                    // writeSerialPortDebug(boutRefNum, logy);
-                #endif
+                    writeSerialPortDebug(boutRefNum, logy);
+                // #endif
 
                 const Boolean isKeyDown = event->what == keyDown;
 
@@ -1222,10 +1222,10 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     nk_input_key(nuklear_context, NK_KEY_SCROLL_END, isKeyDown);
                 } else {
 
-                    #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
+                    // #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                        // writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
-                    #endif
+                        writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
+                    // #endif
                     
                     nk_input_unicode(nuklear_context, charKey);
                 }
@@ -1360,7 +1360,7 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     button->image_padding   = nk_vec2(0.0f,0.0f);
     button->touch_padding   = nk_vec2(0.0f, 0.0f);
     button->userdata        = nk_handle_ptr(0);
-    button->text_alignment  = NK_TEXT_CENTERED;
+    button->text_alignment  = NK_TEXT_LEFT;
     button->border          = 1.0f;
     button->rounding        = 4.0f;
     button->draw_begin      = 0;
