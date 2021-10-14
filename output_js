@@ -12,25 +12,18 @@ const defaultOptions = {
   },
   query: {
     fetchPolicy: 'no-cache',
-    errorPolicy: 'all',
+    errorPolicy: 'ignore',
   },
 }
 
-const client = new ApolloClient({
-  uri: 'http://10.0.1.167:4000/',
-  cache: new InMemoryCache(),
-  link: new createHttpLink({
-    uri: 'http://10.0.1.167:4000/'
-  }),
-  defaultOptions
-});
+let client
 
 
 class iMessageClient {
 
   async getMessages (chatId, page) {
 
-    console.log(`get messages for caht ID: ${chatId}`)
+    console.log(`get messages for chat ID: ${chatId}`)
 
     let result = await client.query({
       query: gql`query getMessages {
@@ -57,8 +50,10 @@ class iMessageClient {
     for (const message of messages) {
 
       if (firstMessage) {
+
         messageOutput = `${message.chatter}: ${message.text}`
       } else {
+
         messageOutput = `${messageOutput}ENDLASTMESSAGE${message.chatter}: ${message.text}`
       }
 
@@ -71,7 +66,7 @@ class iMessageClient {
 
   async sendMessage (chatId, message) {
 
-    console.log(`send messages for caht ID: ${chatId} ${message}`)
+    console.log(`send messages for chat ID: ${chatId} ${message}`)
 
     let result = await client.query({
       query: gql`query sendMessage {
@@ -82,11 +77,9 @@ class iMessageClient {
       }`
     })
 
-    let messages = result.data.getMessages
+    let messages = result.data.sendMessage
     let messageOutput = ``
     const maxPerLine = 20000
-    console.log(`return messages from send messages:`)
-    console.log(messages)
 
     let firstMessage = true
 
@@ -98,9 +91,11 @@ class iMessageClient {
     for (const message of messages) {
 
       if (firstMessage) {
-        messageOutput = `${message.chatter}: `
+
+        messageOutput = `${message.chatter}: ${message.text}`
       } else {
-        messageOutput = `${messageOutput}ENDLASTMESSAGE${message.chatter}: `
+
+        messageOutput = `${messageOutput}ENDLASTMESSAGE${message.chatter}: ${message.text}`
       }
 
       firstMessage = false
@@ -136,6 +131,28 @@ class iMessageClient {
     friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
 
     return friendlyNameStrings
+  }
+
+  setIPAddress (IPAddress) {
+
+    try {
+
+      client = new ApolloClient({
+        uri: `${IPAddress}:4000/`,
+        cache: new InMemoryCache(),
+        link: new createHttpLink({
+          uri: `${IPAddress}:4000/`
+        }),
+        defaultOptions
+      });
+    } catch (err) {
+      console.log(`error instantiating the ApolloClient`)
+      console.log(err)
+
+      return `failure`
+    }
+
+    return `success`
   }
 }
 

@@ -556,6 +556,8 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
     readSerialPort(serialPortResponse);
     // writeSerialPortDebug(boutRefNum, "========================Got response from serial port");
     // writeSerialPortDebug(boutRefNum, serialPortResponse);
+
+    memset(output, '\0', RECEIVE_WINDOW_SIZE);
     getReturnValueFromResponse(serialPortResponse, "FUNCTION", output);
     
     return;

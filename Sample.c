@@ -9,6 +9,7 @@
 #include <Dialogs.h>
 #include <ToolUtils.h>
 #include <Memory.h>
+#include <Sound.h>
 #include <SegLoad.h>
 #include <Files.h>
 #include <OSUtils.h>
@@ -37,12 +38,12 @@
 #define NK_ZERO_COMMAND_MEMORY
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
+// #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_IMPLEMENTATION
 #define NK_QUICKDRAW_IMPLEMENTATION
-#define NK_MEMSET memset
-#define NK_MEMCPY memcpy
+// #define NK_MEMSET memset
+// #define NK_MEMCPY memcpy
 
 void aFailed(char *file, int line) {
     
@@ -54,6 +55,9 @@ void aFailed(char *file, int line) {
     // hold the program - we want to be able to read the text! assuming anything after the assert would be a crash
     while (true) {}
 }
+
+int mouse_x;
+int mouse_y;
 
 #define NK_ASSERT(e) \
     if (!(e)) \
@@ -108,28 +112,39 @@ void AlertUser( void );
 #define BotRight(aRect)	(* (Point *) &(aRect).bottom)
 
 // TODO: 
-// set up coprocessor
-// set up imessage service
-// 	 new typescript one that responds via graphql endpoints?????
-// finish setting up UI (maybe mock data from coprocessor?)
-// need UI to start new chat threads
-// need function to create new chat + send message in it
-// QUESTION should the chat UI be a scrollable panel with labels inside of it so both sides of the conversation can be shown?
-// further improve ui performance -- it's close! eliminate more on keyboard events and we'll be fine
+// - IN PROGRESS, fix issues related to perf work... need to have nuklear redraw on text scroll, need to hold scroll positions somehow for inactive windows (undo, see what happens?)
+// - potential perf gain: float -> integer math
+// - potential perf gain: strip unnecessary function calls (which?)
+// - get new messages (when?) -- start with on send
+// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
+// - chat during the day for a few minutes and figure out small issues
+// - transfer to mac, get hw setup working
+// - start writing blog posts
+// - js code needs to split long messages into max length per line, so that they display properly
+
 
 char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
 
-
-
 int haveRun = 0;
 int chatFriendlyNamesCounter = 0;
+int ipAddressSet = 0;
+int sendNewChat = 0;
 char chatFriendlyNames[16][64];
 char activeChat[64];
 int activeMessageCounter = 0;
 char activeChatMessages[10][2048];
 char box_input_buffer[2048];
+char ip_input_buffer[255];
+char new_message_input_buffer[255];
 int box_len;
 int box_input_len;
+int new_message_input_buffer_len;
+int ip_input_buffer_len;
+int shouldScrollMessages = 0;
+int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
+int messagesScrollBarLocation = 0;
+int messageWindowWasDormant = 0;
+int coprocessorLoaded = 0;
 
 void getMessagesFromjsFunctionResponse() {
 
@@ -165,6 +180,17 @@ void sendMessage() {
 
 	callFunctionOnCoprocessor("sendMessage", output, jsFunctionResponse);
 	getMessagesFromjsFunctionResponse();
+
+	return;
+}
+
+
+void sendIPAddressToCoprocessor() {
+
+	char output[2048];
+	sprintf(output, "%s", ip_input_buffer);
+
+	callFunctionOnCoprocessor("setIPAddress", output, jsFunctionResponse);
 
 	return;
 }
@@ -206,72 +232,235 @@ void getChats() {
 	return;
 }
 
+Boolean checkCollision(struct nk_rect window) {
+	// writeSerialPortDebug(boutRefNum, "checkCollision!");
+
+	// Boolean testout = (window.x < mouse_x &&
+	//    window.x + window.w > mouse_x &&
+	//    window.y < mouse_y &&
+	//    window.y + window.h > mouse_y);
+	// char str[255];
+	// sprintf(str, "what %d", testout);
+	//     	writeSerialPortDebug(boutRefNum, str);
+
+
+	// if truthy return, mouse is over window!
+	return (window.x < mouse_x &&
+	   window.x + window.w > mouse_x &&
+	   window.y < mouse_y &&
+	   window.y + window.h > mouse_y);
+
+}
+
+struct nk_rect graphql_input_window_size;
+struct nk_rect chats_window_size;
+struct nk_rect messages_window_size;
+struct nk_rect message_input_window_size;
+
 static void boxTest(struct nk_context *ctx) {
 
-    if (nk_begin(ctx, "Chats",  nk_rect(0, 0, 200, WINDOW_HEIGHT), NK_WINDOW_BORDER)) {
+	Boolean isMouseHoveringWindow;
 
-        getChats();
+	// prompt the user for the graphql instance
+	if (!coprocessorLoaded) {
 
-		nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
-		{
-	        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-				nk_layout_row_push(ctx, 175); // 40% wide
+	    if (nk_begin_titled(ctx, "Loading coprocessor services", "Loading coprocessor services", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
 
-		        if (nk_button_label(ctx, chatFriendlyNames[i])) {
+	    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
+	    	{
+				nk_layout_row_push(ctx, 200); // 40% wide
+				nk_label_wrap(ctx, "Please wait");
+	    	}
+	    	nk_layout_row_end(ctx);
 
-		            // writeSerialPortDebug(boutRefNum, "CLICK!");
-		            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
-		            sprintf(activeChat, "%s", chatFriendlyNames[i]);
-		            getMessages(activeChat, 0);
-		            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
-		        }
-	        }
-		}
-		nk_layout_row_end(ctx);
+	    	nk_end(ctx);
+	    }
 
-    	nk_end(ctx);
-    }
-
-    if (nk_begin(ctx, "Message Input", nk_rect(200, WINDOW_HEIGHT - 50, 310, 50), NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
-		// bottom text input		
-		nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
-		{
-			nk_layout_row_push(ctx, 200); // 40% wide
-
-			nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
-
-			nk_layout_row_push(ctx, 96); // 40% wide
-			if (nk_button_label(ctx, "send")) {
-        		//fprintf(stdout, "pushed!\n");
-        		sendMessage();
-			}
-		}
-		nk_layout_row_end(ctx);
-
-    	nk_end(ctx);
+		return;
 	}
 
-    if (nk_begin_titled(ctx, "Message", activeChat, nk_rect(200, 0, 310, WINDOW_HEIGHT - 50), NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
 
-		nk_layout_row_begin(ctx, NK_STATIC, 0, 1);
-		{
-		    for (int i = 0; i < activeMessageCounter; i++) {
-		        
-				nk_layout_row_push(ctx, 285); // 40% wide
-				// message label
-	            // writeSerialPortDebug(boutRefNum, "create label!");
-	            // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
+	// prompt the user for the graphql instance
+	if (!ipAddressSet) {
 
-				nk_label_wrap(ctx, activeChatMessages[i]);
+		isMouseHoveringWindow = checkCollision(graphql_input_window_size);
+
+		if (isMouseHoveringWindow || forceRedraw) {
+
+		    if (nk_begin_titled(ctx, "Enter iMessage GraphQL Server", "Enter iMessage GraphQL Server", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
+
+		    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
+		    	{
+					nk_layout_row_push(ctx, 200); // 40% wide
+					nk_label_wrap(ctx, "ex: http://127.0.0.1");
+		    	}
+		    	nk_layout_row_end(ctx);
+
+				nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
+				{
+					nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90); // 40% wide
+
+					nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 2048, nk_filter_default);
+
+					nk_layout_row_push(ctx, 60); // 40% wide
+					if (nk_button_label(ctx, "save")) {
+		        	
+		        		ipAddressSet = 1;
+		        		forceRedraw = 2;
+		        		sendIPAddressToCoprocessor();
+					}
+				}
+				nk_layout_row_end(ctx);
+
+		    	nk_end(ctx);
 		    }
 
 		}
-		nk_layout_row_end(ctx);
-    	nk_end(ctx);
+
+		return;
+	}
+
+	// prompt the user for  new chat
+	if (sendNewChat) {
+
+	    if (nk_begin_titled(ctx, "Enter New Message Recipient", "Enter New Message Recipient",  nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120), NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
+
+			nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
+			{
+				nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 110); // 40% wide
+
+				nk_edit_string(ctx, NK_EDIT_SIMPLE, new_message_input_buffer, &new_message_input_buffer_len, 2048, nk_filter_default);
+
+				nk_layout_row_push(ctx, 80); // 40% wide
+				if (nk_button_label(ctx, "open chat")) {
+	        	
+	        		sendNewChat = 0;
+		        	forceRedraw = 2;
+	        		// sendIPAddressToCoprocessor();
+
+	        		sprintf(activeChat, new_message_input_buffer);
+				}
+			}
+			nk_layout_row_end(ctx);
+
+	    	nk_end(ctx);
+	    }
+
+		return;
+	}
+
+	isMouseHoveringWindow = checkCollision(chats_window_size);
+
+	if (isMouseHoveringWindow || forceRedraw) {
+
+	    if (nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+
+	        getChats();
+
+			nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
+			{
+		        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
+
+		        	if (i > 9) {
+
+		        		continue;
+		        	}
+
+					nk_layout_row_push(ctx, 185); // 40% wide
+
+			        if (nk_button_label(ctx, chatFriendlyNames[i])) {
+
+			            // writeSerialPortDebug(boutRefNum, "CLICK!");
+			            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
+			            sprintf(activeChat, "%s", chatFriendlyNames[i]);
+			            getMessages(activeChat, 0);
+			            shouldScrollMessages = 1;
+			            forceRedraw = 2;
+			            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
+			        }
+		        }
+			}
+			nk_layout_row_end(ctx);
+
+	    	nk_end(ctx);
+	    }
+	}
+
+	isMouseHoveringWindow = checkCollision(message_input_window_size);
+
+	if (isMouseHoveringWindow || forceRedraw) {
+
+	    if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+
+			// bottom text input		
+			nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
+			{
+				nk_layout_row_push(ctx, 220); // 40% wide
+
+				nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
+
+				nk_layout_row_push(ctx, 76); // 40% wide
+				if (nk_button_label(ctx, "send")) {
+	        		//fprintf(stdout, "pushed!\n");
+	        		sendMessage();
+	        		forceRedraw = 2;
+				}
+			}
+			nk_layout_row_end(ctx);
+
+	    	nk_end(ctx);
+		}
+	}
+
+
+	isMouseHoveringWindow = checkCollision(messages_window_size);
+
+	if (isMouseHoveringWindow || forceRedraw) {
+
+
+	    if (nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
+
+			nk_layout_row_begin(ctx, NK_STATIC, 15, 1);
+			{
+			    for (int i = 0; i < activeMessageCounter; i++) {
+			        
+					nk_layout_row_push(ctx, 285); // 40% wide
+					// message label
+		            writeSerialPortDebug(boutRefNum, "create label!");
+		            writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
+
+					nk_label_wrap(ctx, activeChatMessages[i]);
+			    }
+
+			    if (shouldScrollMessages) {
+
+					ctx->current->scrollbar.y = 10000;
+					shouldScrollMessages = 0;
+			    } else if (messageWindowWasDormant) {
+
+					ctx->current->scrollbar.y = messagesScrollBarLocation;
+			    }
+
+			    messagesScrollBarLocation = ctx->current->scrollbar.y;
+
+			}
+
+			nk_layout_row_end(ctx);
+	    	nk_end(ctx);
+	    }
+
+	    messageWindowWasDormant = 0;
+	} else {
+
+    	messageWindowWasDormant = 1;
     }
 
 
+    if (forceRedraw > 0) {
+
+    	forceRedraw--;
+    }
 }
 
 #pragma segment Main
@@ -282,12 +471,6 @@ void main()
 
 	UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
 
-    setupCoprocessor("nuklear", "modem"); // could also be "printer", modem is 0 in PCE settings - printer would be 1
-
-    char programResult[MAX_RECEIVE_SIZE];
-    sendProgramToCoprocessor(OUTPUT_JS, programResult);
-
-    nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     struct nk_context *ctx;
 
@@ -296,7 +479,32 @@ void main()
     	// writeSerialPortDebug(boutRefNum, "call nk_init");
     #endif
 
+    graphql_input_window_size = nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120);
+	chats_window_size = nk_rect(0, 0, 200, WINDOW_HEIGHT);
+	messages_window_size = nk_rect(200, 0, 310, WINDOW_HEIGHT - 50);
+	message_input_window_size = nk_rect(200, WINDOW_HEIGHT - 50, 310, 50);
     ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+   	// run our nuklear app one time to render the window telling us to be patient for the coprocessor
+   	// app to load up 
+	nk_input_begin(ctx);
+	nk_input_end(ctx);
+	boxTest(ctx);
+	nk_quickdraw_render(FrontWindow(), ctx);
+	nk_clear(ctx);
+	SysBeep(1);
+
+    writeSerialPortDebug(boutRefNum, "setupCoprocessor!");
+    setupCoprocessor("nuklear", "modem"); // could also be "printer", modem is 0 in PCE settings - printer would be 1
+
+    char programResult[MAX_RECEIVE_SIZE];
+    writeSerialPortDebug(boutRefNum, "sendProgramToCoprocessor!");
+    sendProgramToCoprocessor(OUTPUT_JS, programResult);
+
+	coprocessorLoaded = 1;
+    sprintf(ip_input_buffer, "http://");
+
+
 
     #ifdef MAC_APP_DEBUGGING
 
@@ -312,7 +520,9 @@ void EventLoop(struct nk_context *ctx)
 {
 	RgnHandle cursorRgn;
 	Boolean	gotEvent;
+	Boolean hasNextEvent;
 	EventRecord	event;
+	EventRecord nextEventRecord;
 	Point mouse;
 	cursorRgn = NewRgn();
 
@@ -334,9 +544,7 @@ void EventLoop(struct nk_context *ctx)
         	// writeSerialPortDebug(boutRefNum, "nk_input_begin complete");
         #endif
 
-
 		GetGlobalMouse(&mouse);
-
 
 		// as far as i can tell, there is no way to event on mouse movement with mac libraries,
 		// so we are just going to track on our own, and create our own events.
@@ -359,73 +567,45 @@ void EventLoop(struct nk_context *ctx)
             beganInput = true;
         	nk_input_begin(ctx);
         	nk_input_motion(ctx, tempPoint.h, tempPoint.v);
+
+			mouse_x = tempPoint.h;
+			mouse_y = tempPoint.v;
         }
 
         lastMouseHPos = mouse.h;
         lastMouseVPos = mouse.v;
 
-		if (gHasWaitNextEvent) {
+		SystemTask();
+		gotEvent = GetNextEvent(everyEvent, &event);
 
-			gotEvent = WaitNextEvent(everyEvent, &event, MAXLONG, cursorRgn);
-		} else {
-
-			SystemTask();
-			gotEvent = GetNextEvent(everyEvent, &event);
-		}
-
-	    long start;
-	    long end;
-	    long total;
-	    long eventTime0;
-	    long eventTime1;
-	    long eventTime2;
-	    long eventTime3;
-
-	    start = TickCount();
-		if (gotEvent) {
+	    // drain all events before rendering
+		while (gotEvent) {
 
 			#ifdef MAC_APP_DEBUGGING
 
-        		// writeSerialPortDebug(boutRefNum, "calling to DoEvent");
+        		writeSerialPortDebug(boutRefNum, "calling to DoEvent");
         	#endif
 
         	if (!beganInput) {
 
         		nk_input_begin(ctx);
+        		beganInput = true;
         	}
-
-        	beganInput = true;
 
 			DoEvent(&event, ctx);
 
 			#ifdef MAC_APP_DEBUGGING
 
-        		// writeSerialPortDebug(boutRefNum, "done with DoEvent");
+        		writeSerialPortDebug(boutRefNum, "done with DoEvent");
         	#endif
+
+        	gotEvent = GetNextEvent(everyEvent, &event);
 		}
 
-	    end = TickCount();
-
-		total = end - start;
-	    eventTime0 = total;// / 60.0;
-	    start = TickCount();
-		#ifdef MAC_APP_DEBUGGING
-
-        	// writeSerialPortDebug(boutRefNum, "nk_input_end");
-        #endif
-
-        if (beganInput) {
+        // only re-render if there is an event, prevents screen flickering
+        if (beganInput || firstOrMouseMove) {
 
         	nk_input_end(ctx);
-        }
-
-        #ifdef MAC_APP_DEBUGGING
-        	
-        	// writeSerialPortDebug(boutRefNum, "nk_input_end complete");
-        #endif
-
-        // only re-render if there is an event, prevents screen flickering
-        if (gotEvent || firstOrMouseMove) {
 
         	firstOrMouseMove = false;
 
@@ -434,36 +614,11 @@ void EventLoop(struct nk_context *ctx)
 		        // writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
 		    #endif
 
+			boxTest(ctx);
 
+			nk_quickdraw_render(FrontWindow(), ctx);
 
-		    start = TickCount();
-
-	        //calculator(ctx);
-	        //overview(ctx);
-        	boxTest(ctx);
-
-
-		    end = TickCount();
-
-    		total = end - start;
-		    eventTime1 = total;// / 60.0;
-		    start = TickCount();
-        	nk_quickdraw_render(FrontWindow(), ctx);
-		    end = TickCount();
-
-    		total = end - start;
-		    eventTime2 = total;// / 60.0;
-		    start = TickCount();
-    		nk_clear(ctx);
-		    end = TickCount();
-
-    		total = end - start;
-		    eventTime3 = total;// / 60.0;
-		    start = TickCount();
-    
-		    // char logx[255];
-		    // sprintf(logx, "EventLoop() eventTime0 (handle event) %ld, eventTime1 (nuklear UI) %ld, eventTime2 (render function) %ld, eventTime3 (clear) %ld ticks to execute\n", eventTime0, eventTime1, eventTime2, eventTime3);
-		    // // writeSerialPortDebug(boutRefNum, logx);
+			nk_clear(ctx);
         }
 
 
@@ -775,12 +930,7 @@ void DoMenuCommand(menuResult)
 			handledByDA = SystemEdit(menuItem-1);	/* since we donÕt do any Editing */
 			break;
 		case mLight:
-			switch ( menuItem ) {
-				case iStop:
-					break;
-				case iGo:
-					break;
-			}
+			sendNewChat = 1;
 			break;
 
         case mHelp:

@@ -115,6 +115,7 @@ void NewShockBitmap(ShockBitmap *theMap, short width, short height) {
     theMap->Address = theMap->BWBits.baseAddr;
     theMap->RowBytes = (long) theMap->BWBits.rowBytes;
     theMap->bits = (GrafPtr) &theMap->BWPort;
+
 }
 
 ShockBitmap gMainOffScreen;
@@ -392,7 +393,7 @@ int widthFor12ptFont[128] = {
 // TODO: fully convert
 // TODO: assuming system font for v1, support other fonts in v2
 // doing this in a "fast" way by using a precomputed table for a 12pt font
-static int nk_quickdraw_font_get_text_width(nk_handle handle, int height, const char *text, int len) {
+static float nk_quickdraw_font_get_text_width(nk_handle handle, int height, const char *text, int len) {
 
     // // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
 
@@ -408,7 +409,7 @@ static int nk_quickdraw_font_get_text_width(nk_handle handle, int height, const 
         width += widthFor12ptFont[(int)text[i]];
     }
 
-    return width;
+    return (float)width;
 }
 
 static int _get_text_width(const char *text, int len) {
@@ -533,15 +534,27 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
     const struct nk_command *cmd = 0;
 
-    if (!lastEventWasKey) {
+    // if (!lastEventWasKey) {
         OpenPort(&gMainOffScreen.BWPort);
         SetPort(&gMainOffScreen.BWPort);
         SetPortBits(&gMainOffScreen.BWBits);
         // EraseRect(&gMainOffScreen.bounds);
-    } else {
+        
+    // int theNum;
+    // GetFNum('Chicago', theNum);
+    // // do this twice, once now, and once after the port is switched to the offscreen
+    // TextFont(theNum);
+    // TextSize(12); 
+    // } else {
 
-        SetPort(window);
-    }
+    //     SetPort(window);
+
+    // int theNum;
+    // GetFNum('Chicago', theNum);
+    // // do this twice, once now, and once after the port is switched to the offscreen
+    // TextFont(theNum);
+    // TextSize(12); 
+    // }
 
     end = TickCount();
     total = end - start;
@@ -551,34 +564,34 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     nk_foreach(cmd, ctx) {
 
         int color;
-        ForeColor(blackColor);
+        // ForeColor(blackColor);
 
-        if (lastEventWasKey && cmd->type == NK_COMMAND_TEXT) {
-
-
-            writeSerialPortDebug(boutRefNum, "FAST INPUT");
+        // if (lastEventWasKey && cmd->type == NK_COMMAND_TEXT) {
 
 
-            const struct nk_command_text *t = (const struct nk_command_text*)cmd;
+        //     // writeSerialPortDebug(boutRefNum, "FAST INPUT");
+
+
+        //     const struct nk_command_text *t = (const struct nk_command_text*)cmd;
             
-            #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+        //     #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
-                char log[255];
-                sprintf(log, "%f: %c, %d", (int)t->height, &t->string, (int)t->length);
-                // writeSerialPortDebug(boutRefNum, log);
-            #endif
+        //         // writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
+        //         char log[255];
+        //         sprintf(log, "%f: %c, %d", (int)t->height, &t->string, (int)t->length);
+        //         // writeSerialPortDebug(boutRefNum, log);
+        //     #endif
 
-            MoveTo((int)t->x + _get_text_width(t->string, (int)t->length - 1), (int)t->y + (int)t->height);
+        //     MoveTo((int)t->x + _get_text_width(t->string, (int)t->length - 1), (int)t->y + (int)t->height);
 
-            // DrawText((const char*)t->string, 0, (int)t->length);
+        //     // DrawText((const char*)t->string, 0, (int)t->length);
+        //     PenSize(1.0, 1.0);
+        //     DrawChar(t->string[t->length - 1]);
 
-            DrawChar(t->string[t->length - 1]);
-
-        } else if (!lastEventWasKey) {
+        // } else if (!lastEventWasKey) {
 
 
-            writeSerialPortDebug(boutRefNum, "SLOW INPUT");
+            // writeSerialPortDebug(boutRefNum, "SLOW INPUT");
             switch (cmd->type) {
 
                 case NK_COMMAND_NOP:
@@ -904,6 +917,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         ForeColor(color);
                         MoveTo((int)t->x, (int)t->y + (int)t->height);
 
+                        PenSize(1.0, 1.0);
                         DrawText((const char*)t->string, 0, (int)t->length);
 
                         // DrawChar(t->string[t->length - 1]);
@@ -998,7 +1012,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                     #endif
                     break;
             }
-        }
+        // }
     }
 
 
@@ -1009,14 +1023,14 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
 
 
-    if (!lastEventWasKey) {
+    // if (!lastEventWasKey) {
         SetPort(window);
 
 
         // our offscreen bitmap is the same size as our port rectangle, so we
         // get away with using the portRect sizing for source and destination
         CopyBits(&gMainOffScreen.bits->portBits, &window->portBits, &window->portRect, &window->portRect, srcCopy, 0L);
-    }
+    // }
 
     end = TickCount();
     total = end - start;
@@ -1138,14 +1152,14 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                 int key = (int)charKey;
 
 
-                // #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
+                #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "keyDown/autoKey");
 
                     char logy[255];
                     sprintf(logy, "key pressed: key: '%c', 02x: '%02X', return: '%02X', %d == %d ??", key, key, returnKey, (int)(key), (int)(returnKey));
                     writeSerialPortDebug(boutRefNum, logy);
-                // #endif
+                #endif
 
                 const Boolean isKeyDown = event->what == keyDown;
 
@@ -1269,10 +1283,18 @@ NK_INTERN void nk_quickdraw_clipboard_copy(nk_handle usr, const char *text, int 
 // it us up to our "main" function to call this code
 NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int height) {
 
+
+    int theNum;
+    GetFNum('Chicago', theNum);
+    // do this twice, once now, and once after the port is switched to the offscreen buffer
+    TextFont(theNum);
+    TextSize(12); 
     // needed to calculate bezier info, see mactech article.
     setupBezier();
 
     NewShockBitmap(&gMainOffScreen, width, height);
+    TextFont(theNum);
+    TextSize(12); 
     NkQuickDrawFont *quickdrawfont = nk_quickdraw_font_create_from_file();
     struct nk_user_font *font = &quickdrawfont->nk;
 
