@@ -42,8 +42,8 @@
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_IMPLEMENTATION
 #define NK_QUICKDRAW_IMPLEMENTATION
-// #define NK_MEMSET memset
-// #define NK_MEMCPY memcpy
+#define NK_MEMSET memset
+#define NK_MEMCPY memcpy
 
 void aFailed(char *file, int line) {
     
@@ -136,10 +136,10 @@ char activeChatMessages[10][2048];
 char box_input_buffer[2048];
 char ip_input_buffer[255];
 char new_message_input_buffer[255];
-int box_len;
-int box_input_len;
-int new_message_input_buffer_len;
-int ip_input_buffer_len;
+short box_len;
+short box_input_len;
+short new_message_input_buffer_len;
+short ip_input_buffer_len;
 int shouldScrollMessages = 0;
 int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
 int messagesScrollBarLocation = 0;
@@ -157,7 +157,7 @@ void getMessagesFromjsFunctionResponse() {
 	// writeSerialPortDebug(boutRefNum, "BEGIN");
 
 	// writeSerialPortDebug(boutRefNum, jsFunctionResponse);
-	char *token = strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
+	char *token = (char *)strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
 	// loop through the string to extract all other tokens
 	while (token != NULL) {
 
@@ -166,7 +166,7 @@ void getMessagesFromjsFunctionResponse() {
 		sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
     	// writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
     	// writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
-		token = strtokm(NULL, "ENDLASTMESSAGE");
+		token = (char *)strtokm(NULL, "ENDLASTMESSAGE");
 		activeMessageCounter++;
 	}
 
@@ -222,34 +222,14 @@ void getChats() {
 
 	callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
 
-	char * token = strtokm(jsFunctionResponse, ",");
+	char * token = (char *)strtokm(jsFunctionResponse, ",");
 	// loop through the string to extract all other tokens
 	while (token != NULL) {
 		sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
-		token = strtokm(NULL, ",");
+		token = (char *)strtokm(NULL, ",");
 	}
 
 	return;
-}
-
-Boolean checkCollision(struct nk_rect window) {
-	// writeSerialPortDebug(boutRefNum, "checkCollision!");
-
-	// Boolean testout = (window.x < mouse_x &&
-	//    window.x + window.w > mouse_x &&
-	//    window.y < mouse_y &&
-	//    window.y + window.h > mouse_y);
-	// char str[255];
-	// sprintf(str, "what %d", testout);
-	//     	writeSerialPortDebug(boutRefNum, str);
-
-
-	// if truthy return, mouse is over window!
-	return (window.x < mouse_x &&
-	   window.x + window.w > mouse_x &&
-	   window.y < mouse_y &&
-	   window.y + window.h > mouse_y);
-
 }
 
 struct nk_rect graphql_input_window_size;
@@ -259,11 +239,8 @@ struct nk_rect message_input_window_size;
 
 static void boxTest(struct nk_context *ctx) {
 
-	Boolean isMouseHoveringWindow;
-
 	// prompt the user for the graphql instance
 	if (!coprocessorLoaded) {
-
 
 	    if (nk_begin_titled(ctx, "Loading coprocessor services", "Loading coprocessor services", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
 
@@ -284,39 +261,33 @@ static void boxTest(struct nk_context *ctx) {
 	// prompt the user for the graphql instance
 	if (!ipAddressSet) {
 
-		isMouseHoveringWindow = checkCollision(graphql_input_window_size);
+	    if (nk_begin_titled(ctx, "Enter iMessage GraphQL Server", "Enter iMessage GraphQL Server", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
 
-		if (isMouseHoveringWindow || forceRedraw) {
+	    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
+	    	{
+				nk_layout_row_push(ctx, 200); // 40% wide
+				nk_label_wrap(ctx, "ex: http://127.0.0.1");
+	    	}
+	    	nk_layout_row_end(ctx);
 
-		    if (nk_begin_titled(ctx, "Enter iMessage GraphQL Server", "Enter iMessage GraphQL Server", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
+			nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
+			{
+				nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90); // 40% wide
 
-		    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
-		    	{
-					nk_layout_row_push(ctx, 200); // 40% wide
-					nk_label_wrap(ctx, "ex: http://127.0.0.1");
-		    	}
-		    	nk_layout_row_end(ctx);
+				nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 2048, nk_filter_default);
 
-				nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
-				{
-					nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90); // 40% wide
-
-					nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 2048, nk_filter_default);
-
-					nk_layout_row_push(ctx, 60); // 40% wide
-					if (nk_button_label(ctx, "save")) {
-		        	
-		        		ipAddressSet = 1;
-		        		forceRedraw = 2;
-		        		sendIPAddressToCoprocessor();
-					}
+				nk_layout_row_push(ctx, 60); // 40% wide
+				if (nk_button_label(ctx, "save")) {
+	        	
+	        		ipAddressSet = 1;
+	        		forceRedraw = 2;
+	        		sendIPAddressToCoprocessor();
 				}
-				nk_layout_row_end(ctx);
+			}
+			nk_layout_row_end(ctx);
 
-		    	nk_end(ctx);
-		    }
-
-		}
+	    	nk_end(ctx);
+	    }
 
 		return;
 	}
@@ -350,116 +321,91 @@ static void boxTest(struct nk_context *ctx) {
 		return;
 	}
 
-	isMouseHoveringWindow = checkCollision(chats_window_size);
 
-	if (isMouseHoveringWindow || forceRedraw) {
+    if (nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
-	    if (nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+        getChats();
 
-	        getChats();
+		nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
+		{
+	        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-			nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
-			{
-		        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
+	        	if (i > 9) {
 
-		        	if (i > 9) {
+	        		continue;
+	        	}
 
-		        		continue;
-		        	}
+				nk_layout_row_push(ctx, 185); // 40% wide
 
-					nk_layout_row_push(ctx, 185); // 40% wide
+		        if (nk_button_label(ctx, chatFriendlyNames[i])) {
 
-			        if (nk_button_label(ctx, chatFriendlyNames[i])) {
-
-			            // writeSerialPortDebug(boutRefNum, "CLICK!");
-			            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
-			            sprintf(activeChat, "%s", chatFriendlyNames[i]);
-			            getMessages(activeChat, 0);
-			            shouldScrollMessages = 1;
-			            forceRedraw = 2;
-			            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
-			        }
+		            // writeSerialPortDebug(boutRefNum, "CLICK!");
+		            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
+		            sprintf(activeChat, "%s", chatFriendlyNames[i]);
+		            getMessages(activeChat, 0);
+		            shouldScrollMessages = 1;
+		            forceRedraw = 2;
+		            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
 		        }
-			}
-			nk_layout_row_end(ctx);
-
-	    	nk_end(ctx);
-	    }
-	}
-
-	isMouseHoveringWindow = checkCollision(message_input_window_size);
-
-	if (isMouseHoveringWindow || forceRedraw) {
-
-	    if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
-
-			// bottom text input		
-			nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
-			{
-				nk_layout_row_push(ctx, 220); // 40% wide
-
-				nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
-
-				nk_layout_row_push(ctx, 76); // 40% wide
-				if (nk_button_label(ctx, "send")) {
-	        		//fprintf(stdout, "pushed!\n");
-	        		sendMessage();
-	        		forceRedraw = 2;
-				}
-			}
-			nk_layout_row_end(ctx);
-
-	    	nk_end(ctx);
+	        }
 		}
-	}
+		nk_layout_row_end(ctx);
 
-
-	isMouseHoveringWindow = checkCollision(messages_window_size);
-
-	if (isMouseHoveringWindow || forceRedraw) {
-
-
-	    if (nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
-
-			nk_layout_row_begin(ctx, NK_STATIC, 15, 1);
-			{
-			    for (int i = 0; i < activeMessageCounter; i++) {
-			        
-					nk_layout_row_push(ctx, 285); // 40% wide
-					// message label
-		            writeSerialPortDebug(boutRefNum, "create label!");
-		            writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
-
-					nk_label_wrap(ctx, activeChatMessages[i]);
-			    }
-
-			    if (shouldScrollMessages) {
-
-					ctx->current->scrollbar.y = 10000;
-					shouldScrollMessages = 0;
-			    } else if (messageWindowWasDormant) {
-
-					ctx->current->scrollbar.y = messagesScrollBarLocation;
-			    }
-
-			    messagesScrollBarLocation = ctx->current->scrollbar.y;
-
-			}
-
-			nk_layout_row_end(ctx);
-	    	nk_end(ctx);
-	    }
-
-	    messageWindowWasDormant = 0;
-	} else {
-
-    	messageWindowWasDormant = 1;
+    	nk_end(ctx);
     }
 
 
-    if (forceRedraw > 0) {
+    if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
-    	forceRedraw--;
+		// bottom text input		
+		nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
+		{
+			nk_layout_row_push(ctx, 220); // 40% wide
+
+			nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
+
+			nk_layout_row_push(ctx, 76); // 40% wide
+			if (nk_button_label(ctx, "send")) {
+        		//fprintf(stdout, "pushed!\n");
+        		sendMessage();
+        		forceRedraw = 2;
+			}
+		}
+		nk_layout_row_end(ctx);
+
+    	nk_end(ctx);
+	}
+
+
+    if (nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
+
+		nk_layout_row_begin(ctx, NK_STATIC, 15, 1);
+		{
+		    for (int i = 0; i < activeMessageCounter; i++) {
+		        
+				nk_layout_row_push(ctx, 285); // 40% wide
+				// message label
+	            // writeSerialPortDebug(boutRefNum, "create label!");
+	            // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
+
+				nk_label_wrap(ctx, activeChatMessages[i]);
+		    }
+
+		    if (shouldScrollMessages) {
+
+				ctx->current->scrollbar.y = 10000;
+				shouldScrollMessages = 0;
+		    } else if (messageWindowWasDormant) {
+
+				ctx->current->scrollbar.y = messagesScrollBarLocation;
+		    }
+
+		    messagesScrollBarLocation = ctx->current->scrollbar.y;
+
+		}
+
+		nk_layout_row_end(ctx);
+    	nk_end(ctx);
     }
 }
 

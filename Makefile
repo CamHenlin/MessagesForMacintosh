@@ -6,7 +6,8 @@ CC=$(RETRO68)/bin/m68k-unknown-elf-gcc
 CXX=$(RETRO68)/bin/m68k-unknown-elf-g++
 REZ=$(RETRO68)/bin/Rez
 
-LDFLAGS=-lRetroConsole
+BUILDFLAGS=-Ofast -ffloat-store -funsafe-math-optimizations -fsingle-precision-constant -mcpu=68000 -mtune=68000 -m68000 -msoft-float -malign-int
+LDFLAGS=-lRetroConsole $(BUILDFLAGS)
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
@@ -21,7 +22,7 @@ NuklearQuickDraw.bin NuklearQuickDraw.APPL NuklearQuickDraw.dsk: NuklearQuickDra
 	$(REZ) $(REZFLAGS) \
 		-DFLT_FILE_NAME="\"NuklearQuickDraw.flt\"" "$(RINCLUDES)/Retro68APPL.r" \
 		-t "APPL" \
-		 -Ofast -o NuklearQuickDraw.bin --cc NuklearQuickDraw.APPL --cc NuklearQuickDraw.dsk -C WWW6 $(shell cat rsrc-args)
+		 $(BUILDFLAGS) -o NuklearQuickDraw.bin --cc NuklearQuickDraw.APPL --cc NuklearQuickDraw.dsk -C WWW6 $(shell cat rsrc-args)
 
 NuklearQuickDraw.flt: hello.o
 	$(CXX) $< -o $@ $(LDFLAGS)	# C++ used for linking because RetroConsole needs it

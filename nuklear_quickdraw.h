@@ -393,7 +393,7 @@ int widthFor12ptFont[128] = {
 // TODO: fully convert
 // TODO: assuming system font for v1, support other fonts in v2
 // doing this in a "fast" way by using a precomputed table for a 12pt font
-static float nk_quickdraw_font_get_text_width(nk_handle handle, int height, const char *text, int len) {
+static short nk_quickdraw_font_get_text_width(nk_handle handle, short height, const char *text, short len) {
 
     // // writeSerialPortDebug(boutRefNum, "nk_quickdraw_font_get_text_width");
 
@@ -402,14 +402,14 @@ static float nk_quickdraw_font_get_text_width(nk_handle handle, int height, cons
         return 0;
     }
 
-    int width = 0;
+    short width = 0;
 
-    for (int i = 0; i < len; i++) {
+    for (short i = 0; i < len; i++) {
 
-        width += widthFor12ptFont[(int)text[i]];
+        width += widthFor12ptFont[(short)text[i]];
     }
 
-    return (float)width;
+    return width;
 }
 
 static int _get_text_width(const char *text, int len) {
@@ -1238,10 +1238,10 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                     // #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
-                        writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
+                        //writeSerialPortDebug(boutRefNum, "default keydown/autokey event");
                     // #endif
                     
-                    nk_input_unicode(nuklear_context, charKey);
+                    nk_input_char(nuklear_context, charKey);
                 }
 
                 lastEventWasKey = 1;
@@ -1274,7 +1274,7 @@ NK_INTERN void nk_quickdraw_clipboard_paste(nk_handle usr, struct nk_text_edit *
     DisposeHandle(hDest);
 }
 
-NK_INTERN void nk_quickdraw_clipboard_copy(nk_handle usr, const char *text, int len) {
+NK_INTERN void nk_quickdraw_clipboard_copy(nk_handle usr, const char *text, short len) {
 
     // in Macintosh Toolbox the clipboard is referred to as "scrap manager"
     PutScrap(len, 'TEXT', text);
@@ -1283,18 +1283,11 @@ NK_INTERN void nk_quickdraw_clipboard_copy(nk_handle usr, const char *text, int 
 // it us up to our "main" function to call this code
 NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int height) {
 
-
-    int theNum;
-    GetFNum('Chicago', theNum);
-    // do this twice, once now, and once after the port is switched to the offscreen buffer
-    TextFont(theNum);
-    TextSize(12); 
     // needed to calculate bezier info, see mactech article.
     setupBezier();
 
     NewShockBitmap(&gMainOffScreen, width, height);
-    TextFont(theNum);
-    TextSize(12); 
+
     NkQuickDrawFont *quickdrawfont = nk_quickdraw_font_create_from_file();
     struct nk_user_font *font = &quickdrawfont->nk;
 
@@ -1342,10 +1335,10 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     toggle->text_normal     = nk_rgba(70, 70, 70, 255);
     toggle->text_hover      = nk_rgba(70, 70, 70, 255);
     toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    toggle->padding         = nk_vec2(3.0f, 3.0f);
+    toggle->padding         = nk_vec2(3, 3);
     toggle->touch_padding   = nk_vec2(0,0);
     toggle->border_color    = nk_rgba(0,0,0,0);
-    toggle->border          = 0.0f;
+    toggle->border          = 0;
     toggle->spacing         = 5;
 
     /* option toggle */
@@ -1361,10 +1354,10 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     toggle->text_normal     = nk_rgba(70, 70, 70, 255);
     toggle->text_hover      = nk_rgba(70, 70, 70, 255);
     toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    toggle->padding         = nk_vec2(3.0f, 3.0f);
+    toggle->padding         = nk_vec2(3, 3);
     toggle->touch_padding   = nk_vec2(0,0);
     toggle->border_color    = nk_rgba(0,0,0,0);
-    toggle->border          = 0.0f;
+    toggle->border          = 0;
     toggle->spacing         = 5;
 
     // button
@@ -1378,20 +1371,17 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     button->text_normal     = nk_rgba(70, 70, 70, 255);
     button->text_hover      = nk_rgba(70, 70, 70, 255);
     button->text_active     = nk_rgba(0, 0, 0, 255);
-    button->padding         = nk_vec2(2.0f,2.0f);
-    button->image_padding   = nk_vec2(0.0f,0.0f);
-    button->touch_padding   = nk_vec2(0.0f, 0.0f);
+    button->padding         = nk_vec2(2,2);
+    button->image_padding   = nk_vec2(0,0);
+    button->touch_padding   = nk_vec2(0, 0);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_LEFT;
-    button->border          = 1.0f;
-    button->rounding        = 4.0f;
+    button->border          = 1;
+    button->rounding        = 4;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
     ForeColor(blackColor);
-
-    TextSize(13);
-
 
     return &quickdraw.nuklear_context;
 }
