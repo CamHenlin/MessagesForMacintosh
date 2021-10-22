@@ -1242,6 +1242,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     // #endif
                     
                     nk_input_char(nuklear_context, charKey);
+                    writeSerialPortDebug(boutRefNum, "back from nk_input_char");
                 }
 
                 lastEventWasKey = 1;

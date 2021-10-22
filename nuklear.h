@@ -899,7 +899,7 @@ NK_API void nk_input_char(struct nk_context*, char);
 /// __ctx__     | Must point to a previously initialized `nk_context` struct
 /// __g__       | UTF-32 unicode codepoint
 */
-NK_API void nk_input_glyph(struct nk_context*, const nk_glyph);
+// NK_API void nk_input_glyph(struct nk_context*, const nk_glyph);
 /*/// #### nk_input_unicode
 /// Converts a unicode rune into UTF-8 and copies the result
 /// into an internal text buffer.
@@ -915,7 +915,7 @@ NK_API void nk_input_glyph(struct nk_context*, const nk_glyph);
 /// __ctx__     | Must point to a previously initialized `nk_context` struct
 /// __rune__    | UTF-32 unicode codepoint
 */
-NK_API void nk_input_unicode(struct nk_context*, nk_rune);
+// NK_API void nk_input_unicode(struct nk_context*, nk_rune);
 /*/// #### nk_input_end
 /// End the input mirroring process by resetting mouse grabbing
 /// state to ensure the mouse cursor is not grabbed indefinitely.
@@ -3639,7 +3639,8 @@ NK_API short nk_strmatch_fuzzy_text(const char *txt, short txt_len, const char *
  *                                  UTF-8
  *
  * ============================================================================= */
-NK_API short nk_utf_decode(const char*, nk_rune*, short);
+ NK_API short nk_utf_decode(const char*, nk_rune*, short);
+
 NK_API short nk_utf_encode(nk_rune, char*, short);
 NK_API short nk_utf_len(const char*, short byte_len);
 NK_API const char* nk_utf_at(const char *buffer, short length, short index, nk_rune *unicode, short *len);
@@ -6979,9 +6980,11 @@ nk_text_clamp(const struct nk_user_font *font, const char *text,
     short sep_width = 0;
     sep_count = NK_MAX(sep_count,0);
 
-    glyph_len = nk_utf_decode(text, &unicode, text_len);
-    while (glyph_len && (width < space) && (len < text_len)) {
-        len += glyph_len;
+     // glyph_len = nk_utf_decode(text, &unicode, text_len);
+    unicode = text[0];
+
+    while ((width < space) && (len < text_len)) {
+        len += 1;
         s = font->width(font->userdata, font->height, text, len);
         for (i = 0; i < sep_count; ++i) {
             if (unicode != sep_list[i]) continue;
@@ -6995,7 +6998,9 @@ nk_text_clamp(const struct nk_user_font *font, const char *text,
             sep_g = g+1;
         }
         width = s;
-        glyph_len = nk_utf_decode(&text[len], &unicode, text_len - len);
+         // glyph_len = nk_utf_decode(&text[len], &unicode, text_len - len);
+        unicode = text[len];
+
         g++;
     }
     if (len >= text_len) {
@@ -7024,12 +7029,14 @@ nk_text_calculate_text_bounds(const struct nk_user_font *font,
     if (!begin || byte_len <= 0 || !font)
         return nk_vec2(0,row_height);
 
-    glyph_len = nk_utf_decode(begin, &unicode, byte_len);
-    if (!glyph_len) return text_size;
-    glyph_width = font->width(font->userdata, font->height, begin, glyph_len);
+     // glyph_len = nk_utf_decode(begin, &unicode, byte_len);
+      unicode = begin[0];
+
+    // if (!glyph_len) return text_size;
+    glyph_width = font->width(font->userdata, font->height, begin, 1);
 
     *glyphs = 0;
-    while ((text_len < byte_len) && glyph_len) {
+    while ((text_len < byte_len)) {
         if (unicode == '\n') {
             text_size.x = NK_MAX(text_size.x, line_width);
             text_size.y += line_height;
@@ -7039,22 +7046,28 @@ nk_text_calculate_text_bounds(const struct nk_user_font *font,
                 break;
 
             text_len++;
-            glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
+             // glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
+            unicode = (begin + text_len)[0];
+
             continue;
         }
 
         if (unicode == '\r') {
             text_len++;
             *glyphs+=1;
-            glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
+             // glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
+            unicode = (begin + text_len)[0];
+
             continue;
         }
 
         *glyphs = *glyphs + 1;
-        text_len += glyph_len;
+        text_len += 1;
         line_width += glyph_width;
-        glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
-        glyph_width = font->width(font->userdata, font->height, begin+text_len, glyph_len);
+         // glyph_len = nk_utf_decode(begin + text_len, &unicode, byte_len-text_len);
+        unicode = (begin + text_len)[0];
+
+        glyph_width = font->width(font->userdata, font->height, begin+text_len, 1);
         continue;
     }
 
@@ -7501,51 +7514,62 @@ NK_INTERN short
 nk_utf_validate(nk_rune *u, short i)
 {
     // NK_ASSERT(u);
-    if (!u) return 0;
-    if (!NK_BETWEEN(*u, nk_utfmin[i], nk_utfmax[i]) ||
-         NK_BETWEEN(*u, 0xD800, 0xDFFF))
-            *u = NK_UTF_INVALID;
+    // if (!u) return 0;
+    // if (!NK_BETWEEN(*u, nk_utfmin[i], nk_utfmax[i]) ||
+    //      NK_BETWEEN(*u, 0xD800, 0xDFFF))
+    //         *u = NK_UTF_INVALID;
     for (i = 1; *u > nk_utfmax[i]; ++i);
     return i;
 }
-NK_INTERN nk_rune
-nk_utf_decode_byte(char c, short *i)
-{
-    // NK_ASSERT(i);
-    if (!i) return 0;
-    for(*i = 0; *i < NK_LEN(nk_utfmask); ++(*i)) {
-        if (((nk_byte)c & nk_utfmask[*i]) == nk_utfbyte[*i])
-            return (nk_byte)(c & ~nk_utfmask[*i]);
-    }
-    return 0;
-}
+// NK_INTERN nk_rune
+ // // nk_utf_decode_byte(char c, short *i)
+
+// {
+//unicode = text[0];
+//     // NK_ASSERT(i);
+//     // if (!i) return 0;
+//     for(*i = 0; *i < NK_LEN(nk_utfmask); ++(*i)) {
+//         if (((nk_byte)c & nk_utfmask[*i]) == nk_utfbyte[*i])
+//             return (nk_byte)(c & ~nk_utfmask[*i]);
+//     }
+//     return 0;
+// }
 NK_API short
 nk_utf_decode(const char *c, nk_rune *u, short clen)
+// unicode = text[0];
+
 {
-    short i, j, len, type=0;
-    nk_rune udecoded;
+    // short i, j, len, type=0;
+    // short len;
+    // nk_rune udecoded;
 
     // NK_ASSERT(c);
     // NK_ASSERT(u);
 
-    if (!c || !u) return 0;
-    if (!clen) return 0;
-    *u = NK_UTF_INVALID;
+    // if (!c || !u) return 0;
+    // if (!clen) return 0;
+    // *u = NK_UTF_INVALID;
 
-    udecoded = nk_utf_decode_byte(c[0], &len);
-    if (!NK_BETWEEN(len, 1, NK_UTF_SIZE))
-        return 1;
+     // // udecoded = nk_utf_decode_byte(c[0], &len);
 
-    for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
-        udecoded = (udecoded << 6) | nk_utf_decode_byte(c[i], &type);
-        if (type != 0)
-            return j;
-    }
-    if (j < len)
-        return 0;
-    *u = udecoded;
+    // if (!NK_BETWEEN(len, 1, NK_UTF_SIZE))
+  // unicode = text[0];
+    //     return 1;
+
+    // for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
+     // //     udecoded = (udecoded << 6) | nk_utf_decode_byte(c[i], &type);
+  // unicode = text[0];
+
+    //     if (type != 0)
+    //         return j;
+    // }
+    // if (j < len)
+    //     return 0;
+    // *u = udecoded;
     // nk_utf_validate(u, len);
-    return len;
+    // return len;
+    *u = c[0];
+    return 1;
 }
 NK_INTERN char
 nk_utf_encode_byte(nk_rune u, short i)
@@ -7555,40 +7579,62 @@ nk_utf_encode_byte(nk_rune u, short i)
 NK_API short
 nk_utf_encode(nk_rune u, char *c, short clen)
 {
-    short len, i;
-    len = nk_utf_validate(&u, 0);
-    if (clen < len || !len || len > NK_UTF_SIZE)
-        return 0;
 
-    for (i = len - 1; i != 0; --i) {
-        c[i] = nk_utf_encode_byte(u, 0);
-        u >>= 6;
-    }
-    c[0] = nk_utf_encode_byte(u, len);
-    return len;
+  writeSerialPortDebug(boutRefNum, "nk_utf_encode");
+// {
+//     short len, i;
+//     // len = nk_utf_validate(&u, 0);
+//     // if (clen < len || !len || len > NK_UTF_SIZE)
+//     //     return 0;
+//     len = 1;
+
+//     for (i = len - 1; i != 0; --i) {
+//         c[i] = nk_utf_encode_byte(u, 0);
+//         u >>= 6;
+//     }
+
+    // c[0] = nk_utf_encode_byte(u, 0);
+    // u >>= 6;
+    // c[0] = nk_utf_encode_byte(u, 1);
+
+    writeSerialPortDebug(boutRefNum, c);
+
+    char character[1];
+    sprintf(character, "%c\0", u);
+    strcat(c, character);
+
+    writeSerialPortDebug(boutRefNum, c);
+
+    return 1;
 }
 NK_API short
 nk_utf_len(const char *str, short len)
 {
-    const char *text;
-    short glyphs = 0;
-    short text_len;
-    short glyph_len;
-    short src_len = 0;
-    nk_rune unicode;
+//     const char *text;
+//     short glyphs = 0;
+//     short text_len;
+//     short glyph_len;
+//     short src_len = 0;
+//     nk_rune unicode;
 
-    // NK_ASSERT(str);
-    if (!str || !len) return 0;
+//     // NK_ASSERT(str);
+//     // if (!str || !len) return 0;
 
-    text = str;
-    text_len = len;
-    glyph_len = nk_utf_decode(text, &unicode, text_len);
-    while (glyph_len && src_len < len) {
-        glyphs++;
-        src_len = src_len + glyph_len;
-        glyph_len = nk_utf_decode(text + src_len, &unicode, text_len - src_len);
-    }
-    return glyphs;
+//     text = str;
+//     text_len = len;
+//      // glyph_len = nk_utf_decode(text, &unicode, text_len);
+//     unicode = text[0];
+
+//     while (/*glyph_len &&*/ src_len < len) {
+//         glyphs++;
+//         src_len = src_len + 1;
+//          // glyph_len = nk_utf_decode(text + src_len, &unicode, text_len - src_len);
+//         unicode = text[0];
+
+//     }
+//     return glyphs;
+
+  return len;
 }
 NK_API const char*
 nk_utf_at(const char *buffer, short length, short index,
@@ -7613,16 +7659,20 @@ nk_utf_at(const char *buffer, short length, short index,
 
     text = buffer;
     text_len = length;
-    glyph_len = nk_utf_decode(text, unicode, text_len);
-    while (glyph_len) {
+     // glyph_len = nk_utf_decode(text, unicode, text_len);
+    *unicode = (nk_byte)text[0];
+
+    while (1) {
         if (i == index) {
-            *len = glyph_len;
+            *len = 1;
             break;
         }
 
         i++;
-        src_len = src_len + glyph_len;
-        glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        src_len = src_len + 1;
+         // glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        *unicode = (text + src_len)[0];
+
     }
     if (i != index) return 0;
     return buffer + src_len;
@@ -7943,6 +7993,8 @@ nk_str_init_fixed(struct nk_str *str, void *memory, nk_size size)
 NK_API short
 nk_str_append_text_char(struct nk_str *s, const char *str, short len)
 {
+    writeSerialPortDebug(boutRefNum, "nk_str_append_text_char");
+    writeSerialPortDebug(boutRefNum, str);
     char *mem;
     // NK_ASSERT(s);
     // NK_ASSERT(str);
@@ -7966,7 +8018,9 @@ nk_str_append_text_utf8(struct nk_str *str, const char *text, short len)
     nk_rune unicode;
     if (!str || !text || !len) return 0;
     for (i = 0; i < len; ++i)
-        byte_len += nk_utf_decode(text+byte_len, &unicode, 4);
+         // byte_len += nk_utf_decode(text+byte_len, &unicode, 4);
+      unicode = text[0];
+
     nk_str_append_text_char(str, text, byte_len);
     return len;
 }
@@ -7980,10 +8034,14 @@ nk_str_append_str_utf8(struct nk_str *str, const char *text)
     nk_rune unicode;
     if (!str || !text) return 0;
 
-    glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
-    while (unicode != '\0' && glyph_len) {
-        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
-        byte_len += glyph_len;
+     // glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
+    unicode = (text+byte_len)[0];
+
+    while (unicode != '\0') {
+         // glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
+      unicode = (text+byte_len)[0];
+
+        byte_len += 1;
         num_runes++;
     }
     nk_str_append_text_char(str, text, byte_len);
@@ -8020,44 +8078,106 @@ nk_str_append_str_runes(struct nk_str *str, const nk_rune *runes)
     }
     return i;
 }
+
+
+void append(char subject[], const char insert[], int pos) {
+    char buf[100] = {}; // 100 so that it's big enough. fill with zeros
+    // or you could use malloc() to allocate sufficient space
+    // e.g. char *buf = (char*)malloc(strlen(subject) + strlen(insert) + 2);
+    // to fill with zeros: memset(buf, 0, 100);
+
+    strncpy(buf, subject, pos); // copy at most first pos characters
+    int len = strlen(buf);
+    strcpy(buf+len, insert); // copy all of insert[] at the end
+    len += strlen(insert);  // increase the length by length of insert[]
+    strcpy(buf+len, subject+pos); // copy the rest
+
+    strcpy(subject, buf);   // copy it back to subject
+    // Note that subject[] must be big enough, or else segfault.
+    // deallocate buf[] here, if used malloc()
+    // e.g. free(buf);
+}
 NK_API short
 nk_str_insert_at_char(struct nk_str *s, short pos, const char *str, short len)
 {
-    short i;
-    void *mem;
-    char *src;
-    char *dst;
 
-    short copylen;
-    // NK_ASSERT(s);
-    // NK_ASSERT(str);
-    // NK_ASSERT(len >= 0);
-    if (!s || !str || !len || (nk_size)pos > s->buffer.allocated) return 0;
-    if ((s->buffer.allocated + (nk_size)len >= s->buffer.memory.size) &&
-        (s->buffer.type == NK_BUFFER_FIXED)) return 0;
+  char *z;
+  z[0] = str[strlen(str) - 1];
+  nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * sizeof(char), 0);
+  append(s->buffer.memory.ptr, z, pos);
+    // writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char");
+    // writeSerialPortDebug(boutRefNum, str);
 
-    copylen = s->buffer.allocated - pos;
-    if (!copylen) {
-        nk_str_append_text_char(s, str, len);
-        return 1;
-    }
-    mem = nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * sizeof(char), 0);
-    if (!mem) return 0;
+    // char xx[255];
+    // sprintf(xx, "nk_str_insert_at_char out: pos %d, len: %d", pos, len);
+    // writeSerialPortDebug(boutRefNum, xx);
+    // short i;
+    // void *mem;
+    // char *src;
+    // char *dst;
 
-    /* memmove */
-    // NK_ASSERT((pos + len + (copylen - 1)) >= 0);
-    // NK_ASSERT((pos + (copylen - 1)) >= 0);
-    dst = nk_ptr_add(char, s->buffer.memory.ptr, pos + len + (copylen - 1));
-    src = nk_ptr_add(char, s->buffer.memory.ptr, pos + (copylen-1));
-    for (i = 0; i < copylen; ++i) *dst-- = *src--;
-    mem = nk_ptr_add(void, s->buffer.memory.ptr, pos);
-    NK_MEMCPY(mem, str, (nk_size)len * sizeof(char));
-    s->len = nk_utf_len((char *)s->buffer.memory.ptr, s->buffer.allocated);
+    // short copylen;
+    // // NK_ASSERT(s);
+    // // NK_ASSERT(str);
+    // // NK_ASSERT(len >= 0);
+    // if (!s || !str || !len || (nk_size)pos > s->buffer.allocated) {
+
+    //   writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char bail1");
+    //   return 0;
+    // }
+    // if ((s->buffer.allocated + (nk_size)len >= s->buffer.memory.size) && (s->buffer.type == NK_BUFFER_FIXED)) {
+
+    //   writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char bail2");
+    //   return 0;
+    // }
+
+    // copylen = s->buffer.allocated - pos;
+
+    // if (!copylen) {
+    //     writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char no copylen, call to nk_str_append_text_char");
+    //     nk_str_append_text_char(s, str, len);
+    //     return 1;
+    // }
+
+    // mem = nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * sizeof(char), 0);
+
+    // if (!mem) {
+
+    //     writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char bail3");
+    //     return 0;
+    // }
+
+    // /* memmove */
+    // // NK_ASSERT((pos + len + (copylen - 1)) >= 0);
+    // // NK_ASSERT((pos + (copylen - 1)) >= 0);
+    // dst = nk_ptr_add(short, s->buffer.memory.ptr, pos + len + (copylen - 1));
+    // src = nk_ptr_add(short, s->buffer.memory.ptr, pos + (copylen - 1));
+
+    // for (i = 0; i < copylen; ++i) {
+
+    //   *dst-- = *src--;
+    // }
+
+    // char y[255];
+    // sprintf(y, "(char *)s->buffer.memory.ptr : %s len: %d pos: %d, copylen: %d", (char *)s->buffer.memory.ptr, len, pos, copylen);
+    // writeSerialPortDebug(boutRefNum, y);
+    // mem = nk_ptr_add(void, s->buffer.memory.ptr, pos);
+    // NK_MEMCPY(mem, str, (nk_size)len * sizeof(char));
+    // s->len = nk_utf_len((char *)s->buffer.memory.ptr, s->buffer.allocated);
+
+    // char x[255];
+    // sprintf(x, "(char *)s->buffer.memory.ptr : %s", (char *)s->buffer.memory.ptr);
+    // writeSerialPortDebug(boutRefNum, x);
+
+    // writeSerialPortDebug(boutRefNum, "nk_str_insert_at_char complete");
+
     return 1;
 }
 NK_API short
 nk_str_insert_at_rune(struct nk_str *str, short pos, const char *cstr, short len)
 {
+    writeSerialPortDebug(boutRefNum, "nk_str_insert_at_rune");
+    writeSerialPortDebug(boutRefNum, cstr);
     short glyph_len;
     nk_rune unicode;
     const char *begin;
@@ -8066,12 +8186,30 @@ nk_str_insert_at_rune(struct nk_str *str, short pos, const char *cstr, short len
     // NK_ASSERT(str);
     // NK_ASSERT(cstr);
     // NK_ASSERT(len);
-    if (!str || !cstr || !len) return 0;
+    if (!str || !cstr || !len) {
+
+      writeSerialPortDebug(boutRefNum, "nk_str_insert_at_rune bail");
+      return 0;
+    }
+
     begin = nk_str_at_rune(str, pos, &unicode, &glyph_len);
-    if (!str->len)
+
+    if (!str->len) {
         return nk_str_append_text_char(str, cstr, len);
+    }
+
     buffer = nk_str_get_const(str);
-    if (!begin) return 0;
+
+    if (!begin) {
+
+      writeSerialPortDebug(boutRefNum, "nk_str_insert_at_rune bail2");
+      return 0;
+    }
+
+    char x[255];
+    sprintf(x, "calling out: begin-buffer: %d, len: %d", (begin - buffer), len);
+    writeSerialPortDebug(boutRefNum, x);
+
     return nk_str_insert_at_char(str, (begin - buffer), cstr, len);
 }
 NK_API short
@@ -8087,6 +8225,7 @@ nk_str_insert_str_char(struct nk_str *str, short pos, const char *text)
 NK_API short
 nk_str_insert_text_utf8(struct nk_str *str, short pos, const char *text, short len)
 {
+    writeSerialPortDebug(boutRefNum, "nk_str_insert_text_utf8");
     short i = 0;
     short byte_len = 0;
     nk_rune unicode;
@@ -8094,9 +8233,11 @@ nk_str_insert_text_utf8(struct nk_str *str, short pos, const char *text, short l
     // NK_ASSERT(str);
     // NK_ASSERT(text);
     if (!str || !text || !len) return 0;
-    for (i = 0; i < len; ++i)
-        byte_len += nk_utf_decode(text+byte_len, &unicode, 4);
-    nk_str_insert_at_rune(str, pos, text, byte_len);
+    for (i = 0; i < len; ++i) {
+         // byte_len += nk_utf_decode(text+byte_len, &unicode, 4);
+      unicode = text[0];
+    }
+    nk_str_insert_at_rune(str, pos, text, 1);
     return len;
 }
 NK_API short
@@ -8109,10 +8250,14 @@ nk_str_insert_str_utf8(struct nk_str *str, short pos, const char *text)
     nk_rune unicode;
     if (!str || !text) return 0;
 
-    glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
+     // glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
+    unicode = (text+byte_len)[0];
+
     while (unicode != '\0' && glyph_len) {
-        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
-        byte_len += glyph_len;
+         // glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
+      unicode = (text+byte_len)[0];
+
+        byte_len += 1;
         num_runes++;
     }
     nk_str_insert_at_rune(str, pos, text, byte_len);
@@ -8250,16 +8395,20 @@ nk_str_at_rune(struct nk_str *str, short pos, nk_rune *unicode, short *len)
 
     text = (char*)str->buffer.memory.ptr;
     text_len = str->buffer.allocated;
-    glyph_len = nk_utf_decode(text, unicode, text_len);
-    while (glyph_len) {
+     // glyph_len = nk_utf_decode(text, unicode, text_len);
+    *unicode = text[0];
+
+    while (1) {
         if (i == pos) {
-            *len = glyph_len;
+            *len = 1;
             break;
         }
 
         i++;
-        src_len = src_len + glyph_len;
-        glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        src_len = src_len + 1;
+         // glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        *unicode = (text + src_len)[0];
+
     }
     if (i != pos) return 0;
     return text + src_len;
@@ -8293,16 +8442,20 @@ nk_str_at_const(const struct nk_str *str, short pos, nk_rune *unicode, short *le
 
     text = (char*)str->buffer.memory.ptr;
     text_len = str->buffer.allocated;
-    glyph_len = nk_utf_decode(text, unicode, text_len);
-    while (glyph_len) {
+     // glyph_len = nk_utf_decode(text, unicode, text_len);
+    *unicode = text[0];
+
+    while (1) {
         if (i == pos) {
-            *len = glyph_len;
+            *len = 1;
             break;
         }
 
         i++;
-        src_len = src_len + glyph_len;
-        glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        src_len = src_len + 1;
+         // glyph_len = nk_utf_decode(text + src_len, unicode, text_len - src_len);
+        *unicode = (text + src_len)[0];
+
     }
     if (i != pos) return 0;
     return text + src_len;
@@ -9009,7 +9162,7 @@ NK_API void
 nk_input_scroll(struct nk_context *ctx, struct nk_vec2 val)
 {
     // NK_ASSERT(ctx);
-    if (!ctx) return;
+    // if (!ctx) return;
     ctx->input.mouse.scroll_delta.x += val.x;
     ctx->input.mouse.scroll_delta.y += val.y;
 }
@@ -9021,34 +9174,44 @@ nk_input_glyph(struct nk_context *ctx, const nk_glyph glyph)
     struct nk_input *in;
 
     // NK_ASSERT(ctx);
-    if (!ctx) return;
+    // if (!ctx) return;
     in = &ctx->input;
 
-    len = nk_utf_decode(glyph, &unicode, NK_UTF_SIZE);
-    if (len && ((in->keyboard.text_len + len) < NK_INPUT_MAX)) {
-        nk_utf_encode(unicode, &in->keyboard.text[in->keyboard.text_len],
-            NK_INPUT_MAX - in->keyboard.text_len);
-        in->keyboard.text_len += len;
+     // len = nk_utf_decode(glyph, &unicode, NK_UTF_SIZE);
+    unicode = glyph[0];
+
+    writeSerialPortDebug(boutRefNum, "nk_input_glyph");
+    char x[255];
+    sprintf(x, "char: %c", unicode);
+    writeSerialPortDebug(boutRefNum, x);
+
+    if (((in->keyboard.text_len + 1) < NK_INPUT_MAX)) {
+        nk_utf_encode(unicode, &in->keyboard.text[in->keyboard.text_len], NK_INPUT_MAX - in->keyboard.text_len);
+        in->keyboard.text_len += 1;
     }
+    writeSerialPortDebug(boutRefNum, "nk_input_glyph complete");
+    return;
 }
 NK_API void
 nk_input_char(struct nk_context *ctx, char c)
 {
     nk_glyph glyph;
     // NK_ASSERT(ctx);
-    if (!ctx) return;
+    // if (!ctx) return;
     glyph[0] = c;
+    writeSerialPortDebug(boutRefNum, "nk_input_char");
     nk_input_glyph(ctx, glyph);
+    writeSerialPortDebug(boutRefNum, "nk_input_char complete");
 }
-NK_API void
-nk_input_unicode(struct nk_context *ctx, nk_rune unicode)
-{
-    nk_glyph rune;
-    // NK_ASSERT(ctx);
-    if (!ctx) return;
-    nk_utf_encode(unicode, rune, NK_UTF_SIZE);
-    nk_input_glyph(ctx, rune);
-}
+// NK_API void
+// nk_input_unicode(struct nk_context *ctx, nk_rune unicode)
+// {
+//     nk_glyph rune;
+//     // NK_ASSERT(ctx);
+//     // if (!ctx) return;
+//     nk_utf_encode(unicode, rune, NK_UTF_SIZE);
+//     nk_input_glyph(ctx, rune);
+// }
 NK_API nk_bool
 nk_input_has_mouse_click(const struct nk_input *i, enum nk_buttons id)
 {
@@ -16828,8 +16991,7 @@ NK_INTERN void nk_textedit_makeundo_replace(struct nk_text_edit*, short, short, 
 #define NK_TEXT_HAS_SELECTION(s)   ((s)->select_start != (s)->select_end)
 
 NK_INTERN short
-nk_textedit_get_width(const struct nk_text_edit *edit, short line_start, short char_id,
-    const struct nk_user_font *font)
+nk_textedit_get_width(const struct nk_text_edit *edit, short line_start, short char_id, const struct nk_user_font *font)
 {
     short len = 0;
     nk_rune unicode = 0;
@@ -17154,16 +17316,24 @@ nk_textedit_paste(struct nk_text_edit *state, char const *ctext, short len)
 NK_API void
 nk_textedit_text(struct nk_text_edit *state, const char *text, short total_len)
 {
+    writeSerialPortDebug(boutRefNum, "nk_textedit_text");
+    writeSerialPortDebug(boutRefNum, text);
     nk_rune unicode;
     short glyph_len;
     short text_len = 0;
 
     // NK_ASSERT(state);
     // NK_ASSERT(text);
-    if (!text || !total_len || state->mode == NK_TEXT_EDIT_MODE_VIEW) return;
+    if (!text || !total_len || state->mode == NK_TEXT_EDIT_MODE_VIEW) {
 
-    glyph_len = nk_utf_decode(text, &unicode, total_len);
-    while ((text_len < total_len) && glyph_len)
+      writeSerialPortDebug(boutRefNum, "nk_textedit_text bail");
+      return;
+    }
+
+     // glyph_len = nk_utf_decode(text, &unicode, total_len);
+    unicode = text[0];
+
+    while ((text_len < total_len))
     {
         /* don't insert a backward delete, just process the event */
         if (unicode == 127) goto next;
@@ -17196,8 +17366,10 @@ nk_textedit_text(struct nk_text_edit *state, const char *text, short total_len)
             }
         }
         next:
-        text_len += glyph_len;
-        glyph_len = nk_utf_decode(text + text_len, &unicode, total_len-text_len);
+        text_len += 1;
+         // glyph_len = nk_utf_decode(text + text_len, &unicode, total_len-text_len);
+        unicode = (text + text_len)[0];
+
     }
 }
 NK_LIB void
@@ -17921,9 +18093,11 @@ nk_edit_draw_text(struct nk_command_buffer *out,
     txt.background = background;
     txt.text = foreground;
 
-    glyph_len = nk_utf_decode(text+text_len, &unicode, byte_len-text_len);
-    if (!glyph_len) return;
-    while ((text_len < byte_len) && glyph_len)
+     // glyph_len = nk_utf_decode(text+text_len, &unicode, byte_len-text_len);
+    unicode = (text+text_len)[0];
+
+    // if (!glyph_len) return;
+    while ((text_len < byte_len))
     {
         if (unicode == '\n') {
             /* new line separator so draw previous line */
@@ -17945,18 +18119,24 @@ nk_edit_draw_text(struct nk_command_buffer *out,
             line_width = 0;
             line = text + text_len;
             line_offset += row_height;
-            glyph_len = nk_utf_decode(text + text_len, &unicode, (byte_len-text_len));
+             // glyph_len = nk_utf_decode(text + text_len, &unicode, (byte_len-text_len));
+            unicode = (text + text_len)[0];
+
             continue;
         }
         if (unicode == '\r') {
             text_len++;
-            glyph_len = nk_utf_decode(text + text_len, &unicode, byte_len-text_len);
+             // glyph_len = nk_utf_decode(text + text_len, &unicode, byte_len-text_len);
+            unicode = (text + text_len)[0];
+
             continue;
         }
-        glyph_width = font->width(font->userdata, font->height, text+text_len, glyph_len);
+        glyph_width = font->width(font->userdata, font->height, text+text_len, 1);
         line_width += glyph_width;
-        text_len += glyph_len;
-        glyph_len = nk_utf_decode(text + text_len, &unicode, byte_len-text_len);
+        text_len += 1;
+         // glyph_len = nk_utf_decode(text + text_len, &unicode, byte_len-text_len);
+        unicode = (text + text_len)[0];
+
         continue;
     }
     if (line_width > 0) {
@@ -18201,12 +18381,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             short glyphs = 0;
             short row_begin = 0;
 
-            glyph_len = nk_utf_decode(text, &unicode, len);
-            glyph_width = font->width(font->userdata, font->height, text, glyph_len);
+             // glyph_len = nk_utf_decode(text, &unicode, len);
+            unicode = text[0];
+
+            glyph_width = font->width(font->userdata, font->height, text, 1);
             line_width = 0;
 
             /* iterate all lines */
-            while ((text_len < len) && glyph_len)
+            while ((text_len < len))
             {
                 /* set cursor 2D position and line */
                 if (!cursor_ptr && glyphs == edit->cursor)
@@ -18267,18 +18449,22 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                     text_len++;
                     glyphs++;
                     row_begin = text_len;
-                    glyph_len = nk_utf_decode(text + text_len, &unicode, len-text_len);
-                    glyph_width = font->width(font->userdata, font->height, text+text_len, glyph_len);
+                     // glyph_len = nk_utf_decode(text + text_len, &unicode, len-text_len);
+                    unicode = (text + text_len)[0];
+
+                    glyph_width = font->width(font->userdata, font->height, text+text_len, 1);
                     continue;
                 }
 
                 glyphs++;
-                text_len += glyph_len;
+                text_len += 1;
                 line_width += glyph_width;
 
-                glyph_len = nk_utf_decode(text + text_len, &unicode, len-text_len);
+                 // glyph_len = nk_utf_decode(text + text_len, &unicode, len-text_len);
+                unicode = text[0];
+
                 glyph_width = font->width(font->userdata, font->height,
-                    text+text_len, glyph_len);
+                    text+text_len, 1);
                 continue;
             }
             text_size.y = total_lines * row_height;
@@ -18444,18 +18630,20 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
 
                 nk_rune unicode;
                 // NK_ASSERT(cursor_ptr);
-                glyph_len = nk_utf_decode(cursor_ptr, &unicode, 4);
+                 // glyph_len = nk_utf_decode(cursor_ptr, &unicode, 4);
+                unicode = cursor_ptr[0];
+
 
                 label.x = area.x + cursor_pos.x - edit->scrollbar.x;
                 label.y = area.y + cursor_pos.y - edit->scrollbar.y;
-                label.w = font->width(font->userdata, font->height, cursor_ptr, glyph_len);
+                label.w = font->width(font->userdata, font->height, cursor_ptr, 1);
                 label.h = row_height;
 
                 txt.padding = nk_vec2(0,0);
                 txt.background = cursor_color;;
                 txt.text = cursor_text_color;
                 nk_fill_rect(out, label, 0, cursor_color);
-                nk_widget_text(out, label, cursor_ptr, glyph_len, &txt, NK_TEXT_LEFT, font);
+                nk_widget_text(out, label, cursor_ptr, 1, &txt, NK_TEXT_LEFT, font);
             }
         }}
     } else {
@@ -20517,397 +20705,3 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 
 
 #endif /* NK_IMPLEMENTATION */
-
-/*
-/// ## License
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~none
-///    ------------------------------------------------------------------------------
-///    This software is available under 2 licenses -- choose whichever you prefer.
-///    ------------------------------------------------------------------------------
-///    ALTERNATIVE A - MIT License
-///    Copyright (c) 2016-2018 Micha Mettke
-///    Permission is hereby granted, free of charge, to any person obtaining a copy of
-///    this software and associated documentation files (the "Software"), to deal in
-///    the Software without restriction, including without limitation the rights to
-///    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-///    of the Software, and to permit persons to whom the Software is furnished to do
-///    so, subject to the following conditions:
-///    The above copyright notice and this permission notice shall be included in all
-///    copies or substantial portions of the Software.
-///    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-///    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-///    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-///    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-///    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-///    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-///    SOFTWARE.
-///    ------------------------------------------------------------------------------
-///    ALTERNATIVE B - Public Domain (www.unlicense.org)
-///    This is free and unencumbered software released into the public domain.
-///    Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
-///    software, either in source code form or as a compiled binary, for any purpose,
-///    commercial or non-commercial, and by any means.
-///    In jurisdictions that recognize copyright laws, the author or authors of this
-///    software dedicate any and all copyright interest in the software to the public
-///    domain. We make this dedication for the benefit of the public at large and to
-///    the detriment of our heirs and successors. We intend this dedication to be an
-///    overt act of relinquishment in perpetuity of all present and future rights to
-///    this software under copyright law.
-///    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-///    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-///    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-///    AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-///    ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-///    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-///    ------------------------------------------------------------------------------
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/// ## Changelog
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~none
-/// [date][x.yy.zz]-[description]
-/// -[date]: date on which the change has been pushed
-/// -[x.yy.zz]: Numerical version string representation. Each version number on the right
-///             resets back to zero if version on the left is incremented.
-///    - [x]: Major version with API and library breaking changes
-///    - [yy]: Minor version with non-breaking API and library changes
-///    - [zz]: Bug fix version with no direct changes to API
-///
-/// - 2021/09/22 (4.08.5) - GCC __builtin_offsetof only exists in version 4 and later
-/// - 2021/09/15 (4.08.4) - Fix "'num_len' may be used uninitialized" in nk_do_property
-/// - 2021/09/15 (4.08.3) - Fix "Templates cannot be declared to have 'C' Linkage"
-/// - 2021/09/08 (4.08.2) - Fix warnings in C89 builds
-/// - 2021/09/08 (4.08.1) - Use compiler builtins for NK_OFFSETOF when possible
-/// - 2021/08/17 (4.08.0) - Implemented 9-slice scaling support for widget styles
-/// - 2021/08/16 (4.07.5) - Replace usage of memset in nk_font_atlas_bake with NK_MEMSET
-/// - 2021/08/15 (4.07.4) - Fix conversion and sign conversion warnings
-/// - 2021/08/08 (4.07.3) - Fix crash when baking merged fonts
-/// - 2021/08/08 (4.07.2) - Fix Multiline Edit wrong offset
-/// - 2021/03/17 (4.07.1) - Fix warning about unused parameter
-/// - 2021/03/17 (4.07.0) - Fix nk_property hover bug
-/// - 2021/03/15 (4.06.4) - Change nk_propertyi back to int
-/// - 2021/03/15 (4.06.3) - Update documentation for functions that now return nk_bool
-/// - 2020/12/19 (4.06.2) - Fix additional C++ style comments which are not allowed in ISO C90.
-/// - 2020/10/11 (4.06.1) - Fix C++ style comments which are not allowed in ISO C90.
-/// - 2020/10/07 (4.06.0) - Fix nk_combo return type wrongly changed to nk_bool
-/// - 2020/09/05 (4.05.0) - Use the nk_font_atlas allocator for stb_truetype memory management.
-/// - 2020/09/04 (4.04.1) - Replace every boolean short by nk_bool
-/// - 2020/09/04 (4.04.0) - Add nk_bool with NK_INCLUDE_STANDARD_BOOL
-/// - 2020/06/13 (4.03.1) - Fix nk_pool allocation sizes.
-/// - 2020/06/04 (4.03.0) - Made nk_combo header symbols optional.
-/// - 2020/05/27 (4.02.5) - Fix nk_do_edit: Keep scroll position when re-activating edit widget.
-/// - 2020/05/09 (4.02.4) - Fix nk_menubar height calculation bug
-/// - 2020/05/08 (4.02.3) - Fix missing stdarg.h with NK_INCLUDE_STANDARD_VARARGS
-/// - 2020/04/30 (4.02.2) - Fix nk_edit border drawing bug
-/// - 2020/04/09 (4.02.1) - Removed unused nk_sqrt function to fix compiler warnings
-///                       - Fixed compiler warnings if you bring your own methods for
-///                        nk_cos/nk_sin/nk_strtod/nk_memset/nk_memcopy/nk_dtoa
-/// - 2020/04/06 (4.01.10) - Fix bug: Do not use pool before checking for NULL
-/// - 2020/03/22 (4.01.9) - Fix bug where layout state wasn't restored correctly after
-///                        popping a tree.
-/// - 2020/03/11 (4.01.8) - Fix bug where padding is subtracted from widget
-/// - 2020/03/06 (4.01.7) - Fix bug where width padding was applied twice
-/// - 2020/02/06 (4.01.6) - Update stb_truetype.h and stb_rect_pack.h and separate them
-/// - 2019/12/10 (4.01.5) - Fix off-by-one error in NK_INTERSECT
-/// - 2019/10/09 (4.01.4) - Fix bug for autoscrolling in nk_do_edit
-/// - 2019/09/20 (4.01.3) - Fixed a bug wherein combobox cannot be closed by clicking the header
-///                        when NK_BUTTON_TRIGGER_ON_RELEASE is defined.
-/// - 2019/09/10 (4.01.2) - Fixed the nk_cos function, which deviated significantly.
-/// - 2019/09/08 (4.01.1) - Fixed a bug wherein re-baking of fonts caused a segmentation
-///                        fault due to dst_font->glyph_count not being zeroed on subsequent
-///                        bakes of the same set of fonts.
-/// - 2019/06/23 (4.01.0) - Added nk_***_get_scroll and nk_***_set_scroll for groups, windows, and popups.
-/// - 2019/06/12 (4.00.3) - Fix panel background drawing bug.
-/// - 2018/10/31 (4.00.2) - Added NK_KEYSTATE_BASED_INPUT to "fix" state based backends
-///                        like GLFW without breaking key repeat behavior on event based.
-/// - 2018/04/01 (4.00.1) - Fixed calling `nk_convert` multiple time per single frame.
-/// - 2018/04/01 (4.00.0) - BREAKING CHANGE: nk_draw_list_clear no longer tries to
-///                        clear provided buffers. So make sure to either free
-///                        or clear each passed buffer after calling nk_convert.
-/// - 2018/02/23 (3.00.6) - Fixed slider dragging behavior.
-/// - 2018/01/31 (3.00.5) - Fixed overcalculation of cursor data in font baking process.
-/// - 2018/01/31 (3.00.4) - Removed name collision with stb_truetype.
-/// - 2018/01/28 (3.00.3) - Fixed panel window border drawing bug.
-/// - 2018/01/12 (3.00.2) - Added `nk_group_begin_titled` for separed group identifier and title.
-/// - 2018/01/07 (3.00.1) - Started to change documentation style.
-/// - 2018/01/05 (3.00.0) - BREAKING CHANGE: The previous color picker API was broken
-///                        because of conversions between short and byte color representation.
-///                        Color pickers now use inting point values to represent
-///                        HSV values. To get back the old behavior I added some additional
-///                        color conversion functions to cast between nk_color and
-///                        nk_colorf.
-/// - 2017/12/23 (2.00.7) - Fixed small warning.
-/// - 2017/12/23 (2.00.7) - Fixed `nk_edit_buffer` behavior if activated to allow input.
-/// - 2017/12/23 (2.00.7) - Fixed modifyable progressbar dragging visuals and input behavior.
-/// - 2017/12/04 (2.00.6) - Added formated string tooltip widget.
-/// - 2017/11/18 (2.00.5) - Fixed window becoming hidden with flag `NK_WINDOW_NO_INPUT`.
-/// - 2017/11/15 (2.00.4) - Fixed font merging.
-/// - 2017/11/07 (2.00.3) - Fixed window size and position modifier functions.
-/// - 2017/09/14 (2.00.2) - Fixed `nk_edit_buffer` and `nk_edit_focus` behavior.
-/// - 2017/09/14 (2.00.1) - Fixed window closing behavior.
-/// - 2017/09/14 (2.00.0) - BREAKING CHANGE: Modifing window position and size funtions now
-///                        require the name of the window and must happen outside the window
-///                        building process (between function call nk_begin and nk_end).
-/// - 2017/09/11 (1.40.9) - Fixed window background flag if background window is declared last.
-/// - 2017/08/27 (1.40.8) - Fixed `nk_item_is_any_active` for hidden windows.
-/// - 2017/08/27 (1.40.7) - Fixed window background flag.
-/// - 2017/07/07 (1.40.6) - Fixed missing clipping rect check for hovering/clicked
-///                        query for widgets.
-/// - 2017/07/07 (1.40.5) - Fixed drawing bug for vertex output for lines and stroked
-///                        and filled rectangles.
-/// - 2017/07/07 (1.40.4) - Fixed bug in nk_convert trying to add windows that are in
-///                        process of being destroyed.
-/// - 2017/07/07 (1.40.3) - Fixed table internal bug caused by storing table size in
-///                        window instead of directly in table.
-/// - 2017/06/30 (1.40.2) - Removed unneeded semicolon in C++ NK_ALIGNOF macro.
-/// - 2017/06/30 (1.40.1) - Fixed drawing lines smaller or equal zero.
-/// - 2017/06/08 (1.40.0) - Removed the breaking part of last commit. Auto layout now only
-///                        comes in effect if you pass in zero was row height argument.
-/// - 2017/06/08 (1.40.0) - BREAKING CHANGE: while not directly API breaking it will change
-///                        how layouting works. From now there will be an internal minimum
-///                        row height derived from font height. If you need a row smaller than
-///                        that you can directly set it by `nk_layout_set_min_row_height` and
-///                        reset the value back by calling `nk_layout_reset_min_row_height.
-/// - 2017/06/08 (1.39.1) - Fixed property text edit handling bug caused by past `nk_widget` fix.
-/// - 2017/06/08 (1.39.0) - Added function to retrieve window space without calling a `nk_layout_xxx` function.
-/// - 2017/06/06 (1.38.5) - Fixed `nk_convert` return flag for command buffer.
-/// - 2017/05/23 (1.38.4) - Fixed activation behavior for widgets partially clipped.
-/// - 2017/05/10 (1.38.3) - Fixed wrong min window size mouse scaling over boundries.
-/// - 2017/05/09 (1.38.2) - Fixed vertical scrollbar drawing with not enough space.
-/// - 2017/05/09 (1.38.1) - Fixed scaler dragging behavior if window size hits minimum size.
-/// - 2017/05/06 (1.38.0) - Added platform int-click support.
-/// - 2017/04/20 (1.37.1) - Fixed key repeat found inside glfw demo backends.
-/// - 2017/04/20 (1.37.0) - Extended properties with selection and clipboard support.
-/// - 2017/04/20 (1.36.2) - Fixed #405 overlapping rows with zero padding and spacing.
-/// - 2017/04/09 (1.36.1) - Fixed #403 with another widget short error.
-/// - 2017/04/09 (1.36.0) - Added window `NK_WINDOW_NO_INPUT` and `NK_WINDOW_NOT_INTERACTIVE` flags.
-/// - 2017/04/09 (1.35.3) - Fixed buffer heap corruption.
-/// - 2017/03/25 (1.35.2) - Fixed popup overlapping for `NK_WINDOW_BACKGROUND` windows.
-/// - 2017/03/25 (1.35.1) - Fixed windows closing behavior.
-/// - 2017/03/18 (1.35.0) - Added horizontal scroll requested in #377.
-/// - 2017/03/18 (1.34.3) - Fixed long window header titles.
-/// - 2017/03/04 (1.34.2) - Fixed text edit filtering.
-/// - 2017/03/04 (1.34.1) - Fixed group closable flag.
-/// - 2017/02/25 (1.34.0) - Added custom draw command for better language binding support.
-/// - 2017/01/24 (1.33.0) - Added programatic way of remove edit focus.
-/// - 2017/01/24 (1.32.3) - Fixed wrong define for basic type definitions for windows.
-/// - 2017/01/21 (1.32.2) - Fixed input capture from hidden or closed windows.
-/// - 2017/01/21 (1.32.1) - Fixed slider behavior and drawing.
-/// - 2017/01/13 (1.32.0) - Added flag to put scaler into the bottom left corner.
-/// - 2017/01/13 (1.31.0) - Added additional row layouting method to combine both
-///                        dynamic and static widgets.
-/// - 2016/12/31 (1.30.0) - Extended scrollbar offset from 16-bit to 32-bit.
-/// - 2016/12/31 (1.29.2) - Fixed closing window bug of minimized windows.
-/// - 2016/12/03 (1.29.1) - Fixed wrapped text with no seperator and C89 error.
-/// - 2016/12/03 (1.29.0) - Changed text wrapping to process words not characters.
-/// - 2016/11/22 (1.28.6) - Fixed window minimized closing bug.
-/// - 2016/11/19 (1.28.5) - Fixed abstract combo box closing behavior.
-/// - 2016/11/19 (1.28.4) - Fixed tooltip flickering.
-/// - 2016/11/19 (1.28.3) - Fixed memory leak caused by popup repeated closing.
-/// - 2016/11/18 (1.28.2) - Fixed memory leak caused by popup panel allocation.
-/// - 2016/11/10 (1.28.1) - Fixed some warnings and C++ error.
-/// - 2016/11/10 (1.28.0) - Added additional `nk_button` versions which allows to directly
-///                        pass in a style struct to change buttons visual.
-/// - 2016/11/10 (1.27.0) - Added additional `nk_tree` versions to support external state
-///                        storage. Just like last the `nk_group` commit the main
-///                        advantage is that you optionally can minimize nuklears runtime
-///                        memory consumption or handle hash collisions.
-/// - 2016/11/09 (1.26.0) - Added additional `nk_group` version to support external scrollbar
-///                        offset storage. Main advantage is that you can externalize
-///                        the memory management for the offset. It could also be helpful
-///                        if you have a hash collision in `nk_group_begin` but really
-///                        want the name. In addition I added `nk_list_view` which allows
-///                        to draw big lists inside a group without actually having to
-///                        commit the whole list to nuklear (issue #269).
-/// - 2016/10/30 (1.25.1) - Fixed clipping rectangle bug inside `nk_draw_list`.
-/// - 2016/10/29 (1.25.0) - Pulled `nk_panel` memory management into nuklear and out of
-///                        the hands of the user. From now on users don't have to care
-///                        about panels unless they care about some information. If you
-///                        still need the panel just call `nk_window_get_panel`.
-/// - 2016/10/21 (1.24.0) - Changed widget border drawing to stroked rectangle from filled
-///                        rectangle for less overdraw and widget background transparency.
-/// - 2016/10/18 (1.23.0) - Added `nk_edit_focus` for manually edit widget focus control.
-/// - 2016/09/29 (1.22.7) - Fixed deduction of basic type in non `<stdint.h>` compilation.
-/// - 2016/09/29 (1.22.6) - Fixed edit widget UTF-8 text cursor drawing bug.
-/// - 2016/09/28 (1.22.5) - Fixed edit widget UTF-8 text appending/inserting/removing.
-/// - 2016/09/28 (1.22.4) - Fixed drawing bug inside edit widgets which offset all text
-///                        text in every edit widget if one of them is scrolled.
-/// - 2016/09/28 (1.22.3) - Fixed small bug in edit widgets if not active. The wrong
-///                        text length is passed. It should have been in bytes but
-///                        was passed as glyphes.
-/// - 2016/09/20 (1.22.2) - Fixed color button size calculation.
-/// - 2016/09/20 (1.22.1) - Fixed some `nk_vsnprintf` behavior bugs and removed `<stdio.h>`
-///                        again from `NK_INCLUDE_STANDARD_VARARGS`.
-/// - 2016/09/18 (1.22.0) - C89 does not support vsnprintf only C99 and newer as well
-///                        as C++11 and newer. In addition to use vsnprintf you have
-///                        to include <stdio.h>. So just defining `NK_INCLUDE_STD_VAR_ARGS`
-///                        is not enough. That behavior is now fixed. By default if
-///                        both varargs as well as stdio is selected I try to use
-///                        vsnprintf if not possible I will revert to vsprintf. If
-///                        varargs but not stdio was defined I will use my own function.
-/// - 2016/09/15 (1.21.2) - Fixed panel `close` behavior for deeper panel levels.
-/// - 2016/09/15 (1.21.1) - Fixed C++ errors and wrong argument to `nk_panel_get_xxxx`.
-/// - 2016/09/13 (1.21.0) - !BREAKING! Fixed nonblocking popup behavior in menu, combo,
-///                        and contextual which prevented closing in y-direction if
-///                        popup did not reach max height.
-///                        In addition the height parameter was changed into vec2
-///                        for width and height to have more control over the popup size.
-/// - 2016/09/13 (1.20.3) - Cleaned up and extended type selection.
-/// - 2016/09/13 (1.20.2) - Fixed slider behavior hopefully for the last time. This time
-///                        all calculation are correct so no more hackery.
-/// - 2016/09/13 (1.20.1) - Internal change to divide window/panel flags into panel flags and types.
-///                        Suprisinly spend years in C and still happened to confuse types
-///                        with flags. Probably something to take note.
-/// - 2016/09/08 (1.20.0) - Added additional helper function to make it easier to just
-///                        take the produced buffers from `nk_convert` and unplug the
-///                        iteration process from `nk_context`. So now you can
-///                        just use the vertex,element and command buffer + two pointer
-///                        inside the command buffer retrieved by calls `nk__draw_begin`
-///                        and `nk__draw_end` and macro `nk_draw_foreach_bounded`.
-/// - 2016/09/08 (1.19.0) - Added additional asserts to make sure every `nk_xxx_begin` call
-///                        for windows, popups, combobox, menu and contextual is guarded by
-///                        `if` condition and does not produce false drawing output.
-/// - 2016/09/08 (1.18.0) - Changed confusing name for `NK_SYMBOL_RECT_FILLED`, `NK_SYMBOL_RECT`
-///                        to hopefully easier to understand `NK_SYMBOL_RECT_FILLED` and
-///                        `NK_SYMBOL_RECT_OUTLINE`.
-/// - 2016/09/08 (1.17.0) - Changed confusing name for `NK_SYMBOL_CIRLCE_FILLED`, `NK_SYMBOL_CIRCLE`
-///                        to hopefully easier to understand `NK_SYMBOL_CIRCLE_FILLED` and
-///                        `NK_SYMBOL_CIRCLE_OUTLINE`.
-/// - 2016/09/08 (1.16.0) - Added additional checks to select correct types if `NK_INCLUDE_FIXED_TYPES`
-///                        is not defined by supporting the biggest compiler GCC, clang and MSVC.
-/// - 2016/09/07 (1.15.3) - Fixed `NK_INCLUDE_COMMAND_USERDATA` define to not cause an error.
-/// - 2016/09/04 (1.15.2) - Fixed wrong combobox height calculation.
-/// - 2016/09/03 (1.15.1) - Fixed gaps inside combo boxes in OpenGL.
-/// - 2016/09/02 (1.15.0) - Changed nuklear to not have any default vertex layout and
-///                        instead made it user provided. The range of types to convert
-///                        to is quite limited at the moment, but I would be more than
-///                        happy to accept PRs to add additional.
-/// - 2016/08/30 (1.14.2) - Removed unused variables.
-/// - 2016/08/30 (1.14.1) - Fixed C++ build errors.
-/// - 2016/08/30 (1.14.0) - Removed mouse dragging from SDL demo since it does not work correctly.
-/// - 2016/08/30 (1.13.4) - Tweaked some default styling variables.
-/// - 2016/08/30 (1.13.3) - Hopefully fixed drawing bug in slider, in general I would
-///                        refrain from using slider with a big number of steps.
-/// - 2016/08/30 (1.13.2) - Fixed close and minimize button which would fire even if the
-///                        window was in Read Only Mode.
-/// - 2016/08/30 (1.13.1) - Fixed popup panel padding handling which was previously just
-///                        a hack for combo box and menu.
-/// - 2016/08/30 (1.13.0) - Removed `NK_WINDOW_DYNAMIC` flag from public API since
-///                        it is bugged and causes issues in window selection.
-/// - 2016/08/30 (1.12.0) - Removed scaler size. The size of the scaler is now
-///                        determined by the scrollbar size.
-/// - 2016/08/30 (1.11.2) - Fixed some drawing bugs caused by changes from 1.11.0.
-/// - 2016/08/30 (1.11.1) - Fixed overlapping minimized window selection.
-/// - 2016/08/30 (1.11.0) - Removed some internal complexity and overly complex code
-///                        handling panel padding and panel border.
-/// - 2016/08/29 (1.10.0) - Added additional height parameter to `nk_combobox_xxx`.
-/// - 2016/08/29 (1.10.0) - Fixed drawing bug in dynamic popups.
-/// - 2016/08/29 (1.10.0) - Added experimental mouse scrolling to popups, menus and comboboxes.
-/// - 2016/08/26 (1.10.0) - Added window name string prepresentation to account for
-///                        hash collisions. Currently limited to `NK_WINDOW_MAX_NAME`
-///                        which in term can be redefined if not big enough.
-/// - 2016/08/26 (1.10.0) - Added stacks for temporary style/UI changes in code.
-/// - 2016/08/25 (1.10.0) - Changed `nk_input_is_key_pressed` and 'nk_input_is_key_released'
-///                        to account for key press and release happening in one frame.
-/// - 2016/08/25 (1.10.0) - Added additional nk_edit flag to directly jump to the end on activate.
-/// - 2016/08/17 (1.09.6) - Removed invalid check for value zero in `nk_propertyx`.
-/// - 2016/08/16 (1.09.5) - Fixed ROM mode for deeper levels of popup windows parents.
-/// - 2016/08/15 (1.09.4) - Editbox are now still active if enter was pressed with flag
-///                        `NK_EDIT_SIG_ENTER`. Main reasoning is to be able to keep
-///                        typing after commiting.
-/// - 2016/08/15 (1.09.4) - Removed redundant code.
-/// - 2016/08/15 (1.09.4) - Fixed negative numbers in `nk_strtoi` and remove unused variable.
-/// - 2016/08/15 (1.09.3) - Fixed `NK_WINDOW_BACKGROUND` flag behavior to select a background
-///                        window only as selected by hovering and not by clicking.
-/// - 2016/08/14 (1.09.2) - Fixed a bug in font atlas which caused wrong loading
-///                        of glyphes for font with multiple ranges.
-/// - 2016/08/12 (1.09.1) - Added additional function to check if window is currently
-///                        hidden and therefore not visible.
-/// - 2016/08/12 (1.09.1) - nk_window_is_closed now queries the correct flag `NK_WINDOW_CLOSED`
-///                        instead of the old flag `NK_WINDOW_HIDDEN`.
-/// - 2016/08/09 (1.09.0) - Added additional short version to nk_property and changed
-///                        the underlying implementation to not cast to short and instead
-///                        work directly on the given values.
-/// - 2016/08/09 (1.08.0) - Added additional define to overwrite library internal
-///                        inting pointer number to string conversion for additional
-///                        precision.
-/// - 2016/08/09 (1.08.0) - Added additional define to overwrite library internal
-///                        string to inting point number conversion for additional
-///                        precision.
-/// - 2016/08/08 (1.07.2) - Fixed compiling error without define `NK_INCLUDE_FIXED_TYPE`.
-/// - 2016/08/08 (1.07.1) - Fixed possible inting point error inside `nk_widget` leading
-///                        to wrong wiget width calculation which results in widgets falsly
-///                        becomming tagged as not inside window and cannot be accessed.
-/// - 2016/08/08 (1.07.0) - Nuklear now differentiates between hiding a window (NK_WINDOW_HIDDEN) and
-///                        closing a window (NK_WINDOW_CLOSED). A window can be hidden/shown
-///                        by using `nk_window_show` and closed by either clicking the close
-///                        icon in a window or by calling `nk_window_close`. Only closed
-///                        windows get removed at the end of the frame while hidden windows
-///                        remain.
-/// - 2016/08/08 (1.06.0) - Added `nk_edit_string_zero_terminated` as a second option to
-///                        `nk_edit_string` which takes, edits and outputs a '\0' terminated string.
-/// - 2016/08/08 (1.05.4) - Fixed scrollbar auto hiding behavior.
-/// - 2016/08/08 (1.05.3) - Fixed wrong panel padding selection in `nk_layout_widget_space`.
-/// - 2016/08/07 (1.05.2) - Fixed old bug in dynamic immediate mode layout API, calculating
-///                        wrong item spacing and panel width.
-/// - 2016/08/07 (1.05.1) - Hopefully finally fixed combobox popup drawing bug.
-/// - 2016/08/07 (1.05.0) - Split varargs away from `NK_INCLUDE_STANDARD_IO` into own
-///                        define `NK_INCLUDE_STANDARD_VARARGS` to allow more fine
-///                        grained controlled over library includes.
-/// - 2016/08/06 (1.04.5) - Changed memset calls to `NK_MEMSET`.
-/// - 2016/08/04 (1.04.4) - Fixed fast window scaling behavior.
-/// - 2016/08/04 (1.04.3) - Fixed window scaling, movement bug which appears if you
-///                        move/scale a window and another window is behind it.
-///                        If you are fast enough then the window behind gets activated
-///                        and the operation is blocked. I now require activating
-///                        by hovering only if mouse is not pressed.
-/// - 2016/08/04 (1.04.2) - Fixed changing fonts.
-/// - 2016/08/03 (1.04.1) - Fixed `NK_WINDOW_BACKGROUND` behavior.
-// /// - 2016/08/03 (1.04.0) - Added color parameter to `nk_draw_image`.
-/// - 2016/08/03 (1.04.0) - Added additional window padding style attributes for
-///                        sub windows (combo, menu, ...).
-/// - 2016/08/03 (1.04.0) - Added functions to show/hide software cursor.
-/// - 2016/08/03 (1.04.0) - Added `NK_WINDOW_BACKGROUND` flag to force a window
-///                        to be always in the background of the screen.
-/// - 2016/08/03 (1.03.2) - Removed invalid assert macro for NK_RGB color picker.
-/// - 2016/08/01 (1.03.1) - Added helper macros into header include guard.
-/// - 2016/07/29 (1.03.0) - Moved the window/table pool into the header part to
-///                        simplify memory management by removing the need to
-///                        allocate the pool.
-/// - 2016/07/29 (1.02.0) - Added auto scrollbar hiding window flag which if enabled
-///                        will hide the window scrollbar after NK_SCROLLBAR_HIDING_TIMEOUT
-///                        seconds without window interaction. To make it work
-///                        you have to also set a delta time inside the `nk_context`.
-/// - 2016/07/25 (1.01.1) - Fixed small panel and panel border drawing bugs.
-/// - 2016/07/15 (1.01.0) - Added software cursor to `nk_style` and `nk_context`.
-/// - 2016/07/15 (1.01.0) - Added const correctness to `nk_buffer_push' data argument.
-/// - 2016/07/15 (1.01.0) - Removed internal font baking API and simplified
-///                        font atlas memory management by converting pointer
-///                        arrays for fonts and font configurations to lists.
-/// - 2016/07/15 (1.00.0) - Changed button API to use context dependend button
-///                        behavior instead of passing it for every function call.
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// ## Gallery
-/// ![Figure [blue]: Feature overview with blue color styling](https://cloud.githubusercontent.com/assets/8057201/13538240/acd96876-e249-11e5-9547-5ac0b19667a0.png)
-/// ![Figure [red]: Feature overview with red color styling](https://cloud.githubusercontent.com/assets/8057201/13538243/b04acd4c-e249-11e5-8fd2-ad7744a5b446.png)
-/// ![Figure [widgets]: Widget overview](https://cloud.githubusercontent.com/assets/8057201/11282359/3325e3c6-8eff-11e5-86cb-cf02b0596087.png)
-/// ![Figure [blackwhite]: Black and white](https://cloud.githubusercontent.com/assets/8057201/11033668/59ab5d04-86e5-11e5-8091-c56f16411565.png)
-/// ![Figure [filexp]: File explorer](https://cloud.githubusercontent.com/assets/8057201/10718115/02a9ba08-7b6b-11e5-950f-adacdd637739.png)
-/// ![Figure [opengl]: OpenGL Editor](https://cloud.githubusercontent.com/assets/8057201/12779619/2a20d72c-ca69-11e5-95fe-4edecf820d5c.png)
-/// ![Figure [nodedit]: Node Editor](https://cloud.githubusercontent.com/assets/8057201/9976995/e81ac04a-5ef7-11e5-872b-acd54fbeee03.gif)
-/// ![Figure [skinning]: Using skinning in Nuklear](https://cloud.githubusercontent.com/assets/8057201/15991632/76494854-30b8-11e6-9555-a69840d0d50b.png)
-/// ![Figure [bf]: Heavy modified version](https://cloud.githubusercontent.com/assets/8057201/14902576/339926a8-0d9c-11e6-9fee-a8b73af04473.png)
-///
-/// ## Credits
-/// Developed by Micha Mettke and every direct or indirect github contributor. <br /><br />
-///
-/// Embeds [stb_texedit](https://github.com/nothings/stb/blob/master/stb_textedit.h), [stb_truetype](https://github.com/nothings/stb/blob/master/stb_truetype.h) and [stb_rectpack](https://github.com/nothings/stb/blob/master/stb_rect_pack.h) by Sean Barret (public domain) <br />
-/// Uses [stddoc.c](https://github.com/r-lyeh/stddoc.c) from r-lyeh@github.com for documentation generation <br /><br />
-/// Embeds ProggyClean.ttf font by Tristan Grimmer (MIT license). <br />
-///
-/// Big thank you to Omar Cornut (ocornut@github) for his [imgui library](https://github.com/ocornut/imgui) and
-/// giving me the inspiration for this library, Casey Muratori for handmade hero
-/// and his original immediate mode graphical user interface idea and Sean
-/// Barret for his amazing single header libraries which restored my faith
-/// in libraries and brought me to create some of my own. Finally Apoorva Joshi
-/// for his single header file packer.
-*/
