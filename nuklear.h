@@ -7522,30 +7522,44 @@ nk_utf_decode_byte(char c, short *i)
 NK_API short
 nk_utf_decode(const char *c, nk_rune *u, short clen)
 {
-    short i, j, len, type=0;
-    nk_rune udecoded;
+    // if (!strlen(c)) {
 
-    // NK_ASSERT(c);
-    // NK_ASSERT(u);
+    //     return 0;
+    // }
 
-    if (!c || !u) return 0;
-    if (!clen) return 0;
-    *u = NK_UTF_INVALID;
+    *u = c[0];
+    c++;
 
-    udecoded = nk_utf_decode_byte(c[0], &len);
-    if (!NK_BETWEEN(len, 1, NK_UTF_SIZE))
-        return 1;
+    return 1;
+    // short i, j, len, type=0;
+    // nk_rune udecoded;
 
-    for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
-        udecoded = (udecoded << 6) | nk_utf_decode_byte(c[i], &type);
-        if (type != 0)
-            return j;
-    }
-    if (j < len)
-        return 0;
-    *u = udecoded;
-    // nk_utf_validate(u, len);
-    return len;
+    // writeSerialPortDebug(boutRefNum, "nk_utf_decode");
+    // writeSerialPortDebug(boutRefNum, c);
+    // // NK_ASSERT(c);
+    // // NK_ASSERT(u);
+
+    // if (!c || !u) return 0;
+    // if (!clen) return 0;
+    // *u = NK_UTF_INVALID;
+
+    // udecoded = nk_utf_decode_byte(c[0], &len);
+    // if (!NK_BETWEEN(len, 1, NK_UTF_SIZE))
+    //     return 1;
+
+    // for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
+    //     udecoded = (udecoded << 6) | nk_utf_decode_byte(c[i], &type);
+    //     if (type != 0)
+    //         return j;
+    // }
+    // if (j < len)
+    //     return 0;
+    // *u = udecoded;
+    // // nk_utf_validate(u, len);
+    // char x[2454];
+    // sprintf(x, "len: %d, u: %c", len, u);
+    // writeSerialPortDebug(boutRefNum, x);
+    // return len;
 }
 NK_INTERN char
 nk_utf_encode_byte(nk_rune u, short i)
@@ -7555,17 +7569,13 @@ nk_utf_encode_byte(nk_rune u, short i)
 NK_API short
 nk_utf_encode(nk_rune u, char *c, short clen)
 {
-    short len, i;
-    len = nk_utf_validate(&u, 0);
-    if (clen < len || !len || len > NK_UTF_SIZE)
-        return 0;
+    // short len, i;
+    //len = nk_utf_validate(&u, 0);
+    // if (clen < len || !len || len > NK_UTF_SIZE)
+    //     return 0;
 
-    for (i = len - 1; i != 0; --i) {
-        c[i] = nk_utf_encode_byte(u, 0);
-        u >>= 6;
-    }
-    c[0] = nk_utf_encode_byte(u, len);
-    return len;
+    c[0] = u;
+    return 1;
 }
 NK_API short
 nk_utf_len(const char *str, short len)

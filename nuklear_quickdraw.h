@@ -256,7 +256,7 @@ NK_API void nk_quickdraw_del_image(struct nk_image* image) {
     free(image);
 }
 
-int widthFor12ptFont[128] = {
+short widthFor12ptFont[128] = {
     0,
     10,
     10,
@@ -406,7 +406,7 @@ static short nk_quickdraw_font_get_text_width(nk_handle handle, short height, co
 
     for (short i = 0; i < len; i++) {
 
-        width += widthFor12ptFont[(short)text[i]];
+        width += widthFor12ptFont[text[i]];
     }
 
     return width;
@@ -611,20 +611,14 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                         #endif
 
                         const struct nk_command_scissor *s =(const struct nk_command_scissor*)cmd;
-                       //  // al_set_clipping_rectangle((int)s->x, (int)s->y, (int)s->w, (int)s->h); // TODO: https://www.allegro.cc/manual/5/al_set_clipping_rectangle
-                       //  // this essentially just sets the region of the screen that we are going to write to
-                       //  // initially, i thought that this would be SetClip, but now believe this should be ClipRect, see:
-                       //  // Inside Macintosh: Imaging with Quickdraw pages 2-48 and 2-49 for more info
-                       //  // additionally, see page 2-61 for a data structure example for the rectangle OR 
-                       //  // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-60.html
-                       //  // for usage example
-                       // Rect quickDrawRectangle;
-                       // quickDrawRectangle.top = (int)s->y;
-                       // quickDrawRectangle.left = (int)s->x;
-                       // quickDrawRectangle.bottom = (int)s->y + (int)s->h;
-                       // quickDrawRectangle.right = (int)s->x + (int)s->w;
+
+                       Rect quickDrawRectangle;
+                       quickDrawRectangle.top = (int)s->y;
+                       quickDrawRectangle.left = (int)s->x;
+                       quickDrawRectangle.bottom = (int)s->y + (int)s->h;
+                       quickDrawRectangle.right = (int)s->x + (int)s->w;
                        
-                       // ClipRect(&quickDrawRectangle);
+                       ClipRect(&quickDrawRectangle);
                     }
 
                     break;
