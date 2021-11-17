@@ -7957,9 +7957,9 @@ nk_str_append_text_char(struct nk_str *s, const char *str, short len)
     // NK_ASSERT(s);
     // NK_ASSERT(str);
     if (!s || !str || !len) return 0;
-    mem = (char*)nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * 8, 0);
+    mem = (char*)nk_buffer_alloc(&s->buffer, NK_BUFFER_FRONT, (nk_size)len * sizeof(char), 0);
     if (!mem) return 0;
-    NK_MEMCPY(mem, str, (nk_size)len * 8);
+    NK_MEMCPY(mem, str, (nk_size)len * sizeof(char));
     s->len += nk_utf_len(str, len);
     return len;
 }
@@ -10984,6 +10984,7 @@ nk_panel_end(struct nk_context *ctx)
                 scroll_offset, scroll_target, scroll_step, scroll_inc,
                 &ctx->style.scrollv, in, style->font);
             *layout->offset_y = (short)scroll_offset;
+            
             if (in && scroll_has_scrolling)
                 in->mouse.scroll_delta.y = 0;
         }
@@ -16688,11 +16689,19 @@ nk_do_scrollbarv(nk_flags *state,
     //  27 = (84/574) * 190
     // target / scroll.h = scroll_offset / 574/190 = 
 
+    // cursor.h = 192 / (270 / 192)
+    // cursor.h = 192 / 1.4 // i think this rounds to 192 / 1, but we want = 137
 
-    cursor.h = NK_MAX(scroll.h / (target / scroll.h), 0);
-    cursor.y = scroll.y + scroll_offset / (target / scroll.h) + style->border + style->padding.y;
+    cursor.h = (scroll.h * scroll.h) / target;
+    // y = 39 + (78 * 270) / 192
+    // y = 39 +  21060 / 192 
+    // y = 39 + 110
+    cursor.y = scroll.y + (scroll_offset * target) / scroll.h + style->border + style->padding.y;
     cursor.w = scroll.w - (2 * style->border + 2 * style->padding.x);
     cursor.x = scroll.x + style->border + style->padding.x;
+
+
+
 
     /* calculate empty space around cursor */
     empty_north.x = scroll.x;
@@ -16709,8 +16718,12 @@ nk_do_scrollbarv(nk_flags *state,
     scroll_offset = nk_scrollbar_behavior(state, in, has_scrolling, &scroll, &cursor,
         &empty_north, &empty_south, scroll_offset, target, scroll_step, NK_VERTICAL);
 
-    cursor.y = scroll.y + scroll_offset / (target / scroll.h) + style->border_cursor + style->padding.y;
+    cursor.y = scroll.y + (scroll_offset * scroll.h) / target + style->border_cursor + style->padding.y;
 
+    writeSerialPortDebug(boutRefNum, "vertical scroll barxxx!");
+    char x[255];
+    sprintf(x, "h %d, y %d, w %d, x %d, scrollh: %d, target: %d, scroll_off %d, scroll_off %d scrolly %d", cursor.h, cursor.y, cursor.w, cursor.x, scroll.h, target, scroll_off, scroll_offset, scroll.y);
+    writeSerialPortDebug(boutRefNum, x);
     /* draw scrollbar */
     if (style->draw_begin) style->draw_begin(out, style->userdata);
     nk_draw_scrollbar(out, *state, style, &scroll, &cursor);

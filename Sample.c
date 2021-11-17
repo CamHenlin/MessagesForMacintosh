@@ -112,19 +112,16 @@ void AlertUser( void );
 #define BotRight(aRect)	(* (Point *) &(aRect).bottom)
 
 // TODO: 
-// - IN PROGRESS, fix issues related to perf work... need to have nuklear redraw on text scroll, need to hold scroll positions somehow for inactive windows (undo, see what happens?)
-// - potential perf gain: float -> integer math
-// - potential perf gain: strip unnecessary function calls (which?)
-// - get new messages (when?) -- start with on send
 // - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
 // - chat during the day for a few minutes and figure out small issues
-// - transfer to mac, get hw setup working
 // - start writing blog posts
-// - js code needs to split long messages into max length per line, so that they display properly
+// - get new messages in other chats and display some sort of alert
+// - why does the automator script sometimes not send
 
 
 char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
 
+Boolean firstOrMouseMove = true;
 int haveRun = 0;
 int chatFriendlyNamesCounter = 0;
 int ipAddressSet = 0;
@@ -132,14 +129,14 @@ int sendNewChat = 0;
 char chatFriendlyNames[16][64];
 char activeChat[64];
 int activeMessageCounter = 0;
-char activeChatMessages[10][2048];
+char activeChatMessages[64][2048];
 char box_input_buffer[2048];
 char ip_input_buffer[255];
 char new_message_input_buffer[255];
 short box_len;
 short box_input_len;
 short new_message_input_buffer_len;
-short ip_input_buffer_len;
+static short ip_input_buffer_len; // TODO: setting a length here will make the default `http://...` work, but doesn't work right -- maybe due to perf work in nuklear
 int shouldScrollMessages = 0;
 int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
 int messagesScrollBarLocation = 0;
@@ -148,7 +145,8 @@ int coprocessorLoaded = 0;
 
 void getMessagesFromjsFunctionResponse() {
 
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 64; i++) {
+
 		memset(&activeChatMessages[i], '\0', 2048);
 	}
 
@@ -184,12 +182,13 @@ void sendMessage() {
 	return;
 }
 
-
 void sendIPAddressToCoprocessor() {
 
 	char output[2048];
 	sprintf(output, "%s", ip_input_buffer);
 
+
+    writeSerialPortDebug(boutRefNum, output);
 	callFunctionOnCoprocessor("setIPAddress", output, jsFunctionResponse);
 
 	return;
@@ -206,6 +205,29 @@ void getMessages(char *thread, int page) {
 	callFunctionOnCoprocessor("getMessages", output, jsFunctionResponse);
     // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
     getMessagesFromjsFunctionResponse();
+
+	return;
+}
+
+void getHasNewMessagesInChat(char *thread) {
+
+	char output[62];
+	sprintf(output, "%s", thread);
+    // writeSerialPortDebug(boutRefNum, output);
+
+	callFunctionOnCoprocessor("hasNewMessagesInChat", output, jsFunctionResponse);
+    writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+    if (!strcmp(jsFunctionResponse, "true")) {
+
+    	writeSerialPortDebug(boutRefNum, "update current chat");
+		SysBeep(1);
+		getMessages(thread, 0);
+		// force redraw
+		firstOrMouseMove = true;
+	} else {
+
+
+	}
 
 	return;
 }
@@ -257,7 +279,6 @@ static void boxTest(struct nk_context *ctx) {
 		return;
 	}
 
-
 	// prompt the user for the graphql instance
 	if (!ipAddressSet) {
 
@@ -274,7 +295,7 @@ static void boxTest(struct nk_context *ctx) {
 			{
 				nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90); // 40% wide
 
-				nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 2048, nk_filter_default);
+				nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 255, nk_filter_default);
 
 				nk_layout_row_push(ctx, 60); // 40% wide
 				if (nk_button_label(ctx, "save")) {
@@ -330,6 +351,7 @@ static void boxTest(struct nk_context *ctx) {
 		{
 	        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
+				// only display the first 8 chats, create new chat if you need someone not in your list
 	        	if (i > 9) {
 
 	        		continue;
@@ -339,13 +361,9 @@ static void boxTest(struct nk_context *ctx) {
 
 		        if (nk_button_label(ctx, chatFriendlyNames[i])) {
 
-		            // writeSerialPortDebug(boutRefNum, "CLICK!");
-		            // writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
 		            sprintf(activeChat, "%s", chatFriendlyNames[i]);
 		            getMessages(activeChat, 0);
-		            shouldScrollMessages = 1;
-		            forceRedraw = 2;
-		            // writeSerialPortDebug(boutRefNum, "CLICK complete, enjoy your chat!");
+					shouldScrollMessages = 1;
 		        }
 	        }
 		}
@@ -368,7 +386,8 @@ static void boxTest(struct nk_context *ctx) {
 			if (nk_button_label(ctx, "send")) {
         		//fprintf(stdout, "pushed!\n");
         		sendMessage();
-        		forceRedraw = 2;
+
+				memset(&box_input_buffer, '\0', 2048);
 			}
 		}
 		nk_layout_row_end(ctx);
@@ -395,13 +414,7 @@ static void boxTest(struct nk_context *ctx) {
 
 				ctx->current->scrollbar.y = 10000;
 				shouldScrollMessages = 0;
-		    } else if (messageWindowWasDormant) {
-
-				ctx->current->scrollbar.y = messagesScrollBarLocation;
 		    }
-
-		    messagesScrollBarLocation = ctx->current->scrollbar.y;
-
 		}
 
 		nk_layout_row_end(ctx);
@@ -450,8 +463,6 @@ void main()
 	coprocessorLoaded = 1;
     sprintf(ip_input_buffer, "http://");
 
-
-
     #ifdef MAC_APP_DEBUGGING
 
 	    // writeSerialPortDebug(boutRefNum, "call into event loop");
@@ -472,11 +483,24 @@ void EventLoop(struct nk_context *ctx)
 	Point mouse;
 	cursorRgn = NewRgn();
 
-	Boolean firstOrMouseMove = true;
 	int lastMouseHPos = 0;
 	int lastMouseVPos = 0;
+	int lastUpdatedTickCount = 0;
 
 	do {
+
+		// check for new stuff ever 5 sec?
+		if (TickCount() - lastUpdatedTickCount > 300) {
+
+    		writeSerialPortDebug(boutRefNum, "update by tick count");
+			lastUpdatedTickCount = TickCount();
+
+			if (strcmp(activeChat, "no active chat")) {
+
+    			writeSerialPortDebug(boutRefNum, "check chat");
+				getHasNewMessagesInChat(activeChat);
+			}
+		} 
 
 		Boolean beganInput = false;
 
@@ -516,6 +540,8 @@ void EventLoop(struct nk_context *ctx)
 
 			mouse_x = tempPoint.h;
 			mouse_y = tempPoint.v;
+
+			lastUpdatedTickCount = TickCount();
         }
 
         lastMouseHPos = mouse.h;
@@ -526,6 +552,8 @@ void EventLoop(struct nk_context *ctx)
 
 	    // drain all events before rendering
 		while (gotEvent) {
+
+			lastUpdatedTickCount = TickCount();
 
 			#ifdef MAC_APP_DEBUGGING
 

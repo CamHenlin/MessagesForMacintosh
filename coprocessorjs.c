@@ -522,12 +522,16 @@ void sendProgramToCoprocessor(char* program, char *output) {
         printf("sendProgramToCoprocessor\n");
     }
 
+    SetCursor(*GetCursor(watchCursor));
+
     writeToCoprocessor("PROGRAM", program);
 
     char serialPortResponse[MAX_RECEIVE_SIZE];
     readSerialPort(serialPortResponse);
 
     getReturnValueFromResponse(serialPortResponse, "PROGRAM", output);
+
+    SetCursor(&qd.arrow);
     
     return;
 }
@@ -549,6 +553,7 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
     // delimeter for function paramters is &&& - user must do this on their own via sprintf call or other construct - this is easiest for us to deal with
     sprintf(functionCallMessage, functionTemplate, functionName, parameters);
 
+    SetCursor(*GetCursor(watchCursor));
     //                         writeSerialPortDebug(boutRefNum, functionCallMessage);
     writeToCoprocessor("FUNCTION", functionCallMessage);
 
@@ -559,6 +564,8 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
 
     memset(output, '\0', RECEIVE_WINDOW_SIZE);
     getReturnValueFromResponse(serialPortResponse, "FUNCTION", output);
+
+    SetCursor(&qd.arrow);
     
     return;
 }
