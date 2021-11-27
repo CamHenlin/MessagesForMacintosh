@@ -1,0 +1,40 @@
+{
+    "name": "@types/zen-observable",
+    "version": "0.8.3",
+    "description": "TypeScript definitions for zen-observable",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/zen-observable",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Kombu",
+            "url": "https://github.com/aicest",
+            "githubUsername": "aicest"
+        },
+        {
+            "name": "JounQin",
+            "url": "https://github.com/JounQin",
+            "githubUsername": "JounQin"
+        },
+        {
+            "name": "Thomas",
+            "url": "https://github.com/itomtom",
+            "githubUsername": "itomtom"
+        },
+        {
+            "name": "BenoitZugmeyer",
+            "url": "https://github.com/BenoitZugmeyer",
+            "githubUsername": "BenoitZugmeyer"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/zen-observable"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "3d765e40e4e7ad433e8aad0aa4c7a12b1be14da92802316cde9177358a00ff32",
+    "typeScriptVersion": "3.6"
+}

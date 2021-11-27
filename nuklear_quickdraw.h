@@ -1122,16 +1122,17 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     int x = tempPoint.h;
                     int y = tempPoint.v;
 
-                    #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
+                    //#ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
                         char logx[255];
-                        sprintf(logx, "mouse location at time of click h: %d,  v: %d", x, y);
-                        // writeSerialPortDebug(boutRefNum, logx);
-                    #endif
+                        sprintf(logx, "mouse location at time of click h: %d,  v: %d, is mouse down: %d", x, y, event->what == mouseDown);
+                        writeSerialPortDebug(boutRefNum, logx);
+                    //#endif
 
                     // nk_input_motion(nuklear_context, x, y); // you can enable this if you don't want to use motion tracking
                     // in the Mac event loop handler as in the nuklear quickdraw sample, and this will allow mouse clicks to
                     // work properly, but will not allow hover states to work
+        	        nk_input_motion(nuklear_context, x, y);
                     nk_input_button(nuklear_context, NK_BUTTON_LEFT, x, y, event->what == mouseDown);
                 }
                 break;

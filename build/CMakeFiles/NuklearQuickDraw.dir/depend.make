@@ -6,9 +6,9 @@ CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../Sample.h
 CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../SerialHelper.h
 CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../coprocessorjs.h
 CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../nuklear.h
+CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../nuklear_app.c
 CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../nuklear_quickdraw.h
 CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../output_js.h
-CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj: ../overview.c
 
 CMakeFiles/NuklearQuickDraw.dir/SerialHelper.c.obj: ../SerialHelper.c
 CMakeFiles/NuklearQuickDraw.dir/SerialHelper.c.obj: ../SerialHelper.h

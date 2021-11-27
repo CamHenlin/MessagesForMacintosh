@@ -150,7 +150,8 @@ const widthFor12ptFont = [
 
 
 // this is tied to Sample.c's message window max width
-const MAX_WIDTH = 285
+const MAX_WIDTH = 304
+const SPACE_WIDTH = widthFor12ptFont[32]
 
 const getNextWordLength = (word) => {
 
@@ -159,10 +160,16 @@ const getNextWordLength = (word) => {
   for (const char of word.split(``)) {
 
     let currentCharWidth = widthFor12ptFont[char.charCodeAt()]
+
+    if (isNaN(currentCharWidth)) {
+
+    currentCharWidth = 1;
+    }
+
     currentWidth += currentCharWidth
   }
 
-  return currentWidth
+return currentWidth
 }
 
 const shortenText = (text) => {
@@ -174,28 +181,33 @@ const shortenText = (text) => {
 
     let currentWordWidth = getNextWordLength(word)
 
-    if (currentWidth + currentWordWidth > MAX_WIDTH) {
+    if (currentWidth + currentWordWidth + SPACE_WIDTH > MAX_WIDTH) {
 
-      outputText = `${outputText}ENDLASTMESSAGE`
-      currentWidth = 0
+    outputText = `${outputText}ENDLASTMESSAGE`
+    currentWidth = 0
 
-      // okay, but what if the word itself is greater than max width?
-      if (currentWordWidth > MAX_WIDTH) {
+    // okay, but what if the word itself is greater than max width?
+    if (currentWordWidth > MAX_WIDTH) {
 
-        let splitWordWidth = 0
+      let splitWordWidth = 0
 
-        for (const char of word.split(``)) {
+      for (const char of word.split(``)) {
 
-          let currentCharWidth = widthFor12ptFont[char.charCodeAt()]
+        let currentCharWidth = widthFor12ptFont[char.charCodeAt()]
 
-          if (splitWordWidth + currentCharWidth > MAX_WIDTH) {
+        if (isNaN(currentCharWidth)) {
+      
+          currentCharWidth = 1;
+        }
 
-            outputText = `${outputText}ENDLASTMESSAGE`
-            splitWordWidth = 0
-          }
+        if (splitWordWidth + currentCharWidth > MAX_WIDTH) {
 
-          splitWordWidth += currentCharWidth
-          outputText = `${outputText}${char}`
+          outputText = `${outputText}ENDLASTMESSAGE`
+          splitWordWidth = 0
+        }
+
+        splitWordWidth += currentCharWidth
+        outputText = `${outputText}${char}`
         }
 
         currentWidth += splitWordWidth
@@ -204,12 +216,14 @@ const shortenText = (text) => {
       }
     }
 
-    currentWidth += currentWordWidth
+    currentWidth += currentWordWidth + SPACE_WIDTH
     outputText = `${outputText} ${word}`
   }
 
   return outputText
 }
+
+const MAX_ROWS = 15
 
 const splitMessages = (messages) => {
 
@@ -239,7 +253,20 @@ const splitMessages = (messages) => {
     firstMessage = false
   }
 
-  messageOutput = `${messageOutput}ENDLASTMESSAGE`
+
+  if (messageOutput.split(`ENDLASTMESSAGE`).length > MAX_ROWS) {
+
+    messageOutput = messageOutput.split(`ENDLASTMESSAGE`)
+
+    let newMessageOutput = []
+
+    for (let i = messageOutput.length; i > messageOutput.length - MAX_ROWS; i--) {
+
+      newMessageOutput.unshift(messageOutput[i])
+    }
+
+    messageOutput = newMessageOutput.join(`ENDLASTMESSAGE`)
+  } 
 
   lastMessageOutput = messageOutput
 
@@ -273,13 +300,22 @@ class iMessageClient {
     let currentLastMessageOutput = `${lastMessageOutput}`
     let messageOutput = await this.getMessages(chatId, 0)
 
-    console.log(`new messages in chat?`)
-    console.log(currentLastMessageOutput !== messageOutput)
+    return (currentLastMessageOutput !== messageOutput).toString()
+  }
+
+  async hasNewMessages (chatId) {
+
+    let currentLastMessageOutput = `${lastMessageOutput}`
+    let messageOutput = await this.getChats(chatId, 0)
 
     return (currentLastMessageOutput !== messageOutput).toString()
   }
 
   async sendMessage (chatId, message) {
+
+    console.log(`send message`)
+    console.log(chatId)
+    console.log(message)
 
     let result = await client.query({
       query: gql`query sendMessage {

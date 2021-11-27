@@ -9005,9 +9005,14 @@ nk_input_button(struct nk_context *ctx, enum nk_buttons id, short x, short y, nk
     struct nk_mouse_button *btn;
     struct nk_input *in;
     // NK_ASSERT(ctx);
-    if (!ctx) return;
+    if (!ctx) {
+        
+        return;
+    }
     in = &ctx->input;
-    if (in->mouse.buttons[id].down == down) return;
+    if (in->mouse.buttons[id].down == down) {
+        return;
+    }
 
     btn = &in->mouse.buttons[id];
     btn->clicked_pos.x = x;
@@ -16720,10 +16725,6 @@ nk_do_scrollbarv(nk_flags *state,
 
     cursor.y = scroll.y + (scroll_offset * scroll.h) / target + style->border_cursor + style->padding.y;
 
-    writeSerialPortDebug(boutRefNum, "vertical scroll barxxx!");
-    char x[255];
-    sprintf(x, "h %d, y %d, w %d, x %d, scrollh: %d, target: %d, scroll_off %d, scroll_off %d scrolly %d", cursor.h, cursor.y, cursor.w, cursor.x, scroll.h, target, scroll_off, scroll_offset, scroll.y);
-    writeSerialPortDebug(boutRefNum, x);
     /* draw scrollbar */
     if (style->draw_begin) style->draw_begin(out, style->userdata);
     nk_draw_scrollbar(out, *state, style, &scroll, &cursor);

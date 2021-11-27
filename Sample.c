@@ -26,12 +26,6 @@
 #include "output_js.h"
 #include "coprocessorjs.h"
 
-
-// needed by overview.c:
-#include <limits.h>
-#include <time.h>
-#include <math.h>
-
 #define WINDOW_WIDTH 510
 #define WINDOW_HEIGHT 302
 
@@ -42,6 +36,7 @@
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_IMPLEMENTATION
 #define NK_QUICKDRAW_IMPLEMENTATION
+// #define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_MEMSET memset
 #define NK_MEMCPY memcpy
 
@@ -64,7 +59,7 @@ int mouse_y;
         aFailed(__FILE__, __LINE__)
 #include "nuklear.h"
 #include "nuklear_quickdraw.h"
-#include "overview.c"
+#include "nuklear_app.c"
 /* GMac is used to hold the result of a SysEnvirons call. This makes
    it convenient for any routine to check the environment. */
 SysEnvRec	gMac;				/* set up by Initialize */
@@ -116,311 +111,9 @@ void AlertUser( void );
 // - chat during the day for a few minutes and figure out small issues
 // - start writing blog posts
 // - get new messages in other chats and display some sort of alert
-// - why does the automator script sometimes not send
-
-
-char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
-
-Boolean firstOrMouseMove = true;
-int haveRun = 0;
-int chatFriendlyNamesCounter = 0;
-int ipAddressSet = 0;
-int sendNewChat = 0;
-char chatFriendlyNames[16][64];
-char activeChat[64];
-int activeMessageCounter = 0;
-char activeChatMessages[64][2048];
-char box_input_buffer[2048];
-char ip_input_buffer[255];
-char new_message_input_buffer[255];
-short box_len;
-short box_input_len;
-short new_message_input_buffer_len;
-static short ip_input_buffer_len; // TODO: setting a length here will make the default `http://...` work, but doesn't work right -- maybe due to perf work in nuklear
-int shouldScrollMessages = 0;
-int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
-int messagesScrollBarLocation = 0;
-int messageWindowWasDormant = 0;
-int coprocessorLoaded = 0;
-
-void getMessagesFromjsFunctionResponse() {
-
-	for (int i = 0; i < 64; i++) {
-
-		memset(&activeChatMessages[i], '\0', 2048);
-	}
-
-	activeMessageCounter = 0;
-
-	// writeSerialPortDebug(boutRefNum, "BEGIN");
-
-	// writeSerialPortDebug(boutRefNum, jsFunctionResponse);
-	char *token = (char *)strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
-	// loop through the string to extract all other tokens
-	while (token != NULL) {
-
-    	// writeSerialPortDebug(boutRefNum, "LOAD VALUE TO TOKEN");
-    	// writeSerialPortDebug(boutRefNum, token);
-		sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
-    	// writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
-    	// writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
-		token = (char *)strtokm(NULL, "ENDLASTMESSAGE");
-		activeMessageCounter++;
-	}
-
-	return;
-}
-// function to send messages in chat
-void sendMessage() {
-
-	char output[2048];
-	sprintf(output, "%s&&&%s", activeChat, box_input_buffer);
-
-	callFunctionOnCoprocessor("sendMessage", output, jsFunctionResponse);
-	getMessagesFromjsFunctionResponse();
-
-	return;
-}
-
-void sendIPAddressToCoprocessor() {
-
-	char output[2048];
-	sprintf(output, "%s", ip_input_buffer);
-
-
-    writeSerialPortDebug(boutRefNum, output);
-	callFunctionOnCoprocessor("setIPAddress", output, jsFunctionResponse);
-
-	return;
-}
-// set up function to get messages in current chat
-// 	 limit to recent messages 
-// 	 figure out pagination?? button on the top that says "get previous chats"?
-void getMessages(char *thread, int page) {
-
-	char output[62];
-	sprintf(output, "%s&&&%d", thread, page);
-    // writeSerialPortDebug(boutRefNum, output);
-
-	callFunctionOnCoprocessor("getMessages", output, jsFunctionResponse);
-    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
-    getMessagesFromjsFunctionResponse();
-
-	return;
-}
-
-void getHasNewMessagesInChat(char *thread) {
-
-	char output[62];
-	sprintf(output, "%s", thread);
-    // writeSerialPortDebug(boutRefNum, output);
-
-	callFunctionOnCoprocessor("hasNewMessagesInChat", output, jsFunctionResponse);
-    writeSerialPortDebug(boutRefNum, jsFunctionResponse);
-    if (!strcmp(jsFunctionResponse, "true")) {
-
-    	writeSerialPortDebug(boutRefNum, "update current chat");
-		SysBeep(1);
-		getMessages(thread, 0);
-		// force redraw
-		firstOrMouseMove = true;
-	} else {
-
-
-	}
-
-	return;
-}
-// set up function to get available chat (fill buttons on right hand side)
-//	 run it on some interval? make sure user is not typing!!!
-void getChats() {
-
-	if (haveRun) {
-
-		return;
-	}
-
-	haveRun = 1;
-
-	callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
-
-	char * token = (char *)strtokm(jsFunctionResponse, ",");
-	// loop through the string to extract all other tokens
-	while (token != NULL) {
-		sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
-		token = (char *)strtokm(NULL, ",");
-	}
-
-	return;
-}
-
-struct nk_rect graphql_input_window_size;
-struct nk_rect chats_window_size;
-struct nk_rect messages_window_size;
-struct nk_rect message_input_window_size;
-
-static void boxTest(struct nk_context *ctx) {
-
-	// prompt the user for the graphql instance
-	if (!coprocessorLoaded) {
-
-	    if (nk_begin_titled(ctx, "Loading coprocessor services", "Loading coprocessor services", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
-
-	    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
-	    	{
-				nk_layout_row_push(ctx, 200); // 40% wide
-				nk_label_wrap(ctx, "Please wait");
-	    	}
-	    	nk_layout_row_end(ctx);
-
-	    	nk_end(ctx);
-	    }
-
-		return;
-	}
-
-	// prompt the user for the graphql instance
-	if (!ipAddressSet) {
-
-	    if (nk_begin_titled(ctx, "Enter iMessage GraphQL Server", "Enter iMessage GraphQL Server", graphql_input_window_size, NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
-
-	    	nk_layout_row_begin(ctx, NK_STATIC, 20, 1);
-	    	{
-				nk_layout_row_push(ctx, 200); // 40% wide
-				nk_label_wrap(ctx, "ex: http://127.0.0.1");
-	    	}
-	    	nk_layout_row_end(ctx);
-
-			nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
-			{
-				nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90); // 40% wide
-
-				nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 255, nk_filter_default);
-
-				nk_layout_row_push(ctx, 60); // 40% wide
-				if (nk_button_label(ctx, "save")) {
-	        	
-	        		ipAddressSet = 1;
-	        		forceRedraw = 2;
-	        		sendIPAddressToCoprocessor();
-				}
-			}
-			nk_layout_row_end(ctx);
-
-	    	nk_end(ctx);
-	    }
-
-		return;
-	}
-
-	// prompt the user for  new chat
-	if (sendNewChat) {
-
-	    if (nk_begin_titled(ctx, "Enter New Message Recipient", "Enter New Message Recipient",  nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120), NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
-
-			nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
-			{
-				nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 110); // 40% wide
-
-				nk_edit_string(ctx, NK_EDIT_SIMPLE, new_message_input_buffer, &new_message_input_buffer_len, 2048, nk_filter_default);
-
-				nk_layout_row_push(ctx, 80); // 40% wide
-				if (nk_button_label(ctx, "open chat")) {
-	        	
-	        		sendNewChat = 0;
-		        	forceRedraw = 2;
-	        		// sendIPAddressToCoprocessor();
-
-	        		sprintf(activeChat, new_message_input_buffer);
-				}
-			}
-			nk_layout_row_end(ctx);
-
-	    	nk_end(ctx);
-	    }
-
-		return;
-	}
-
-
-    if (nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
-
-        getChats();
-
-		nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
-		{
-	        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
-
-				// only display the first 8 chats, create new chat if you need someone not in your list
-	        	if (i > 9) {
-
-	        		continue;
-	        	}
-
-				nk_layout_row_push(ctx, 185); // 40% wide
-
-		        if (nk_button_label(ctx, chatFriendlyNames[i])) {
-
-		            sprintf(activeChat, "%s", chatFriendlyNames[i]);
-		            getMessages(activeChat, 0);
-					shouldScrollMessages = 1;
-		        }
-	        }
-		}
-		nk_layout_row_end(ctx);
-
-    	nk_end(ctx);
-    }
-
-
-    if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
-
-		// bottom text input		
-		nk_layout_row_begin(ctx, NK_STATIC, 40, 2);
-		{
-			nk_layout_row_push(ctx, 220); // 40% wide
-
-			nk_edit_string(ctx, NK_EDIT_BOX, box_input_buffer, &box_input_len, 2048, nk_filter_default);
-
-			nk_layout_row_push(ctx, 76); // 40% wide
-			if (nk_button_label(ctx, "send")) {
-        		//fprintf(stdout, "pushed!\n");
-        		sendMessage();
-
-				memset(&box_input_buffer, '\0', 2048);
-			}
-		}
-		nk_layout_row_end(ctx);
-
-    	nk_end(ctx);
-	}
-
-
-    if (nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE)) {
-
-		nk_layout_row_begin(ctx, NK_STATIC, 15, 1);
-		{
-		    for (int i = 0; i < activeMessageCounter; i++) {
-		        
-				nk_layout_row_push(ctx, 285); // 40% wide
-				// message label
-	            // writeSerialPortDebug(boutRefNum, "create label!");
-	            // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
-
-				nk_label_wrap(ctx, activeChatMessages[i]);
-		    }
-
-		    if (shouldScrollMessages) {
-
-				ctx->current->scrollbar.y = 10000;
-				shouldScrollMessages = 0;
-		    }
-		}
-
-		nk_layout_row_end(ctx);
-    	nk_end(ctx);
-    }
-}
+// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
+// - delete doesnt work right (leaves characters at end of string)
+// - move app-specific code to distinct file
 
 #pragma segment Main
 void main()
@@ -439,9 +132,9 @@ void main()
     #endif
 
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120);
-	chats_window_size = nk_rect(0, 0, 200, WINDOW_HEIGHT);
-	messages_window_size = nk_rect(200, 0, 310, WINDOW_HEIGHT - 50);
-	message_input_window_size = nk_rect(200, WINDOW_HEIGHT - 50, 310, 50);
+	chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
+	messages_window_size = nk_rect(180, 0, 330, WINDOW_HEIGHT - 36);
+	message_input_window_size = nk_rect(180, WINDOW_HEIGHT - 36, 330, 36);
     ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
 
    	// run our nuklear app one time to render the window telling us to be patient for the coprocessor
@@ -489,15 +182,15 @@ void EventLoop(struct nk_context *ctx)
 
 	do {
 
-		// check for new stuff ever 5 sec?
-		if (TickCount() - lastUpdatedTickCount > 300) {
+		// check for new stuff every 10 sec?
+		if (TickCount() - lastUpdatedTickCount > 600) {
 
-    		writeSerialPortDebug(boutRefNum, "update by tick count");
+    		// writeSerialPortDebug(boutRefNum, "update by tick count");
 			lastUpdatedTickCount = TickCount();
 
 			if (strcmp(activeChat, "no active chat")) {
 
-    			writeSerialPortDebug(boutRefNum, "check chat");
+    			// writeSerialPortDebug(boutRefNum, "check chat");
 				getHasNewMessagesInChat(activeChat);
 			}
 		} 
@@ -542,39 +235,48 @@ void EventLoop(struct nk_context *ctx)
 			mouse_y = tempPoint.v;
 
 			lastUpdatedTickCount = TickCount();
-        }
+        } else {
+
+			gotEvent = GetNextEvent(everyEvent, &event);
+			gotMouseEvent = false;
+
+			// drain all events before rendering -- really this only applies to keyboard events now
+			while (gotEvent) {
+
+				lastUpdatedTickCount = TickCount();
+
+				#ifdef MAC_APP_DEBUGGING
+
+					writeSerialPortDebug(boutRefNum, "calling to DoEvent");
+				#endif
+
+				if (!beganInput) {
+
+					nk_input_begin(ctx);
+					beganInput = true;
+				}
+
+				DoEvent(&event, ctx);
+
+				#ifdef MAC_APP_DEBUGGING
+
+					writeSerialPortDebug(boutRefNum, "done with DoEvent");
+				#endif
+
+				if (!gotMouseEvent) {
+
+					gotEvent = GetNextEvent(everyEvent, &event);
+				} else {
+
+					gotEvent = false;
+				}
+			}
+		}
 
         lastMouseHPos = mouse.h;
         lastMouseVPos = mouse.v;
 
 		SystemTask();
-		gotEvent = GetNextEvent(everyEvent, &event);
-
-	    // drain all events before rendering
-		while (gotEvent) {
-
-			lastUpdatedTickCount = TickCount();
-
-			#ifdef MAC_APP_DEBUGGING
-
-        		writeSerialPortDebug(boutRefNum, "calling to DoEvent");
-        	#endif
-
-        	if (!beganInput) {
-
-        		nk_input_begin(ctx);
-        		beganInput = true;
-        	}
-
-			DoEvent(&event, ctx);
-
-			#ifdef MAC_APP_DEBUGGING
-
-        		writeSerialPortDebug(boutRefNum, "done with DoEvent");
-        	#endif
-
-        	gotEvent = GetNextEvent(everyEvent, &event);
-		}
 
         // only re-render if there is an event, prevents screen flickering
         if (beganInput || firstOrMouseMove) {
@@ -583,10 +285,10 @@ void EventLoop(struct nk_context *ctx)
 
         	firstOrMouseMove = false;
 
-	        #ifdef MAC_APP_DEBUGGING
+	        // #ifdef MAC_APP_DEBUGGING
 
 		        // writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
-		    #endif
+		    // #endif
 
 			boxTest(ctx);
 
@@ -621,6 +323,8 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 
         case mouseUp:
 
+			gotMouseEvent = true;
+
 	    	#ifdef MAC_APP_DEBUGGING
 	        	// writeSerialPortDebug(boutRefNum, "mouseup");
         	#endif
@@ -636,6 +340,8 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             }
             break;
 		case mouseDown:
+
+			gotMouseEvent = true;
 
 
 	    	#ifdef MAC_APP_DEBUGGING
