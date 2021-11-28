@@ -10,6 +10,7 @@
         "fonts.h": "c",
         "devices.h": "c",
         "stdlib.h": "c",
-        "serialhelper.h": "c"
+        "serialhelper.h": "c",
+        "coprocessorjs.h": "c"
     }
 }

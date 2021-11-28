@@ -61,10 +61,6 @@ output_js.h
 /home/camh/Documents/Retro68kApps/NuklearQuickDraw/output_js.h
 coprocessorjs.h
 /home/camh/Documents/Retro68kApps/NuklearQuickDraw/coprocessorjs.h
-nuklear.h
-/home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear.h
-nuklear_quickdraw.h
-/home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear_quickdraw.h
 nuklear_app.c
 /home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear_app.c
 
@@ -129,6 +125,10 @@ assert.h
 /home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear_app.c
 Types.h
 -
+nuklear.h
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear.h
+nuklear_quickdraw.h
+/home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear_quickdraw.h
 
 /home/camh/Documents/Retro68kApps/NuklearQuickDraw/nuklear_quickdraw.h
 MacTypes.h

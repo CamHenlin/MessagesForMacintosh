@@ -1097,7 +1097,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
             
             short part = FindWindow(event->where, &window);
 
-			switch (part) {
+            switch (part) {
                 case inContent: {
                     // event->where should have coordinates??? or is it just a pointer to what the mouse is over?
                     // TODO need to figure this out
@@ -1132,7 +1132,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     // nk_input_motion(nuklear_context, x, y); // you can enable this if you don't want to use motion tracking
                     // in the Mac event loop handler as in the nuklear quickdraw sample, and this will allow mouse clicks to
                     // work properly, but will not allow hover states to work
-        	        nk_input_motion(nuklear_context, x, y);
+                    nk_input_motion(nuklear_context, x, y);
                     nk_input_button(nuklear_context, NK_BUTTON_LEFT, x, y, event->what == mouseDown);
                 }
                 break;
@@ -1141,7 +1141,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
             
             break;
         case keyDown:
-		case autoKey: {/* check for menukey equivalents */
+        case autoKey: {/* check for menukey equivalents */
 
                 char charKey = event->message & charCodeMask;
                 int key = (int)charKey;
@@ -1243,7 +1243,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
 
                 return 1;
             }
-			break;
+            break;
         default: {
                 #ifdef NK_QUICKDRAW_EVENTS_DEBUGGING
 
@@ -1388,4 +1388,4 @@ NK_API void nk_quickdraw_shutdown(void) {
 }
         
 
-        
+
