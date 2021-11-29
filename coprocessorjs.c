@@ -516,9 +516,9 @@ char* getReturnValueFromResponse(char *response, char *operation, char *output) 
 // TODO: this is a function we would want to expose in a library
 // TODO: these should all bubble up and return legible errors
 void sendProgramToCoprocessor(char* program, char *output) {
-    
+
     if (DEBUGGING) {
-        
+
         printf("sendProgramToCoprocessor\n");
     }
 

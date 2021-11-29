@@ -1,4 +1,11 @@
-
+// TODO: 
+// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
+// - chat during the day for a few minutes and figure out small issues
+// - start writing blog posts
+// - get new messages in other chats and display some sort of alert
+// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
+// - delete doesnt work right (leaves characters at end of string)
+// - move app-specific code to distinct file
 
 void aFailed(char *file, int line) {
     
@@ -198,9 +205,9 @@ Boolean checkCollision(struct nk_rect window) {
        window.x + window.w > mouse_x &&
        window.y < mouse_y &&
        window.y + window.h > mouse_y);
-
 }
 
+// UI setup and event handling goes here
 static void nuklearApp(struct nk_context *ctx) {
 
     // prompt the user for the graphql instance
@@ -271,7 +278,6 @@ static void nuklearApp(struct nk_context *ctx) {
                 
                     sendNewChat = 0;
                     forceRedraw = 2;
-                    // sendIPAddressToCoprocessor();
 
                     sprintf(activeChat, new_message_input_buffer);
                 }
@@ -344,12 +350,10 @@ static void nuklearApp(struct nk_context *ctx) {
 
         nk_layout_row_begin(ctx, NK_STATIC, 12, 1);
         {
+
             for (int i = 0; i < activeMessageCounter; i++) {
-                
+
                 nk_layout_row_push(ctx, 305);
-                // message label
-                // writeSerialPortDebug(boutRefNum, "create label!");
-                // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
 
                 nk_label(ctx, activeChatMessages[i], NK_TEXT_ALIGN_LEFT);
             }
@@ -373,19 +377,20 @@ static void nuklearApp(struct nk_context *ctx) {
 struct nk_context* initializeNuklearApp() {
 
     sprintf(activeChat, "no active chat");
-    struct nk_context *ctx;
+
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120);
     chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
     messages_window_size = nk_rect(180, 0, 330, WINDOW_HEIGHT - 36);
     message_input_window_size = nk_rect(180, WINDOW_HEIGHT - 36, 330, 36);
-    ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    struct nk_context *ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     nk_input_begin(ctx);
     nk_input_end(ctx);
     nuklearApp(ctx);
     nk_quickdraw_render(FrontWindow(), ctx);
     nk_clear(ctx);
-    sprintf(ip_input_buffer, "http://"); // doesn't work due to bug
+    sprintf(ip_input_buffer, "http://"); // doesn't work due to bug, see variable definition
 
     return ctx;
 }

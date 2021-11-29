@@ -76,23 +76,16 @@ void AlertUser( void );
 #define TopLeft(aRect)	(* (Point *) &(aRect).top)
 #define BotRight(aRect)	(* (Point *) &(aRect).bottom)
 
-// TODO: 
-// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
-// - chat during the day for a few minutes and figure out small issues
-// - start writing blog posts
-// - get new messages in other chats and display some sort of alert
-// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
-// - delete doesnt work right (leaves characters at end of string)
-// - move app-specific code to distinct file
-
+// this function, EventLoop, and DoEvent contain all of the business logic necessary
+// for our application to run
 #pragma segment Main
 void main()
 {	
     Initialize();					/* initialize the program */
     UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
 
-       // run our nuklear app one time to render the window telling us to be patient for the coprocessor
-       // app to load up 
+    // run our nuklear app one time to render the window telling us to be patient for the coprocessor
+    // app to load up 
     struct nk_context *ctx = initializeNuklearApp();
 
     SysBeep(1);
@@ -107,7 +100,6 @@ void main()
 
     EventLoop(ctx); /* call the main event loop */
 }
-
 
 #pragma segment Main
 void EventLoop(struct nk_context *ctx)
@@ -143,16 +135,6 @@ void EventLoop(struct nk_context *ctx)
 
         Boolean beganInput = false;
 
-        #ifdef MAC_APP_DEBUGGING
-
-            writeSerialPortDebug(boutRefNum, "nk_input_begin");
-        #endif
-
-        #ifdef MAC_APP_DEBUGGING
-
-            writeSerialPortDebug(boutRefNum, "nk_input_begin complete");
-        #endif
-
         GetGlobalMouse(&mouse);
 
         // as far as i can tell, there is no way to event on mouse movement with mac libraries,
@@ -164,16 +146,16 @@ void EventLoop(struct nk_context *ctx)
 
             #ifdef MAC_APP_DEBUGGING
 
-                // writeSerialPortDebug(boutRefNum, "nk_input_motion!");
+                writeSerialPortDebug(boutRefNum, "nk_input_motion!");
             #endif
 
             firstOrMouseMove = true;
+            beganInput = true;
 
             Point tempPoint;
             SetPt(&tempPoint, mouse.h, mouse.v);
             GlobalToLocal(&tempPoint);
 
-            beganInput = true;
             nk_input_begin(ctx);
             nk_input_motion(ctx, tempPoint.h, tempPoint.v);
 
@@ -224,7 +206,7 @@ void EventLoop(struct nk_context *ctx)
 
         SystemTask();
 
-        // only re-render if there is an event, prevents screen flickering
+        // only re-render if there is an event, prevents screen flickering, speeds up app
         if (beganInput || firstOrMouseMove) {
 
             nk_input_end(ctx);
@@ -243,10 +225,9 @@ void EventLoop(struct nk_context *ctx)
             nk_clear(ctx);
         }
 
-
         #ifdef MAC_APP_DEBUGGING
 
-            // writeSerialPortDebug(boutRefNum, "nk_input_render complete");
+            writeSerialPortDebug(boutRefNum, "nk_input_render complete");
         #endif
     } while ( true );	/* loop forever; we quit via ExitToShell */
 } /*EventLoop*/
@@ -272,7 +253,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             gotMouseEvent = true;
 
             #ifdef MAC_APP_DEBUGGING
-                // writeSerialPortDebug(boutRefNum, "mouseup");
+                writeSerialPortDebug(boutRefNum, "mouseup");
             #endif
 
             part = FindWindow(event->where, &window);
@@ -306,7 +287,6 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
                 case inContent:
                     if ( window != FrontWindow() ) {
                         SelectWindow(window);
-
                     }
                     nk_quickdraw_handle_event(event, ctx);
                     break;
@@ -329,7 +309,6 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             break;
         case keyDown:
         case autoKey:						/* check for menukey equivalents */
-            
 
             #ifdef MAC_APP_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "key");
@@ -485,7 +464,7 @@ void AdjustMenus()
         EnableItem(menu, iCopy);
         EnableItem(menu, iClear);
         EnableItem(menu, iPaste);
-    } else {						/* Ébut we donÕt use it */
+    } else {						/* but we dont use it */
         DisableItem(menu, iUndo);
         DisableItem(menu, iCut);
         DisableItem(menu, iCopy);
@@ -553,6 +532,8 @@ void DoMenuCommand(menuResult)
             handledByDA = SystemEdit(menuItem-1);	/* since we donÕt do any Editing */
             break;
         case mLight:
+            // note this was co-opted to send new chats instead of the demo functionality. do the
+            // same thing for other menu items as necessary
             sendNewChat = 1;
             break;
 
