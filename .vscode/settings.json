@@ -11,6 +11,7 @@
         "devices.h": "c",
         "stdlib.h": "c",
         "serialhelper.h": "c",
-        "coprocessorjs.h": "c"
+        "coprocessorjs.h": "c",
+        "dialogs.h": "c"
     }
 }

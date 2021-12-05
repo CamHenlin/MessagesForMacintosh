@@ -9746,8 +9746,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->header.label_normal = table[NK_COLOR_TEXT];
     win->header.label_hover = table[NK_COLOR_TEXT];
     win->header.label_active = table[NK_COLOR_TEXT];
-    win->header.label_padding = nk_vec2(4,4);
-    win->header.padding = nk_vec2(4,4);
+    win->header.label_padding = nk_vec2(1,1);
+    win->header.padding = nk_vec2(2,2);
     win->header.spacing = nk_vec2(0,0);
 
     /* window header close button */

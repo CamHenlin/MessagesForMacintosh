@@ -6,6 +6,21 @@
 // - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
 // - delete doesnt work right (leaves characters at end of string)
 // - move app-specific code to distinct file
+// - 1 too many lines in the chat -- just reduce line spacing a bit
+
+#define WINDOW_WIDTH 510
+#define WINDOW_HEIGHT 302
+
+#define NK_ZERO_COMMAND_MEMORY
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+// #define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_IMPLEMENTATION
+#define NK_QUICKDRAW_IMPLEMENTATION
+// #define NK_BUTTON_TRIGGER_ON_RELEASE
+#define NK_MEMSET memset
+#define NK_MEMCPY memcpy
 
 void aFailed(char *file, int line) {
     
@@ -22,25 +37,16 @@ void aFailed(char *file, int line) {
     if (!(e)) \
         aFailed(__FILE__, __LINE__)
 
-#define NK_ZERO_COMMAND_MEMORY
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-// #define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_IMPLEMENTATION
-#define NK_QUICKDRAW_IMPLEMENTATION
-// #define NK_BUTTON_TRIGGER_ON_RELEASE
-#define NK_MEMSET memset
-#define NK_MEMCPY memcpy
-
 #include <Types.h>
 #include "nuklear.h"
 #include "nuklear_quickdraw.h"
 
+#define MAX_CHAT_MESSAGES 16
+
 Boolean firstOrMouseMove = true;
 Boolean gotMouseEvent = false;
 char activeChat[64];
-char activeChatMessages[15][2048]; // this should match to MAX_ROWS in index.js
+char activeChatMessages[MAX_CHAT_MESSAGES][2048]; // this should match to MAX_ROWS in index.js
 char box_input_buffer[2048];
 char chatFriendlyNames[16][64];
 char ip_input_buffer[255];
@@ -64,10 +70,11 @@ struct nk_rect chats_window_size;
 struct nk_rect graphql_input_window_size;
 struct nk_rect message_input_window_size;
 struct nk_rect messages_window_size;
+struct nuklear_context *ctx;
 
 void getMessagesFromjsFunctionResponse() {
 
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < MAX_CHAT_MESSAGES; i++) {
 
         memset(&activeChatMessages[i], '\0', 2048);
     }
@@ -102,12 +109,13 @@ void sendMessage() {
     memset(&box_input_buffer, '\0', 2048);
     sprintf(box_input_buffer, "");
     box_input_len = 0;
+    refreshNuklearApp(1);
 
     callFunctionOnCoprocessor("sendMessage", output, jsFunctionResponse);
 
     getMessagesFromjsFunctionResponse();
 
-    forceRedraw = 3;
+    forceRedraw = 2;
     firstOrMouseMove = true;
 
     return;
@@ -124,6 +132,7 @@ void sendIPAddressToCoprocessor() {
 
     return;
 }
+
 // set up function to get messages in current chat
 // 	 limit to recent messages 
 // 	 figure out pagination?? button on the top that says "get previous chats"?
@@ -242,11 +251,11 @@ static void nuklearApp(struct nk_context *ctx) {
 
             nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
             {
-                nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 90);
 
+                nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 100);
                 nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 255, nk_filter_default);
+                nk_layout_row_push(ctx, 55);
 
-                nk_layout_row_push(ctx, 60);
                 if (nk_button_label(ctx, "save")) {
                 
                     ipAddressSet = 1;
@@ -269,11 +278,11 @@ static void nuklearApp(struct nk_context *ctx) {
 
             nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
             {
+
                 nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 110);
-
                 nk_edit_string(ctx, NK_EDIT_SIMPLE, new_message_input_buffer, &new_message_input_buffer_len, 2048, nk_filter_default);
-
                 nk_layout_row_push(ctx, 80);
+
                 if (nk_button_label(ctx, "open chat")) {
                 
                     sendNewChat = 0;
@@ -328,7 +337,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
     if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
-        // bottom text input		
+        // bottom text input
         nk_layout_row_begin(ctx, NK_STATIC, 28, 1);
         {
             nk_layout_row_push(ctx, 320);
@@ -374,22 +383,34 @@ static void nuklearApp(struct nk_context *ctx) {
     }
 }
 
-struct nk_context* initializeNuklearApp() {
-
-    sprintf(activeChat, "no active chat");
-
-    graphql_input_window_size = nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120);
-    chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
-    messages_window_size = nk_rect(180, 0, 330, WINDOW_HEIGHT - 36);
-    message_input_window_size = nk_rect(180, WINDOW_HEIGHT - 36, 330, 36);
-
-    struct nk_context *ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
+void refreshNuklearApp(Boolean blankInput) {
 
     nk_input_begin(ctx);
+
+    if (blankInput) {
+
+        nk_input_key(ctx, NK_KEY_DEL, 1);
+        nk_input_key(ctx, NK_KEY_DEL, 0);
+    }
+
     nk_input_end(ctx);
     nuklearApp(ctx);
     nk_quickdraw_render(FrontWindow(), ctx);
     nk_clear(ctx);
+}
+
+struct nk_context* initializeNuklearApp() {
+
+    sprintf(activeChat, "no active chat");
+
+    graphql_input_window_size = nk_rect(WINDOW_WIDTH / 2 - 118, 80, 234, 100);
+    chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
+    messages_window_size = nk_rect(180, 0, 330, WINDOW_HEIGHT - 36);
+    message_input_window_size = nk_rect(180, WINDOW_HEIGHT - 36, 330, 36);
+
+    ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
+    refreshNuklearApp(false);
+
     sprintf(ip_input_buffer, "http://"); // doesn't work due to bug, see variable definition
 
     return ctx;

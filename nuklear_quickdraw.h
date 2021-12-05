@@ -1266,7 +1266,7 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     button->image_padding   = nk_vec2(0,0);
     button->touch_padding   = nk_vec2(0, 0);
     button->userdata        = nk_handle_ptr(0);
-    button->text_alignment  = NK_TEXT_LEFT;
+    button->text_alignment  = NK_TEXT_CENTERED;
     button->border          = 1;
     button->rounding        = 10;
     button->draw_begin      = 0;

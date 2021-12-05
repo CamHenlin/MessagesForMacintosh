@@ -223,7 +223,7 @@ const shortenText = (text) => {
   return outputText
 }
 
-const MAX_ROWS = 15
+const MAX_ROWS = 16
 
 const splitMessages = (messages) => {
 
@@ -231,7 +231,7 @@ const splitMessages = (messages) => {
 
   if (!messages) {
 
-    return ``
+    return `no messages ENDLASTMESSAGE`
   }
 
   for (const message of messages) {
@@ -281,14 +281,28 @@ class iMessageClient {
 
     console.log(`get messages for chat ID: ${chatId}`)
 
-    let result = await client.query({
-      query: gql`query getMessages {
-          getMessages(chatId: "${chatId}", page: "${page}") {
-              chatter
-              text
-          }
-      }`
-    })
+    let result
+
+    try {
+    
+      result = await client.query({
+        query: gql`query getMessages {
+            getMessages(chatId: "${chatId}", page: "${page}") {
+                chatter
+                text
+            }
+        }`
+      })
+    } catch (error) {
+
+      console.log(`error with apollo query`)
+      console.log(error)
+
+      result = {
+        data: {
+        }
+      }
+    }
 
     let messages = result.data.getMessages
 
@@ -317,14 +331,28 @@ class iMessageClient {
     console.log(chatId)
     console.log(message)
 
-    let result = await client.query({
-      query: gql`query sendMessage {
-          sendMessage(chatId: "${chatId}", message: "${message}") {
-              chatter
-              text
-          }
-      }`
-    })
+    let result
+
+    try {
+    
+      result = await client.query({
+        query: gql`query sendMessage {
+            sendMessage(chatId: "${chatId}", message: "${message}") {
+                chatter
+                text
+            }
+        }`
+      })
+    } catch (error) {
+
+      console.log(`error with apollo query`)
+      console.log(error)
+
+      result = {
+        data: {
+        }
+      }
+    }
 
     let messages = result.data.sendMessage
 
@@ -333,14 +361,28 @@ class iMessageClient {
 
   async getChats () {
 
-    let result = await client.query({
-      query: gql`query getChats {
-          getChats {
-              name
-              friendlyName
-          }
-      }`
-    })
+    let result
+
+    try {
+    
+      result = await client.query({
+        query: gql`query getChats {
+            getChats {
+                name
+                friendlyName
+            }
+        }`
+      })
+    } catch (error) {
+
+      console.log(`error with apollo query`)
+      console.log(error)
+
+      result = {
+        data: {
+        }
+      }
+    }
 
     let chats = result.data.getChats
     let friendlyNameStrings = ``

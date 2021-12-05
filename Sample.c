@@ -26,9 +26,6 @@
 #include "output_js.h"
 #include "coprocessorjs.h"
 
-#define WINDOW_WIDTH 510
-#define WINDOW_HEIGHT 302
-
 #include "nuklear_app.c"
 
 /* GMac is used to hold the result of a SysEnvirons call. This makes
