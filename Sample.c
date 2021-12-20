@@ -21,6 +21,73 @@
 #include <stdio.h>
 #include <string.h>
 #include "Sample.h"
+
+//#define PROFILING 1
+#ifdef PROFILING
+
+OSErr writeSerialPortProfile(const char* str)
+{
+
+    #define PRINTER_PORT_OUT "\p.BOut"
+
+    OSErr err;
+    short serialPort = 0;
+    err = OpenDriver(PRINTER_PORT_OUT, &serialPort);    
+    if (err < 0) return err;    
+    
+    CntrlParam cb2;
+    cb2.ioCRefNum = serialPort;
+    cb2.csCode = 8;
+    cb2.csParam[0] = stop10 | noParity | data8 | baud9600;
+    err = PBControl ((ParmBlkPtr) & cb2, 0);    
+    if (err < 0) return err; 
+            
+    IOParam pb2;
+    pb2.ioRefNum = serialPort;
+    
+    char str2[1024];
+    sprintf(str2, "%s\n", str);
+    pb2.ioBuffer = (Ptr) str2;
+    pb2.ioReqCount = strlen(str2);
+    
+    err = PBWrite((ParmBlkPtr)& pb2, 0);          
+    if (err < 0) return err;
+    
+    // hangs on Mac512K (write hasn't finished due to slow Speed when we wants to close driver
+    // err = CloseDriver(serialPort);
+    
+    return err;
+}
+
+void PROFILE_START(char *name) {
+
+    char profileMessage[255];
+    sprintf(profileMessage, "PROFILE_START %s", name);
+
+    writeSerialPortProfile(profileMessage);
+
+    return;
+}
+
+void PROFILE_END(char *name) {
+
+    char profileMessage[255];
+    sprintf(profileMessage, "PROFILE_END %s", name);
+
+    writeSerialPortProfile(profileMessage);
+
+    return;
+}
+
+void PROFILE_COMPLETE() {
+
+    writeSerialPortProfile("PROFILE_COMPLETE");
+
+    return;
+}
+
+#endif
+
 #include "SerialHelper.h"
 #include "Quickdraw.h"
 #include "output_js.h"
@@ -115,6 +182,12 @@ void EventLoop(struct nk_context *ctx)
 
     do {
 
+        // Don't do this, it won't yield anything useful
+        // and will make your app very slow:
+        // #ifdef PROFILING
+        //     PROFILE_START("eventloop");
+        // #endif
+
         // check for new stuff every 10 sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
         // new chat lookups
@@ -141,31 +214,42 @@ void EventLoop(struct nk_context *ctx)
         // call the nk_input_motion command
         if (lastMouseHPos != mouse.h || lastMouseVPos != mouse.v) {
 
-            #ifdef MAC_APP_DEBUGGING
+            // if the mouse is in motion, try to capture all motion before moving on to rendering
+            while (lastMouseHPos != mouse.h || lastMouseVPos != mouse.v) {
 
-                writeSerialPortDebug(boutRefNum, "nk_input_motion!");
-            #endif
+                #ifdef MAC_APP_DEBUGGING
 
-            firstOrMouseMove = true;
-            beganInput = true;
+                    writeSerialPortDebug(boutRefNum, "nk_input_motion!");
+                #endif
 
-            Point tempPoint;
-            SetPt(&tempPoint, mouse.h, mouse.v);
-            GlobalToLocal(&tempPoint);
 
-            nk_input_begin(ctx);
-            nk_input_motion(ctx, tempPoint.h, tempPoint.v);
+                Point tempPoint;
+                SetPt(&tempPoint, mouse.h, mouse.v);
+                GlobalToLocal(&tempPoint);
 
-            mouse_x = tempPoint.h;
-            mouse_y = tempPoint.v;
+                if (!beganInput) {
+                    nk_input_begin(ctx);
+                }
 
-            lastUpdatedTickCount = TickCount();
+                nk_input_motion(ctx, tempPoint.h, tempPoint.v);
+
+                firstOrMouseMove = true;
+                beganInput = true;
+
+                mouse_x = tempPoint.h;
+                mouse_y = tempPoint.v;
+
+                lastUpdatedTickCount = TickCount();
+                lastMouseHPos = mouse.h;
+                lastMouseVPos = mouse.v;
+                GetGlobalMouse(&mouse);
+            }
         } else {
 
             gotEvent = GetNextEvent(everyEvent, &event);
             gotMouseEvent = false;
 
-            // drain all events before rendering -- really this only applies to keyboard events now
+            // drain all events before rendering -- really this only applies to keyboard events and single mouse clicks now
             while (gotEvent) {
 
                 lastUpdatedTickCount = TickCount();
@@ -206,7 +290,16 @@ void EventLoop(struct nk_context *ctx)
         // only re-render if there is an event, prevents screen flickering, speeds up app
         if (beganInput || firstOrMouseMove) {
 
+            #ifdef PROFILING
+                PROFILE_START("nk_input_end");
+            #endif
+
             nk_input_end(ctx);
+
+            #ifdef PROFILING
+                PROFILE_END("nk_input_end");
+                PROFILE_START("nuklearApp");
+            #endif
 
             firstOrMouseMove = false;
 
@@ -217,15 +310,35 @@ void EventLoop(struct nk_context *ctx)
 
             nuklearApp(ctx);
 
+            #ifdef PROFILING
+                PROFILE_END("nuklearApp");
+                PROFILE_START("nk_quickdraw_render");
+            #endif
+
             nk_quickdraw_render(FrontWindow(), ctx);
 
+            #ifdef PROFILING
+                PROFILE_END("nk_quickdraw_render");
+                PROFILE_START("nk_clear");
+            #endif
+
             nk_clear(ctx);
+
+            #ifdef PROFILING
+                PROFILE_END("nk_clear");
+            #endif
+
         }
 
         #ifdef MAC_APP_DEBUGGING
 
             writeSerialPortDebug(boutRefNum, "nk_input_render complete");
         #endif
+
+
+        // #ifdef PROFILING
+        //     PROFILE_END("eventloop");
+        // #endif
     } while ( true );	/* loop forever; we quit via ExitToShell */
 } /*EventLoop*/
 
@@ -621,6 +734,10 @@ void Terminate()
 {
     WindowPtr	aWindow;
     Boolean		closed;
+
+    #ifdef PROFILING
+        PROFILE_COMPLETE();
+    #endif
     
     closed = true;
     do {

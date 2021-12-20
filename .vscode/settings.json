@@ -12,6 +12,9 @@
         "stdlib.h": "c",
         "serialhelper.h": "c",
         "coprocessorjs.h": "c",
-        "dialogs.h": "c"
+        "dialogs.h": "c",
+        "osutils.h": "c",
+        "traps.h": "c",
+        "quickdraw.h": "c"
     }
 }

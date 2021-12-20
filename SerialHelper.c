@@ -10,7 +10,13 @@ https://opensource.apple.com/source/gdb/gdb-186.1/src/gdb/ser-mac.c?txt
 http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/Devices/Devices-320.html
 */ 
 OSErr writeSerialPortDebug(short refNum, const char* str)
-{ 
+{
+    #ifdef PROFILING
+
+    // we need to bail on profiling, because the profile watcher will be reading this serial port
+    return;
+
+    #endif
 #define MODEM_PORT_OUT   "\p.AOut" 
 #define PRINTER_PORT_OUT "\p.BOut" 
     // OSErr err;

@@ -5,8 +5,6 @@
 // - get new messages in other chats and display some sort of alert
 // - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
 // - delete doesnt work right (leaves characters at end of string)
-// - move app-specific code to distinct file
-// - 1 too many lines in the chat -- just reduce line spacing a bit
 
 #define WINDOW_WIDTH 510
 #define WINDOW_HEIGHT 302
@@ -70,7 +68,9 @@ struct nk_rect chats_window_size;
 struct nk_rect graphql_input_window_size;
 struct nk_rect message_input_window_size;
 struct nk_rect messages_window_size;
-struct nuklear_context *ctx;
+struct nk_context *ctx;
+
+void refreshNuklearApp(Boolean blankInput);
 
 void getMessagesFromjsFunctionResponse() {
 
@@ -171,6 +171,7 @@ void getHasNewMessagesInChat(char *thread) {
 
     return;
 }
+
 // set up function to get available chat (fill buttons on right hand side)
 //	 run it on some interval? make sure user is not typing!!!
 void getChats() {
