@@ -48,7 +48,7 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file();
  *
  * ===============================================================
  */
-#define MAX_MEMORY_IN_KB 4
+#define MAX_MEMORY_IN_KB 6
 #ifdef NK_QUICKDRAW_IMPLEMENTATION
 #ifndef NK_QUICKDRAW_TEXT_MAX
 #define NK_QUICKDRAW_TEXT_MAX 256
@@ -491,15 +491,11 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file() {
     return font;
 }
 
-#ifdef COMMAND_CACHING
-    const struct nk_command *lastCmd;
-#endif
-
 // used for bounds checking
-int mostLeft;// = 1;
-int mostBottom;// = 1;
-int mostTop;// = WINDOW_HEIGHT;
-int mostRight;// = WINDOW_WIDTH;
+int mostLeft = 1;
+int mostBottom = 1;
+int mostTop = WINDOW_HEIGHT;
+int mostRight = WINDOW_WIDTH;
 
 void updateBounds(int top, int bottom, int left, int right) {
 
@@ -524,7 +520,11 @@ void updateBounds(int top, int bottom, int left, int right) {
     }
 }
 
-void runDrawCommand(const struct nk_command *cmd) {
+#ifdef COMMAND_CACHING
+    void runDrawCommand(const struct nk_command *cmd, const struct nk_command *lastCmd) {
+#else
+    void runDrawCommand(const struct nk_command *cmd) {
+#endif
 
     int color;
 
@@ -545,7 +545,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_SCISSOR");
                 #endif
 
-                const struct nk_command_scissor *s =(const struct nk_command_scissor*)cmd;
+                const struct nk_command_scissor *s = (const struct nk_command_scissor*)cmd;
 
                 // there is no point in supressing scissor commands because they only affect
                 // where we can actually draw to:
@@ -589,7 +589,7 @@ void runDrawCommand(const struct nk_command *cmd) {
 
                 #ifdef COMMAND_CACHING
 
-                    if (memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_line");
@@ -620,7 +620,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_rect *r = (const struct nk_command_rect *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_rect");
@@ -674,9 +674,8 @@ void runDrawCommand(const struct nk_command *cmd) {
                     break;
                 }
 
-
                 #ifdef COMMAND_CACHING
-                    if (memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_rect_filled");
@@ -690,10 +689,8 @@ void runDrawCommand(const struct nk_command *cmd) {
                 
                 ForeColor(color);
                 Pattern colorPattern = nk_color_to_quickdraw_color(r->color);
+                PenSize(1.0, 1.0);
 
-                // BackPat(&colorPattern); // inside macintosh: imaging with quickdraw 3-48
-                PenSize(1.0, 1.0); // no member line thickness on this struct so assume we want a thin line
-                // might actually need to build this with SetRect, search inside macintosh: imaging with quickdraw
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = (int)r->y;
                 quickDrawRectangle.left = (int)r->x;
@@ -719,7 +716,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_circle *c = (const struct nk_command_circle *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(c, lastCmd, sizeof(struct nk_command_circle)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_circle");
@@ -756,7 +753,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(c, lastCmd, sizeof(struct nk_command_circle_filled)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_circle_filled");
@@ -798,7 +795,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_triangle *t = (const struct nk_command_triangle*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(t, lastCmd, sizeof(struct nk_command_triangle)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_triangle");
@@ -830,7 +827,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_triangle_filled *t = (const struct nk_command_triangle_filled *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(t, lastCmd, sizeof(struct nk_command_triangle_filled)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_triangle_filled");
@@ -868,7 +865,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
@@ -909,7 +906,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
@@ -960,7 +957,7 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
@@ -991,10 +988,13 @@ void runDrawCommand(const struct nk_command *cmd) {
                 const struct nk_command_text *t = (const struct nk_command_text*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
+                    if (t->allowCache && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-                            writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_text");
+                            char log[255];
+
+                            sprintf(log, "ALREADY DREW CMD nk_command_text string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
+                            writeSerialPortDebug(boutRefNum, log);
                         #endif
 
                         break;
@@ -1003,9 +1003,9 @@ void runDrawCommand(const struct nk_command *cmd) {
 
                 #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_TEXT");
                     char log[255];
-                    sprintf(log, "%f: %c, %d", (int)t->height, &t->string, (int)t->length);
+
+                    sprintf(log, "NK_COMMAND_TEXT string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
                     writeSerialPortDebug(boutRefNum, log);
                 #endif
 
@@ -1015,18 +1015,14 @@ void runDrawCommand(const struct nk_command *cmd) {
                 quickDrawRectangle.bottom = (int)t->y + 15;
                 quickDrawRectangle.right = (int)t->x + _get_text_width((const char*)t->string, (int)t->length);
 
-                // #ifdef COMMAND_CACHING
-                //     if (lastInputWasBackspace) {
-
-                //         quickDrawRectangle.right += 20;
-                //     }
-                // #endif
-
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                EraseRect(&quickDrawRectangle);
+                if (!t->allowCache) {
+
+                    EraseRect(&quickDrawRectangle);
+                }
 
                 color = nk_color_to_quickdraw_bw_color(t->foreground);
                 ForeColor(color);
@@ -1075,7 +1071,6 @@ void runDrawCommand(const struct nk_command *cmd) {
                 int x2 = (int)a->cx + (int)a->r;
                 int y2 = (int)a->cy + (int)a->r;
                 SetRect(&arcBoundingBoxRectangle, x1, y1, x2, y2);
-                // SetRect(secondRect,90,20,140,70);
 
                 FrameArc(&arcBoundingBoxRectangle, a->a[0], a->a[1]);
             }
@@ -1125,7 +1120,6 @@ void runDrawCommand(const struct nk_command *cmd) {
             #endif
             break;
     }
-
 }
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
@@ -1167,18 +1161,23 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         PROFILE_START("rendering loop and switch");
     #endif
 
-    short iterations = 0;
-
     #ifdef COMMAND_CACHING
+        const struct nk_command *lastCmd;
+        nk_byte *buffer;
         lastCmd = nk_ptr_add_const(struct nk_command, last, 0);
     #endif
 
     nk_foreach(cmd, ctx) {
 
-        runDrawCommand(cmd);
+        #ifdef COMMAND_CACHING
+            runDrawCommand(cmd, lastCmd);
+        #else
+            runDrawCommand(cmd);
+        #endif
 
         #ifdef COMMAND_CACHING
-            if (lastCmd->next < ctx->memory.allocated) {
+            if (lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
+
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
         #endif
@@ -1210,25 +1209,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
         SetPort(window);
 
-        /*
-        PROCEDURE CopyBits (srcBits,dstBits: BitMap; 
-                    srcRect,dstRect:ðRect; mode:ðInteger; 
-                    maskRgn:ðRgnHandle);
-        srcBits
-        The source BitMap record.
-        dstBits
-        The destination BitMap record.
-        srcRect
-        The source rectangle.
-        dstRect
-        The destination rectangle.
-        mode
-        One of the eight source modes in which the copy is to be performed.
-        maskRgn
-        A region to use as a clipping mask.
-        */
-        // our offscreen bitmap is the same size as our port rectangle, so we
-        // get away with using the portRect sizing for source and destination
         Rect quickDrawRectangle;
         quickDrawRectangle.top = mostTop;
         quickDrawRectangle.left = mostLeft;

@@ -4,6 +4,9 @@ const InMemoryCache = require('apollo-cache-inmemory').InMemoryCache;
 const createHttpLink = require('apollo-link-http').createHttpLink;
 const gql = require('graphql-tag')
 
+// TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your moder Mac
+const TEST_MODE = true
+
 const defaultOptions = {
   watchQuery: {
     fetchPolicy: 'no-cache',
@@ -148,7 +151,6 @@ const widthFor12ptFont = [
   8
 ]
 
-
 // this is tied to Sample.c's message window max width
 const MAX_WIDTH = 304
 const SPACE_WIDTH = widthFor12ptFont[32]
@@ -169,7 +171,7 @@ const getNextWordLength = (word) => {
     currentWidth += currentCharWidth
   }
 
-return currentWidth
+  return currentWidth
 }
 
 const shortenText = (text) => {
@@ -273,11 +275,67 @@ const splitMessages = (messages) => {
   return messageOutput
 }
 
+const parseChatsToFriendlyNameString = (chats) => {
+
+  let friendlyNameStrings = ``
+
+  if (!chats) {
+
+    return ``
+  }
+
+  for (let chat of chats) {
+
+    friendlyNameStrings = `${friendlyNameStrings},${chat.friendlyName.replace(/,/g, '')}`
+  }
+
+  friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
+
+  console.log(`chats`)
+  console.log(friendlyNameStrings)
+
+  return friendlyNameStrings
+}
+
 let lastMessageOutput
+
+const TEST_MESSAGES = [
+  {chatter: `friend 1`, text: `my super fun text message`},
+  {chatter: `me`, text: `some cool old thing I said earlier`},
+  {chatter: `friend 2`, text: `this message is not relevant to the conversation! not at all :(`},
+  {chatter: `friend 1`, text: `i watch star wars in reverse order`},
+  {chatter: `me`, text: `https://github.com/CamHenlin/MessagesForMacintosh https://github.com/CamHenlin/MessagesForMacintosh`},
+  {chatter: `friend 3`, text: `i'm just catching up`},
+  {chatter: `friend 3`, text: `nobody chat for a minute`},
+  {chatter: `friend 2`, text: `hang on`},
+  {chatter: `friend 1`, text: `no`}
+]
+
+const TEST_CHATS = [
+  {friendlyName: `my group chat 1`, name: `my group chat 1`},
+  {friendlyName: `friend 1`, name: `friend 1`},
+  {friendlyName: `friend 4`, name: `friend 4`},
+  {friendlyName: `boss`, name: `boss`},
+  {friendlyName: `friend 3`, name: `friend 3`},
+  {friendlyName: `restaurant`, name: `restaurant`}
+]
+
+if (TEST_MODE) {
+
+  setInterval(() => {
+
+    TEST_MESSAGES = TEST_MESSAGES.concat({chatter: `friend 1`, text: Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 64)})
+  }, 10000)
+}
 
 class iMessageClient {
 
   async getMessages (chatId, page) {
+
+    if (TEST_MODE) {
+
+      return splitMessages(TEST_MESSAGES)
+    }
 
     console.log(`get messages for chat ID: ${chatId}`)
 
@@ -327,6 +385,13 @@ class iMessageClient {
 
   async sendMessage (chatId, message) {
 
+    if (TEST_MODE) {
+
+      TEST_MESSAGES = TEST_MESSAGES.concat({sender: `me`, text: message})
+
+      return splitMessages(TEST_MESSAGES)
+    }
+
     console.log(`send message`)
     console.log(chatId)
     console.log(message)
@@ -361,6 +426,11 @@ class iMessageClient {
 
   async getChats () {
 
+    if (TEST_MODE) {
+
+      return parseChatsToFriendlyNameString(TEST_CHATS)
+    }
+
     let result
 
     try {
@@ -385,29 +455,18 @@ class iMessageClient {
     }
 
     let chats = result.data.getChats
-    let friendlyNameStrings = ``
 
-    if (!chats) {
-
-      return ``
-    }
-
-    for (let chat of chats) {
-
-      friendlyNameStrings = `${friendlyNameStrings},${chat.friendlyName.replace(/,/g, '')}`
-    }
-
-    friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
-
-    console.log(`chats`)
-    console.log(friendlyNameStrings)
-
-    return friendlyNameStrings
+    return parseChatsToFriendlyNameString(chats)
   }
 
   setIPAddress (IPAddress) {
 
     console.log(`instantiate apolloclient with uri ${IPAddress}:4000/`)
+
+    if (TEST_MODE) {
+
+      return
+    }
 
     try {
 

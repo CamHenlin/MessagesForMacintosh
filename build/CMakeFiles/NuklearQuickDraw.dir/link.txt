@@ -1,1 +1,0 @@
-/home/camh/Retro68-build/toolchain/bin/m68k-apple-macos-gcc    CMakeFiles/NuklearQuickDraw.dir/SerialHelper.c.obj CMakeFiles/NuklearQuickDraw.dir/coprocessorjs.c.obj CMakeFiles/NuklearQuickDraw.dir/Sample.c.obj  -o NuklearQuickDraw.code.bin 
