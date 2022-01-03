@@ -38,6 +38,7 @@ void aFailed(char *file, int line) {
 #include <Types.h>
 #include "nuklear.h"
 #include "nuklear_quickdraw.h"
+#include "coprocessorjs.h"
 
 #define MAX_CHAT_MESSAGES 16
 

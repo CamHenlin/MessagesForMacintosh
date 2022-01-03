@@ -1019,10 +1019,10 @@ void updateBounds(int top, int bottom, int left, int right) {
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                if (!t->allowCache) {
+                // if (!t->allowCache) {
 
                     EraseRect(&quickDrawRectangle);
-                }
+                // }
 
                 color = nk_color_to_quickdraw_bw_color(t->foreground);
                 ForeColor(color);

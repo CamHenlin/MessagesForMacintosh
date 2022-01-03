@@ -299,7 +299,7 @@ const parseChatsToFriendlyNameString = (chats) => {
 
 let lastMessageOutput
 
-const TEST_MESSAGES = [
+let TEST_MESSAGES = [
   {chatter: `friend 1`, text: `my super fun text message`},
   {chatter: `me`, text: `some cool old thing I said earlier`},
   {chatter: `friend 2`, text: `this message is not relevant to the conversation! not at all :(`},
@@ -387,7 +387,7 @@ class iMessageClient {
 
     if (TEST_MODE) {
 
-      TEST_MESSAGES = TEST_MESSAGES.concat({sender: `me`, text: message})
+      TEST_MESSAGES = TEST_MESSAGES.concat({chatter: `me`, text: message})
 
       return splitMessages(TEST_MESSAGES)
     }
@@ -465,7 +465,7 @@ class iMessageClient {
 
     if (TEST_MODE) {
 
-      return
+      return `success`
     }
 
     try {
