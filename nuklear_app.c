@@ -1,9 +1,7 @@
 // TODO: 
 // - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
-// - chat during the day for a few minutes and figure out small issues
-// - start writing blog posts
 // - get new messages in other chats and display some sort of alert
-// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset)
+// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset) -- probably possible in coprocessorjs library
 // - delete doesnt work right (leaves characters at end of string)
 
 #define WINDOW_WIDTH 510
@@ -105,7 +103,7 @@ void getMessagesFromjsFunctionResponse() {
 void sendMessage() {
 
     char output[2048];
-    sprintf(output, "%s&&&%s", activeChat, box_input_buffer);
+    sprintf(output, "%s&&&%.*s", activeChat, box_input_len, box_input_buffer);
 
     memset(&box_input_buffer, '\0', 2048);
     sprintf(box_input_buffer, "");
@@ -125,8 +123,7 @@ void sendMessage() {
 void sendIPAddressToCoprocessor() {
 
     char output[2048];
-    sprintf(output, "%s", ip_input_buffer);
-
+    sprintf(output, "%.*s", ip_input_buffer_len, ip_input_buffer);
 
     writeSerialPortDebug(boutRefNum, output);
     callFunctionOnCoprocessor("setIPAddress", output, jsFunctionResponse);
@@ -276,21 +273,34 @@ static void nuklearApp(struct nk_context *ctx) {
     // prompt the user for  new chat
     if (sendNewChat) {
 
-        if (nk_begin_titled(ctx, "Enter New Message Recipient", "Enter New Message Recipient",  nk_rect(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4, WINDOW_WIDTH / 2, 120), NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
+        if (nk_begin_titled(ctx, "Enter New Message Recipient", "Enter New Message Recipient",  nk_rect(50, WINDOW_HEIGHT / 4, WINDOW_WIDTH - 100, 140), NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
+
+            nk_layout_row_begin(ctx, NK_STATIC, 30, 1);
+            {
+                nk_layout_row_push(ctx, WINDOW_WIDTH - 120);
+                nk_label(ctx, "this is known to be a bit finnicky,", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_push(ctx, WINDOW_WIDTH - 120);
+                nk_label(ctx, "input exact phone number", NK_TEXT_ALIGN_LEFT);
+            }
+            nk_layout_row_end(ctx);
 
             nk_layout_row_begin(ctx, NK_STATIC, 30, 2);
             {
-
-                nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 110);
+                nk_layout_row_push(ctx, WINDOW_WIDTH / 2);
                 nk_edit_string(ctx, NK_EDIT_SIMPLE, new_message_input_buffer, &new_message_input_buffer_len, 2048, nk_filter_default);
-                nk_layout_row_push(ctx, 80);
+                nk_layout_row_push(ctx, 100);
 
                 if (nk_button_label(ctx, "open chat")) {
                 
                     sendNewChat = 0;
                     forceRedraw = 2;
 
-                    sprintf(activeChat, new_message_input_buffer);
+                    sprintf(activeChat, "%.*s", new_message_input_buffer_len, new_message_input_buffer);
+
+                    for (int i = 0; i < MAX_CHAT_MESSAGES; i++) {
+
+                        memset(&activeChatMessages[i], '\0', 2048);
+                    }
                 }
             }
             nk_layout_row_end(ctx);
@@ -376,12 +386,12 @@ static void nuklearApp(struct nk_context *ctx) {
 
     if (forceRedraw) {
 
-        forceRedraw--;
+        forceRedraw = 0;
     }
 
     if (drawChatsOneMoreTime) {
 
-        drawChatsOneMoreTime--;
+        drawChatsOneMoreTime = 0;
     }
 }
 

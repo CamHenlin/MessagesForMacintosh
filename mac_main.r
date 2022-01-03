@@ -160,7 +160,7 @@ resource 'MENU' (mHelp, preload) {
 
 /* this ALRT and DITL are used as an About screen */
 resource 'ALRT' (rAboutAlert, purgeable) {
-	{40, 20, 160, 290},
+	{40, 20, 160, 412},
 	rAboutAlert,
 	{ /* array: 4 elements */
 		/* [1] */
@@ -178,7 +178,7 @@ resource 'ALRT' (rAboutAlert, purgeable) {
 resource 'DITL' (rAboutAlert, purgeable) {
 	{ /* array DITLarray: 5 elements */
 		/* [1] */
-		{88, 180, 108, 260},
+		{88, 380, 108, 260},
 		Button {
 			enabled,
 			"OK"

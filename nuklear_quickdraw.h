@@ -48,7 +48,7 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file();
  *
  * ===============================================================
  */
-#define MAX_MEMORY_IN_KB 6
+#define MAX_MEMORY_IN_KB 4
 #ifdef NK_QUICKDRAW_IMPLEMENTATION
 #ifndef NK_QUICKDRAW_TEXT_MAX
 #define NK_QUICKDRAW_TEXT_MAX 256
@@ -561,10 +561,10 @@ void updateBounds(int top, int bottom, int left, int right) {
                 // #endif
 
                 Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)s->y;
-                quickDrawRectangle.left = (int)s->x;
-                quickDrawRectangle.bottom = (int)s->y + (int)s->h;
-                quickDrawRectangle.right = (int)s->x + (int)s->w;
+                quickDrawRectangle.top = s->y;
+                quickDrawRectangle.left = s->x;
+                quickDrawRectangle.bottom = s->y + s->h;
+                quickDrawRectangle.right = s->x + s->w;
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     // we use "-8192" here to filter out nuklear "nk_null_rect" which we do not want updating bounds
@@ -575,36 +575,6 @@ void updateBounds(int top, int bottom, int left, int right) {
                 #endif
 
                 ClipRect(&quickDrawRectangle);
-            }
-
-            break;
-        case NK_COMMAND_LINE: {
-
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_LINE");
-                #endif
-
-                const struct nk_command_line *l = (const struct nk_command_line *)cmd;
-
-                #ifdef COMMAND_CACHING
-
-                    if (cmd->type == lastCmd->type && memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
-
-                        #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-                            writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_line");
-                        #endif
-
-                        break;
-                    }
-                #endif
-
-                color = nk_color_to_quickdraw_bw_color(l->color);
-                // great reference: http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-60.html
-                ForeColor(color);
-                PenSize((int)l->line_thickness, (int)l->line_thickness);
-                MoveTo((int)l->begin.x, (int)l->begin.y);
-                LineTo((int)l->end.x, (int)l->end.y);
             }
 
             break;
@@ -633,19 +603,19 @@ void updateBounds(int top, int bottom, int left, int right) {
                 color = nk_color_to_quickdraw_bw_color(r->color);
                 
                 ForeColor(color);
-                PenSize((int)r->line_thickness, (int)r->line_thickness);
+                PenSize(r->line_thickness, r->line_thickness);
 
                 Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)r->y;
-                quickDrawRectangle.left = (int)r->x;
-                quickDrawRectangle.bottom = (int)r->y + (int)r->h;
-                quickDrawRectangle.right = (int)r->x + (int)r->w;
+                quickDrawRectangle.top = r->y;
+                quickDrawRectangle.left = r->x;
+                quickDrawRectangle.bottom = r->y + r->h;
+                quickDrawRectangle.right = r->x + r->w;
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                FrameRoundRect(&quickDrawRectangle, (float)r->rounding, (float)r->rounding);
+                FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding);
             }
 
             break;
@@ -661,16 +631,16 @@ void updateBounds(int top, int bottom, int left, int right) {
                 if (r->allowCache == false) {
 
                     Rect quickDrawRectangle;
-                    quickDrawRectangle.top = (int)r->y;
-                    quickDrawRectangle.left = (int)r->x;
-                    quickDrawRectangle.bottom = (int)r->y + (int)r->h;
-                    quickDrawRectangle.right = (int)r->x + (int)r->w;
+                    quickDrawRectangle.top = r->y;
+                    quickDrawRectangle.left = r->x;
+                    quickDrawRectangle.bottom = r->y + r->h;
+                    quickDrawRectangle.right = r->x + r->w;
 
                     #ifdef ENABLED_DOUBLE_BUFFERING
                         updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                     #endif
 
-                    FillRoundRect(&quickDrawRectangle, (float)r->rounding, (float)r->rounding, &qd.white);
+                    FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &qd.white);
                     break;
                 }
 
@@ -692,17 +662,96 @@ void updateBounds(int top, int bottom, int left, int right) {
                 PenSize(1.0, 1.0);
 
                 Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)r->y;
-                quickDrawRectangle.left = (int)r->x;
-                quickDrawRectangle.bottom = (int)r->y + (int)r->h;
-                quickDrawRectangle.right = (int)r->x + (int)r->w;
+                quickDrawRectangle.top = r->y;
+                quickDrawRectangle.left = r->x;
+                quickDrawRectangle.bottom = r->y + r->h;
+                quickDrawRectangle.right = r->x + r->w;
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                FillRoundRect(&quickDrawRectangle, (float)r->rounding, (float)r->rounding, &colorPattern);
-                FrameRoundRect(&quickDrawRectangle, (float)r->rounding, (float)r->rounding); // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-105.html#HEADING105-0
+                FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &colorPattern);
+                FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding); // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-105.html#HEADING105-0
+            }
+
+            break;
+        case NK_COMMAND_TEXT: {
+
+                const struct nk_command_text *t = (const struct nk_command_text*)cmd;
+
+                #ifdef COMMAND_CACHING
+                    if (t->allowCache && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
+
+                        #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                            char log[255];
+
+                            sprintf(log, "ALREADY DREW CMD nk_command_text string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
+                            writeSerialPortDebug(boutRefNum, log);
+                        #endif
+
+                        break;
+                    }
+                #endif
+
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+
+                    char log[255];
+
+                    sprintf(log, "NK_COMMAND_TEXT string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
+                    writeSerialPortDebug(boutRefNum, log);
+                #endif
+
+                Rect quickDrawRectangle;
+                quickDrawRectangle.top = t->y;
+                quickDrawRectangle.left = t->x;
+                quickDrawRectangle.bottom = t->y + 15;
+                quickDrawRectangle.right = t->x + _get_text_width((const char*)t->string, (int)t->length);
+
+                #ifdef ENABLED_DOUBLE_BUFFERING
+                    updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
+                #endif
+
+                #ifdef COMMAND_CACHING
+                    EraseRect(&quickDrawRectangle);
+                #endif
+
+                color = nk_color_to_quickdraw_bw_color(t->foreground);
+                ForeColor(color);
+                MoveTo(t->x, t->y + t->height);
+
+                PenSize(1.0, 1.0);
+                DrawText((const char*)t->string, 0, t->length);
+            }
+
+            break;
+        case NK_COMMAND_LINE: {
+
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_LINE");
+                #endif
+
+                const struct nk_command_line *l = (const struct nk_command_line *)cmd;
+
+                #ifdef COMMAND_CACHING
+
+                    if (cmd->type == lastCmd->type && memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
+
+                        #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                            writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_line");
+                        #endif
+
+                        break;
+                    }
+                #endif
+
+                color = nk_color_to_quickdraw_bw_color(l->color);
+                // great reference: http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-60.html
+                ForeColor(color);
+                PenSize(l->line_thickness, l->line_thickness);
+                MoveTo(l->begin.x, l->begin.y);
+                LineTo(l->end.x, l->end.y);
             }
 
             break;
@@ -730,10 +779,10 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                 ForeColor(color);  
                 Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)c->y;
-                quickDrawRectangle.left = (int)c->x;
-                quickDrawRectangle.bottom = (int)c->y + (int)c->h;
-                quickDrawRectangle.right = (int)c->x + (int)c->w;
+                quickDrawRectangle.top = c->y;
+                quickDrawRectangle.left = c->x;
+                quickDrawRectangle.bottom = c->y + c->h;
+                quickDrawRectangle.right = c->x + c->w;
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
@@ -770,10 +819,10 @@ void updateBounds(int top, int bottom, int left, int right) {
                 // BackPat(&colorPattern); // inside macintosh: imaging with quickdraw 3-48
                 PenSize(1.0, 1.0);
                 Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)c->y;
-                quickDrawRectangle.left = (int)c->x;
-                quickDrawRectangle.bottom = (int)c->y + (int)c->h;
-                quickDrawRectangle.right = (int)c->x + (int)c->w;
+                quickDrawRectangle.top = c->y;
+                quickDrawRectangle.left = c->x;
+                quickDrawRectangle.bottom = c->y + c->h;
+                quickDrawRectangle.right = c->x + c->w;
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
@@ -808,12 +857,12 @@ void updateBounds(int top, int bottom, int left, int right) {
                 color = nk_color_to_quickdraw_bw_color(t->color);
                 
                 ForeColor(color);
-                PenSize((int)t->line_thickness, (int)t->line_thickness);
+                PenSize(t->line_thickness, t->line_thickness);
 
-                MoveTo((int)t->a.x, (int)t->a.y);
-                LineTo((int)t->b.x, (int)t->b.y);
-                LineTo((int)t->c.x, (int)t->c.y);
-                LineTo((int)t->a.x, (int)t->a.y);
+                MoveTo(t->a.x, t->a.y);
+                LineTo(t->b.x, t->b.y);
+                LineTo(t->c.x, t->c.y);
+                LineTo(t->a.x, t->a.y);
             }
 
             break;
@@ -844,10 +893,10 @@ void updateBounds(int top, int bottom, int left, int right) {
                 ForeColor(color);
 
                 PolyHandle trianglePolygon = OpenPoly(); 
-                MoveTo((int)t->a.x, (int)t->a.y);
-                LineTo((int)t->b.x, (int)t->b.y);
-                LineTo((int)t->c.x, (int)t->c.y);
-                LineTo((int)t->a.x, (int)t->a.y);
+                MoveTo(t->a.x, t->a.y);
+                LineTo(t->b.x, t->b.y);
+                LineTo(t->c.x, t->c.y);
+                LineTo(t->a.x, t->a.y);
                 ClosePoly();
 
                 FillPoly(trianglePolygon, &colorPattern);
@@ -980,56 +1029,6 @@ void updateBounds(int top, int bottom, int left, int right) {
                     
                     LineTo(p->points[i].x, p->points[i].y);
                 }
-            }
-
-            break;
-        case NK_COMMAND_TEXT: {
-
-                const struct nk_command_text *t = (const struct nk_command_text*)cmd;
-
-                #ifdef COMMAND_CACHING
-                    if (t->allowCache && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
-
-                        #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-                            char log[255];
-
-                            sprintf(log, "ALREADY DREW CMD nk_command_text string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
-                            writeSerialPortDebug(boutRefNum, log);
-                        #endif
-
-                        break;
-                    }
-                #endif
-
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-
-                    char log[255];
-
-                    sprintf(log, "NK_COMMAND_TEXT string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
-                    writeSerialPortDebug(boutRefNum, log);
-                #endif
-
-                Rect quickDrawRectangle;
-                quickDrawRectangle.top = (int)t->y;
-                quickDrawRectangle.left = (int)t->x;
-                quickDrawRectangle.bottom = (int)t->y + 15;
-                quickDrawRectangle.right = (int)t->x + _get_text_width((const char*)t->string, (int)t->length);
-
-                #ifdef ENABLED_DOUBLE_BUFFERING
-                    updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
-                #endif
-
-                // if (!t->allowCache) {
-
-                    EraseRect(&quickDrawRectangle);
-                // }
-
-                color = nk_color_to_quickdraw_bw_color(t->foreground);
-                ForeColor(color);
-                MoveTo((int)t->x, (int)t->y + (int)t->height);
-
-                PenSize(1.0, 1.0);
-                DrawText((const char*)t->string, 0, (int)t->length);
             }
 
             break;
