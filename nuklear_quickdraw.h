@@ -26,6 +26,7 @@
 
 #define ENABLED_DOUBLE_BUFFERING
 #define COMMAND_CACHING
+// #define NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
 Boolean lastInputWasBackspace;
 

@@ -195,6 +195,8 @@ void wait(float timeInSeconds) {
     // printf(log);
 }
 
+const int MAX_RECIEVE_LOOP_ITERATIONS = 1000;
+
 // void because this function re-assigns respo
 void readSerialPort(char* output) {
 
@@ -210,8 +212,21 @@ void readSerialPort(char* output) {
     char tempOutput[MAX_RECEIVE_SIZE];
     long int totalByteCount = 0;
     incomingSerialPortReference.ioReqCount = 0;
+    int loopCounter = 0;
 
     while (!done) {
+
+        if (loopCounter++ > MAX_RECIEVE_LOOP_ITERATIONS) {
+
+            char *errorMessage = "TIMEOUT_ERROR";
+
+            strncat(output, errorMessage, strlen(errorMessage));
+
+            // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
+            memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);
+
+            return;
+        }
 
         long int byteCount = 0;
         long int lastByteCount = 0;

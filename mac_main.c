@@ -178,7 +178,8 @@ void EventLoop(struct nk_context *ctx)
 
     int lastMouseHPos = 0;
     int lastMouseVPos = 0;
-    int lastUpdatedTickCount = 0;
+    int lastUpdatedTickCountMessagesInChat = 0;
+    int lastUpdatedTickCountChatCounts = 0;
 
     do {
 
@@ -191,10 +192,10 @@ void EventLoop(struct nk_context *ctx)
         // check for new stuff every 10 sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
         // new chat lookups
-        if (TickCount() - lastUpdatedTickCount > 600) {
+        if (TickCount() - lastUpdatedTickCountMessagesInChat > 600) {
 
             // writeSerialPortDebug(boutRefNum, "update by tick count");
-            lastUpdatedTickCount = TickCount();
+            lastUpdatedTickCountMessagesInChat = TickCount();
 
             if (strcmp(activeChat, "no active chat")) {
 
@@ -202,6 +203,20 @@ void EventLoop(struct nk_context *ctx)
                 getHasNewMessagesInChat(activeChat);
             }
         } 
+
+        // this should be out of sync with the counter above it so that we dont end up making
+        // two coprocessor calls on one event loop iteration
+        if (TickCount() - lastUpdatedTickCountChatCounts > 300) {
+
+            // writeSerialPortDebug(boutRefNum, "update by tick count");
+            lastUpdatedTickCountChatCounts = TickCount();
+
+            if (chatFriendlyNamesCounter > 0) {
+
+                // writeSerialPortDebug(boutRefNum, "check chat counts");
+                getChatCounts(activeChat);
+            }
+        }
 
         Boolean beganInput = false;
 
@@ -239,7 +254,8 @@ void EventLoop(struct nk_context *ctx)
                 mouse_x = tempPoint.h;
                 mouse_y = tempPoint.v;
 
-                lastUpdatedTickCount = TickCount();
+                lastUpdatedTickCountChatCounts = TickCount();
+                lastUpdatedTickCountMessagesInChat = TickCount();
                 lastMouseHPos = mouse.h;
                 lastMouseVPos = mouse.v;
                 GetGlobalMouse(&mouse);
@@ -252,7 +268,8 @@ void EventLoop(struct nk_context *ctx)
             // drain all events before rendering -- really this only applies to keyboard events and single mouse clicks now
             while (gotEvent) {
 
-                lastUpdatedTickCount = TickCount();
+                lastUpdatedTickCountChatCounts = TickCount();
+                lastUpdatedTickCountMessagesInChat = TickCount();
 
                 #ifdef MAC_APP_DEBUGGING
 
@@ -305,7 +322,7 @@ void EventLoop(struct nk_context *ctx)
 
             #ifdef MAC_APP_DEBUGGING
 
-                writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
+                writeSerialPortDebug(boutRefNum, "nuklearApp");
             #endif
 
             nuklearApp(ctx);
@@ -313,6 +330,11 @@ void EventLoop(struct nk_context *ctx)
             #ifdef PROFILING
                 PROFILE_END("nuklearApp");
                 PROFILE_START("nk_quickdraw_render");
+            #endif
+
+            #ifdef MAC_APP_DEBUGGING
+
+                writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
             #endif
 
             nk_quickdraw_render(FrontWindow(), ctx);
@@ -464,7 +486,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
         case osEvt:
             
             #ifdef MAC_APP_DEBUGGING
-                riteSerialPortDebug(boutRefNum, "os");
+                writeSerialPortDebug(boutRefNum, "os");
             #endif
 
             // this should be trigger on mousemove but does not -- if we can figure that out, we should call through to 

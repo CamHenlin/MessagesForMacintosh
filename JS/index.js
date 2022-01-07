@@ -4,7 +4,7 @@ const InMemoryCache = require('apollo-cache-inmemory').InMemoryCache;
 const createHttpLink = require('apollo-link-http').createHttpLink;
 const gql = require('graphql-tag')
 
-// TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your moder Mac
+// TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your modern Mac
 const TEST_MODE = false
 
 const defaultOptions = {
@@ -151,7 +151,7 @@ const widthFor12ptFont = [
   8
 ]
 
-// this is tied to Sample.c's message window max width
+// this is tied to mac_main.c's message window max width
 const MAX_WIDTH = 304
 const SPACE_WIDTH = widthFor12ptFont[32]
 
@@ -291,9 +291,6 @@ const parseChatsToFriendlyNameString = (chats) => {
 
   friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
 
-  console.log(`chats`)
-  console.log(friendlyNameStrings)
-
   return friendlyNameStrings
 }
 
@@ -392,10 +389,6 @@ class iMessageClient {
       return splitMessages(TEST_MESSAGES)
     }
 
-    console.log(`send message`)
-    console.log(chatId)
-    console.log(message)
-
     let result
 
     try {
@@ -457,6 +450,61 @@ class iMessageClient {
     let chats = result.data.getChats
 
     return parseChatsToFriendlyNameString(chats)
+  }
+
+  async getChatCounts () {
+
+    if (TEST_MODE) {
+
+      return parseChatsToFriendlyNameString(TEST_CHATS)
+    }
+
+    let result
+
+    try {
+    
+      result = await client.query({
+        query: gql`query getChatCounts {
+            getChatCounts {
+                friendlyName
+                count
+            }
+        }`
+      })
+    } catch (error) {
+
+      console.log(`error with apollo query`)
+      console.log(error)
+
+      result = {
+        data: {
+        }
+      }
+    }
+
+    let chats = result.data.getChatCounts
+
+    if (!chats) {
+
+      return ``
+    }
+
+    let friendlyNameStrings = ``
+  
+    if (chats.length === 0) {
+  
+      return ``
+    }
+  
+    for (let chat of chats) {
+  
+      friendlyNameStrings = `${friendlyNameStrings},${chat.friendlyName.replace(/,/g, '')}:::${chat.count}`
+    }
+  
+    // remove trailing comma
+    friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
+
+    return friendlyNameStrings
   }
 
   setIPAddress (IPAddress) {

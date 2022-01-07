@@ -10504,8 +10504,12 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     // NK_ASSERT(ctx);
     // NK_ASSERT(ctx->current);
     // NK_ASSERT(ctx->current->layout);
-    if (!ctx || !ctx->current || !ctx->current->layout) return 0;
+    if (!ctx || !ctx->current || !ctx->current->layout) {
+        return 0;
+    }
+
     nk_zero(ctx->current->layout, sizeof(*ctx->current->layout));
+
     if ((ctx->current->flags & NK_WINDOW_HIDDEN) || (ctx->current->flags & NK_WINDOW_CLOSED)) {
         nk_zero(ctx->current->layout, sizeof(struct nk_panel));
         ctx->current->layout->type = panel_type;
@@ -10638,11 +10642,12 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         }
 
         /* window close button */
-        {struct nk_rect button;
-        button.y = header.y + style->window.header.padding.y;
-        button.h = header.h - 2 * style->window.header.padding.y;
-        button.w = button.h;
+        {
         if (win->flags & NK_WINDOW_CLOSABLE) {
+            struct nk_rect button;
+            button.y = header.y + style->window.header.padding.y;
+            button.h = header.h - 2 * style->window.header.padding.y;
+            button.w = button.h;
             nk_flags ws = 0;
             if (style->window.header.align == NK_HEADER_RIGHT) {
                 button.x = (header.w + header.x) - (button.w + style->window.header.padding.x);
@@ -10663,6 +10668,10 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
 
         /* window minimize button */
         if (win->flags & NK_WINDOW_MINIMIZABLE) {
+            struct nk_rect button;
+            button.y = header.y + style->window.header.padding.y;
+            button.h = header.h - 2 * style->window.header.padding.y;
+            button.w = button.h;
             nk_flags ws = 0;
             if (style->window.header.align == NK_HEADER_RIGHT) {
                 button.x = (header.w + header.x) - button.w;
@@ -10695,7 +10704,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         label.h = font->height + 2 * style->window.header.label_padding.y;
         label.w = t + 2 * style->window.header.spacing.x;
         label.w = NK_CLAMP(0, label.w, header.x + header.w - label.x);
-        nk_widget_text(out, label, (const char*)title, text_len, &text, NK_TEXT_LEFT, font, true);}
+        nk_widget_text(out, label, (const char*)title, text_len, &text, NK_TEXT_ALIGN_MIDDLE, font, true);}
     }
 
     /* draw window background */
@@ -10722,8 +10731,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     /* set clipping rectangle */
     {struct nk_rect clip;
     layout->clip = layout->bounds;
-    nk_unify(&clip, &win->buffer.clip, layout->clip.x, layout->clip.y,
-        layout->clip.x + layout->clip.w, layout->clip.y + layout->clip.h);
+    nk_unify(&clip, &win->buffer.clip, layout->clip.x, layout->clip.y, layout->clip.x + layout->clip.w, layout->clip.y + layout->clip.h);
     nk_push_scissor(out, clip);
     layout->clip = clip;}
     return !(layout->flags & NK_WINDOW_HIDDEN) && !(layout->flags & NK_WINDOW_MINIMIZED);
@@ -11182,8 +11190,9 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
     // NK_ASSERT(title);
     // NK_ASSERT(ctx->style.font && ctx->style.font->width && "if this triggers you forgot to add a font");
     // NK_ASSERT(!ctx->current && "if this triggers you missed a `nk_end` call");
-    if (!ctx || ctx->current || !title || !name)
+    if (!ctx || ctx->current || !title || !name) {
         return 0;
+    }
 
     /* find or create window */
     style = &ctx->style;
@@ -11197,9 +11206,12 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
         // NK_ASSERT(win);
         if (!win) return 0;
 
-        if (flags & NK_WINDOW_BACKGROUND)
+        if (flags & NK_WINDOW_BACKGROUND) {
             nk_insert_window(ctx, win, NK_INSERT_FRONT);
-        else nk_insert_window(ctx, win, NK_INSERT_BACK);
+        } else {
+            nk_insert_window(ctx, win, NK_INSERT_BACK);
+        }
+
         nk_command_buffer_init(&win->buffer, &ctx->memory, NK_CLIPPING_ON);
 
         win->flags = flags;
@@ -11209,14 +11221,16 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
         NK_MEMCPY(win->name_string, name, name_length);
         win->name_string[name_length] = 0;
         win->popup.win = 0;
-        if (!ctx->active)
+        if (!ctx->active) {
             ctx->active = win;
+        }
     } else {
         /* update window */
         win->flags &= ~(nk_flags)(NK_WINDOW_PRIVATE-1);
         win->flags |= flags;
-        if (!(win->flags & (NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)))
+        if (!(win->flags & (NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))) {
             win->bounds = bounds;
+        }
         /* If this assert triggers you either:
          *
          * I.) Have more than one window with the same name or
@@ -18408,9 +18422,9 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         short l = nk_str_len_char(&edit->string);
         const char *begin = nk_str_get_const(&edit->string);
 
-        const struct nk_style_item *background;
-        struct nk_color background_color;
-        struct nk_color text_color;
+        // const struct nk_style_item *background;
+        // struct nk_color background_color;
+        // struct nk_color text_color;
         nk_push_scissor(out, clip);
         // if (*state & NK_WIDGET_STATE_ACTIVED) {
         //     background = &style->active;
@@ -18434,7 +18448,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         whiteTextarea.w = area.w;
         nk_fill_rect(out, whiteTextarea, 0, nk_rgba(255,255,255,255), false);
 
-        nk_edit_draw_text(out, style, area.x - edit->scrollbar.x, area.y - edit->scrollbar.y, 0, begin, l, row_height, font, background->data.color, text_color, nk_false, false);
+        nk_edit_draw_text(out, style, area.x - edit->scrollbar.x, area.y - edit->scrollbar.y, 0, begin, l, row_height, font, style->normal.data.color, style->text_normal, nk_false, true);
     }
 
     nk_push_scissor(out, old_clip);}

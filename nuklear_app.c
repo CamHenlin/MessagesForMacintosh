@@ -1,8 +1,7 @@
 // TODO: 
-// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end
-// - get new messages in other chats and display some sort of alert
-// - need timeout on serial messages in case the computer at the other end dies (prevent hard reset) -- probably possible in coprocessorjs library
-// - delete doesnt work right (leaves characters at end of string)
+// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end -- this might work
+// - IN PROGRESS  get new messages in other chats and display some sort of alert
+// - IN PROGRESS  need timeout on serial messages in case the computer at the other end dies (prevent hard reset) -- probably possible in coprocessorjs library. made an attempt, needs tested
 
 #define WINDOW_WIDTH 510
 #define WINDOW_HEIGHT 302
@@ -48,6 +47,8 @@ char box_input_buffer[2048];
 char chatFriendlyNames[16][64];
 char ip_input_buffer[255];
 char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
+char chatCountFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
+char previousChatCountFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
 char new_message_input_buffer[255];
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
@@ -149,6 +150,68 @@ void getMessages(char *thread, int page) {
     return;
 }
 
+void getChatCounts() {
+
+    char output[62];
+    sprintf(output, "");
+    // writeSerialPortDebug(boutRefNum, output);
+
+    callFunctionOnCoprocessor("getChatCounts", output, chatCountFunctionResponse);
+    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
+
+    if (!strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
+
+        writeSerialPortDebug(boutRefNum, "update current chat count");
+        writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
+        SysBeep(1);
+        char *token = (char *)strtok(chatCountFunctionResponse, ",");
+
+        // loop through the string to extract all other tokens
+        while (token != NULL) {
+            writeSerialPortDebug(boutRefNum, "update current chat count loop");
+            writeSerialPortDebug(boutRefNum, token);
+            // should be in format NAME:::COUNT
+
+            char *name = strtok(token, ":::");
+            short count = atoi(strtok(NULL, " "));
+
+            if (count == 0) {
+
+                continue;
+            }
+
+            for (int i = 0; i < chatFriendlyNamesCounter; i++) {
+
+                if (strstr(chatFriendlyNames[i], " new) ")) {
+
+                    char *tempChatFriendlyName;
+                    strtok(chatFriendlyNames[i], " new) ");
+                    tempChatFriendlyName = strtok(NULL, " ");
+
+                    if (strcmp(tempChatFriendlyName, name)) {
+
+                        sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
+                        break;
+                    }
+                } else {
+
+                    if (strcmp(chatFriendlyNames[i], name)) {
+
+                        sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
+                        break;
+                    }
+                }
+            }
+
+            token = (char *)strtokm(NULL, ",");
+        }
+
+        strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
+    }
+
+    return;
+}
+
 void getHasNewMessagesInChat(char *thread) {
 
     char output[62];
@@ -163,8 +226,9 @@ void getHasNewMessagesInChat(char *thread) {
         // writeSerialPortDebug(boutRefNum, "update current chat");
         SysBeep(1);
         getMessages(thread, 0);
+
         // force redraw
-        firstOrMouseMove = true;
+        forceRedraw = 3;
     }
 
     return;
@@ -173,6 +237,8 @@ void getHasNewMessagesInChat(char *thread) {
 // set up function to get available chat (fill buttons on right hand side)
 //	 run it on some interval? make sure user is not typing!!!
 void getChats() {
+
+    writeSerialPortDebug(boutRefNum, "getChats!");
 
     if (haveRun) {
 
@@ -186,6 +252,7 @@ void getChats() {
     char * token = (char *)strtokm(jsFunctionResponse, ",");
     // loop through the string to extract all other tokens
     while (token != NULL) {
+        writeSerialPortDebug(boutRefNum, token);
         sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
         token = (char *)strtokm(NULL, ",");
     }
