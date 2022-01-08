@@ -418,6 +418,7 @@ class iMessageClient {
   }
 
   async getChats () {
+    console.log(`getChats`)
 
     if (TEST_MODE) {
 
@@ -448,6 +449,8 @@ class iMessageClient {
     }
 
     let chats = result.data.getChats
+
+    console.log(`getChats complete`)
 
     return parseChatsToFriendlyNameString(chats)
   }
@@ -532,6 +535,8 @@ class iMessageClient {
 
       return `failure`
     }
+
+    console.log(`return success`)
 
     return `success`
   }

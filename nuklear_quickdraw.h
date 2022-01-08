@@ -425,57 +425,6 @@ static int _get_text_width(const char *text, int len) {
     return width;
 }
 
-static int nk_color_to_quickdraw_bw_color(struct nk_color color) {
-
-    // TODO: since we are operating under a b&w display - we need to convert these colors to black and white
-    // look up a simple algorithm for taking RGBA values and making the call on black or white and try it out here
-    // as a future upgrade, we could support color quickdraw
-    // using an algorithm from https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
-    // if (red*0.299 + green*0.587 + blue*0.114) > 186 use #000000 else use #ffffff
-    // return al_map_rgba((unsigned char)color.r, (unsigned char)color.g, (unsigned char)color.b, (unsigned char)color.a);
-   
-    short magicColorNumber = color.r / 3 + color.g / 2 + color.b / 10;
-   
-    #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-
-       char stringMagicColorNumber[255];
-       sprintf(stringMagicColorNumber, "stringMagicColorNumber: %f", magicColorNumber);
-       writeSerialPortDebug(boutRefNum, stringMagicColorNumber);
-    #endif
-   
-   if (magicColorNumber > 37) {
-       
-       return blackColor;
-   }
-   
-   return blackColor;
-}
-
-// i split this in to a 2nd routine because we can use the various shades of gray when filling rectangles and whatnot
-static Pattern nk_color_to_quickdraw_color(struct nk_color color) {
-
-    // as a future upgrade, we could support color quickdraw
-    // using an algorithm from https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
-    // if (red*0.299 + green*0.587 + blue*0.114) > 186 use #000000 else use #ffffff
-    short magicColorNumber = color.r / 3 + color.g / 2 + color.b / 10;
-
-    if (magicColorNumber > 150) {
-
-        return qd.black;
-    } else if (magicColorNumber > 100) {
-
-        return qd.dkGray;
-    } else if (magicColorNumber > 75) {
-
-        return qd.gray;
-    } else if (magicColorNumber > 49) {
-
-        return qd.ltGray;
-    }
-
-    return qd.white;
-}
-
 /* Flags are identical to al_load_font() flags argument */
 NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file() {
 
@@ -591,6 +540,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_rect *r = (const struct nk_command_rect *)cmd;
 
                 #ifdef COMMAND_CACHING
+
                     if (cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
@@ -601,9 +551,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(r->color);
-                
-                ForeColor(color);
+                ForeColor(r->color);
                 PenSize(r->line_thickness, r->line_thickness);
 
                 Rect quickDrawRectangle;
@@ -656,10 +604,11 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(r->color);
-                
-                ForeColor(color);
-                Pattern colorPattern = nk_color_to_quickdraw_color(r->color);
+                // TODO: to support coloring the lines, we need to map from qd Pattern types to integer colors
+                // color = nk_color_to_quickdraw_bw_color(r->color);
+                // ForeColor(color);
+                ForeColor(blackColor);
+
                 PenSize(1.0, 1.0);
 
                 Rect quickDrawRectangle;
@@ -672,7 +621,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &colorPattern);
+                FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &r->color);
                 FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding); // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-105.html#HEADING105-0
             }
 
@@ -717,8 +666,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     EraseRect(&quickDrawRectangle);
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(t->foreground);
-                ForeColor(color);
+                ForeColor(t->foreground);
                 MoveTo(t->x, t->y + t->height);
 
                 PenSize(1.0, 1.0);
@@ -747,9 +695,8 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(l->color);
                 // great reference: http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-60.html
-                ForeColor(color);
+                ForeColor(l->color);
                 PenSize(l->line_thickness, l->line_thickness);
                 MoveTo(l->begin.x, l->begin.y);
                 LineTo(l->end.x, l->end.y);
@@ -776,9 +723,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(c->color);
-
-                ForeColor(color);  
+                ForeColor(c->color);  
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = c->y;
                 quickDrawRectangle.left = c->x;
@@ -813,10 +758,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(c->color);
-                
-                ForeColor(color);
-                Pattern colorPattern = nk_color_to_quickdraw_color(c->color);
+                ForeColor(blackColor);
                 // BackPat(&colorPattern); // inside macintosh: imaging with quickdraw 3-48
                 PenSize(1.0, 1.0);
                 Rect quickDrawRectangle;
@@ -829,7 +771,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                FillOval(&quickDrawRectangle, &colorPattern); 
+                FillOval(&quickDrawRectangle, &c->color); 
                 FrameOval(&quickDrawRectangle);// An oval is a circular or elliptical shape defined by the bounding rectangle that encloses it. inside macintosh: imaging with quickdraw 3-25
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-111.html#HEADING111-0
             }
@@ -854,10 +796,8 @@ void updateBounds(int top, int bottom, int left, int right) {
                         break;
                     }
                 #endif
-
-                color = nk_color_to_quickdraw_bw_color(t->color);
                 
-                ForeColor(color);
+                ForeColor(t->color);
                 PenSize(t->line_thickness, t->line_thickness);
 
                 MoveTo(t->a.x, t->a.y);
@@ -887,11 +827,9 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                Pattern colorPattern = nk_color_to_quickdraw_color(t->color);
-                color = nk_color_to_quickdraw_bw_color(t->color);
                 PenSize(1.0, 1.0);
                 // BackPat(&colorPattern); // inside macintosh: imaging with quickdraw 3-48
-                ForeColor(color);
+                ForeColor(blackColor);
 
                 PolyHandle trianglePolygon = OpenPoly(); 
                 MoveTo(t->a.x, t->a.y);
@@ -900,7 +838,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 LineTo(t->a.x, t->a.y);
                 ClosePoly();
 
-                FillPoly(trianglePolygon, &colorPattern);
+                FillPoly(trianglePolygon, &t->color);
                 KillPoly(trianglePolygon);
             }
 
@@ -925,8 +863,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(p->color);
-                ForeColor(color);
+                ForeColor(p->color);
                 int i;
 
                 for (i = 0; i < p->point_count; i++) {
@@ -953,23 +890,21 @@ void updateBounds(int top, int bottom, int left, int right) {
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_POLYGON_FILLED");
                 #endif
 
-                const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
+                const struct nk_command_polygon_filled *p = (const struct nk_command_polygon_filled*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
-                            writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
+                            writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon_filled");
                         #endif
 
                         break;
                     }
                 #endif
 
-                Pattern colorPattern = nk_color_to_quickdraw_color(p->color);
-                color = nk_color_to_quickdraw_bw_color(p->color);
                 // BackPat(&colorPattern); // inside macintosh: imaging with quickdraw 3-48 -- but might actually need PenPat -- look into this
-                ForeColor(color);
+                ForeColor(blackColor);
                 int i;
 
                 PolyHandle trianglePolygon = OpenPoly(); 
@@ -990,7 +925,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 
                 ClosePoly();
 
-                FillPoly(trianglePolygon, &colorPattern);
+                FillPoly(trianglePolygon, &p->color);
                 KillPoly(trianglePolygon);
             }
             
@@ -1017,8 +952,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                color = nk_color_to_quickdraw_bw_color(p->color);
-                ForeColor(color);
+                ForeColor(p->color);
                 int i;
 
                 for (i = 0; i < p->point_count; i++) {
@@ -1041,8 +975,8 @@ void updateBounds(int top, int bottom, int left, int right) {
                 #endif
 
                 const struct nk_command_curve *q = (const struct nk_command_curve *)cmd;
-                color = nk_color_to_quickdraw_bw_color(q->color);
-                ForeColor(color);
+
+                ForeColor(q->color);
                 Point p1 = { (int)q->begin.x, (int)q->begin.y};
                 Point p2 = { (int)q->ctrl[0].x, (int)q->ctrl[0].y};
                 Point p3 = { (int)q->ctrl[1].x, (int)q->ctrl[1].y};
@@ -1060,9 +994,8 @@ void updateBounds(int top, int bottom, int left, int right) {
                 #endif
 
                 const struct nk_command_arc *a = (const struct nk_command_arc *)cmd;
-                
-                color = nk_color_to_quickdraw_bw_color(a->color);
-                ForeColor(color);
+
+                ForeColor(a->color);
                 Rect arcBoundingBoxRectangle;
                 // this is kind of silly because the cx is at the center of the arc and we need to create a rectangle around it 
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-60.html#MARKER-2-116
@@ -1120,9 +1053,19 @@ void updateBounds(int top, int bottom, int left, int right) {
             #endif
             break;
     }
+
+    #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+
+        writeSerialPortDebug(boutRefNum, "NK_COMMAND_* draw complete");
+    #endif
 }
 
+int lastCalls = 0;
+int currentCalls;
+
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
+
+    currentCalls = 1;
 
     #ifdef PROFILING
         PROFILE_START("IN nk_quickdraw_render");
@@ -1176,10 +1119,12 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         #endif
 
         #ifdef COMMAND_CACHING
-            if (lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
+            if (currentCalls <= lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
 
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
+
+            currentCalls++;
         #endif
     }
 
@@ -1188,6 +1133,8 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     memcpy(last, cmds, ctx->memory.allocated);
+
+    lastCalls = ctx->memory.calls;
 
     #ifdef PROFILING
         PROFILE_END("memcpy commands");
@@ -1513,70 +1460,70 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     quickdraw.nuklear_context.clip.paste = nk_quickdraw_clipboard_paste;
     quickdraw.nuklear_context.clip.userdata = nk_handle_ptr(0);
 
-    // fix styles to be more "mac-like"
-    struct nk_style *style;
-    struct nk_style_toggle *toggle;
-    struct nk_style_button *button;
-    style = &quickdraw.nuklear_context.style;
+    // // fix styles to be more "mac-like"
+    // struct nk_style *style;
+    // struct nk_style_toggle *toggle;
+    // struct nk_style_button *button;
+    // style = &quickdraw.nuklear_context.style;
 
-    /* checkbox toggle */
-    toggle = &style->checkbox;
-    nk_zero_struct(*toggle);
-    toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
-    toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
-    toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
-    toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
-    toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
-    toggle->userdata        = nk_handle_ptr(0);
-    toggle->text_background = nk_rgba(255, 255, 255, 255);
-    toggle->text_normal     = nk_rgba(70, 70, 70, 255);
-    toggle->text_hover      = nk_rgba(70, 70, 70, 255);
-    toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    toggle->padding         = nk_vec2(3, 3);
-    toggle->touch_padding   = nk_vec2(0,0);
-    toggle->border_color    = nk_rgba(0,0,0,0);
-    toggle->border          = 0;
-    toggle->spacing         = 5;
+    // /* checkbox toggle */
+    // toggle = &style->checkbox;
+    // nk_zero_struct(*toggle);
+    // // toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
+    // // toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
+    // // toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
+    // // toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
+    // // toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
+    // toggle->userdata        = nk_handle_ptr(0);
+    // toggle->text_background = qd.black;
+    // // toggle->text_normal     = nk_rgba(70, 70, 70, 255);
+    // // toggle->text_hover      = nk_rgba(70, 70, 70, 255);
+    // // toggle->text_active     = nk_rgba(70, 70, 70, 255);
+    // toggle->padding         = nk_vec2(3, 3);
+    // toggle->touch_padding   = nk_vec2(0,0);
+    // // toggle->border_color    = nk_rgba(0,0,0,0);
+    // toggle->border          = 0;
+    // toggle->spacing         = 5;
 
-    /* option toggle */
-    toggle = &style->option;
-    nk_zero_struct(*toggle);
-    toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
-    toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
-    toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
-    toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
-    toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
-    toggle->userdata        = nk_handle_ptr(0);
-    toggle->text_background = nk_rgba(255, 255, 255, 255);
-    toggle->text_normal     = nk_rgba(70, 70, 70, 255);
-    toggle->text_hover      = nk_rgba(70, 70, 70, 255);
-    toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    toggle->padding         = nk_vec2(3, 3);
-    toggle->touch_padding   = nk_vec2(0,0);
-    toggle->border_color    = nk_rgba(0,0,0,0);
-    toggle->border          = 0;
-    toggle->spacing         = 5;
+    // /* option toggle */
+    // toggle = &style->option;
+    // nk_zero_struct(*toggle);
+    // // toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
+    // // toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
+    // // toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
+    // // toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
+    // // toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
+    // toggle->userdata        = nk_handle_ptr(0);
+    // toggle->text_background = qd.black;
+    // // toggle->text_normal     = nk_rgba(70, 70, 70, 255);
+    // // toggle->text_hover      = nk_rgba(70, 70, 70, 255);
+    // // toggle->text_active     = nk_rgba(70, 70, 70, 255);
+    // toggle->padding         = nk_vec2(3, 3);
+    // toggle->touch_padding   = nk_vec2(0,0);
+    // // toggle->border_color    = nk_rgba(0,0,0,0);
+    // toggle->border          = 0;
+    // toggle->spacing         = 5;
 
-    // button
-    button = &style->button;
-    nk_zero_struct(*button);
-    button->normal          = nk_style_item_color(nk_rgba(0, 0, 0, 255));
-    button->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255));
-    button->active          = nk_style_item_color(nk_rgba(150, 150, 150, 255));
-    button->border_color    = nk_rgba(255, 255, 255, 255);
-    button->text_background = nk_rgba(255, 255, 255, 255);
-    button->text_normal     = nk_rgba(70, 70, 70, 255);
-    button->text_hover      = nk_rgba(70, 70, 70, 255);
-    button->text_active     = nk_rgba(0, 0, 0, 255);
-    button->padding         = nk_vec2(2,2);
-    button->image_padding   = nk_vec2(0,0);
-    button->touch_padding   = nk_vec2(0, 0);
-    button->userdata        = nk_handle_ptr(0);
-    button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 1;
-    button->rounding        = 10;
-    button->draw_begin      = 0;
-    button->draw_end        = 0;
+    // // button
+    // button = &style->button;
+    // nk_zero_struct(*button);
+    // // button->normal          = nk_style_item_color(nk_rgba(0, 0, 0, 255));
+    // // button->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255));
+    // // button->active          = nk_style_item_color(nk_rgba(150, 150, 150, 255));
+    // // button->border_color    = nk_rgba(255, 255, 255, 255);
+    // button->text_background = qd.black;
+    // // button->text_normal     = nk_rgba(70, 70, 70, 255);
+    // // button->text_hover      = nk_rgba(70, 70, 70, 255);
+    // // button->text_active     = nk_rgba(0, 0, 0, 255);
+    // button->padding         = nk_vec2(2,2);
+    // button->image_padding   = nk_vec2(0,0);
+    // button->touch_padding   = nk_vec2(0, 0);
+    // button->userdata        = nk_handle_ptr(0);
+    // button->text_alignment  = NK_TEXT_CENTERED;
+    // button->border          = 1;
+    // button->rounding        = 10;
+    // button->draw_begin      = 0;
+    // button->draw_end        = 0;
 
     ForeColor(blackColor);
 

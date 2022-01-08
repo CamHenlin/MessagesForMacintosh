@@ -159,11 +159,15 @@ void main()
 
     char programResult[MAX_RECEIVE_SIZE];
     sendProgramToCoprocessor(OUTPUT_JS, programResult);
+    writeSerialPortDebug(boutRefNum, "coprocessor loaded");
 
     coprocessorLoaded = 1;
 
     EventLoop(ctx); /* call the main event loop */
 }
+
+Boolean gotKeyboardEvent = false;
+int gotKeyboardEventTime = 0;
 
 #pragma segment Main
 void EventLoop(struct nk_context *ctx)
@@ -188,6 +192,12 @@ void EventLoop(struct nk_context *ctx)
         // #ifdef PROFILING
         //     PROFILE_START("eventloop");
         // #endif
+
+        if (gotKeyboardEvent && TickCount() > gotKeyboardEventTime + 80) {
+
+            gotKeyboardEvent = false;
+            ShowCursor();
+        }
 
         // check for new stuff every 10 sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
@@ -236,7 +246,6 @@ void EventLoop(struct nk_context *ctx)
 
                     writeSerialPortDebug(boutRefNum, "nk_input_motion!");
                 #endif
-
 
                 Point tempPoint;
                 SetPt(&tempPoint, mouse.h, mouse.v);
@@ -402,7 +411,6 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 
             gotMouseEvent = true;
 
-
             #ifdef MAC_APP_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "mousedown");
             #endif
@@ -441,6 +449,13 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             break;
         case keyDown:
         case autoKey:						/* check for menukey equivalents */
+
+            if (!gotKeyboardEvent) {
+
+                HideCursor();
+                gotKeyboardEvent = true;
+                gotKeyboardEventTime = TickCount();
+            }
 
             #ifdef MAC_APP_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "key");
