@@ -457,6 +457,8 @@ class iMessageClient {
 
   async getChatCounts () {
 
+    console.log(`getChatCounts`)
+
     if (TEST_MODE) {
 
       return parseChatsToFriendlyNameString(TEST_CHATS)
@@ -487,6 +489,8 @@ class iMessageClient {
 
     let chats = result.data.getChatCounts
 
+    console.log(`got chat counts`)
+
     if (!chats) {
 
       return ``
@@ -506,7 +510,8 @@ class iMessageClient {
   
     // remove trailing comma
     friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
-
+    
+    console.log(friendlyNameStrings)
     return friendlyNameStrings
   }
 

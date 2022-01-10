@@ -1,6 +1,5 @@
 // TODO: 
-// - IN PROGRESS  new message window -- needs to blank out messages, then needs fixes on new mac end -- this might work
-// - IN PROGRESS  get new messages in other chats and display some sort of alert
+// - IN PROGRESS  new message window -- need to figure this out
 // - IN PROGRESS  need timeout on serial messages in case the computer at the other end dies (prevent hard reset) -- probably possible in coprocessorjs library. made an attempt, needs tested
 
 #define WINDOW_WIDTH 510
@@ -16,6 +15,8 @@
 // #define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_MEMSET memset
 #define NK_MEMCPY memcpy
+
+// #define MESSAGES_FOR_MACINTOSH_DEBUGGING
 
 void aFailed(char *file, int line) {
     
@@ -53,7 +54,6 @@ char new_message_input_buffer[255];
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
 int coprocessorLoaded = 0;
-int drawChatsOneMoreTime = 2; // this is how many 'iterations' of the UI that we need to see every element for
 int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
 int haveRun = 0;
 int ipAddressSet = 0;
@@ -81,18 +81,12 @@ void getMessagesFromjsFunctionResponse() {
 
     activeMessageCounter = 0;
 
-    // writeSerialPortDebug(boutRefNum, "BEGIN");
-
-    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
     char *token = (char *)strtokm(jsFunctionResponse, "ENDLASTMESSAGE");
+
     // loop through the string to extract all other tokens
     while (token != NULL) {
 
-        // writeSerialPortDebug(boutRefNum, "LOAD VALUE TO TOKEN");
-        // writeSerialPortDebug(boutRefNum, token);
         sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
-        // writeSerialPortDebug(boutRefNum, activeChatMessages[activeMessageCounter]);
-        // writeSerialPortDebug(boutRefNum, "DONE! LOAD VALUE TO TOKEN");
         token = (char *)strtokm(NULL, "ENDLASTMESSAGE");
         activeMessageCounter++;
     }
@@ -150,6 +144,11 @@ void getMessages(char *thread, int page) {
     return;
 }
 
+// from https://stackoverflow.com/a/4770992
+Boolean prefix(const char *pre, const char *str) {
+    return strncmp(pre, str, strlen(pre)) == 0;
+}
+
 void getChatCounts() {
 
     char output[62];
@@ -157,45 +156,80 @@ void getChatCounts() {
     // writeSerialPortDebug(boutRefNum, output);
 
     callFunctionOnCoprocessor("getChatCounts", output, chatCountFunctionResponse);
-    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
 
-    if (!strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
-
-        writeSerialPortDebug(boutRefNum, "update current chat count");
+    #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+        writeSerialPortDebug(boutRefNum, "getChatCounts");
         writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
+    #endif
+
+    if (strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
+
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+            writeSerialPortDebug(boutRefNum, "update current chat count");
+            writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
+        #endif
+
         SysBeep(1);
-        char *token = (char *)strtok(chatCountFunctionResponse, ",");
+        char **saveptr;
+        char *token = strtok_r(chatCountFunctionResponse, ",", saveptr);
 
         // loop through the string to extract all other tokens
         while (token != NULL) {
-            writeSerialPortDebug(boutRefNum, "update current chat count loop");
-            writeSerialPortDebug(boutRefNum, token);
+
+            #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
+                writeSerialPortDebug(boutRefNum, "update current chat count loop");
+                writeSerialPortDebug(boutRefNum, token);
+            #endif
             // should be in format NAME:::COUNT
 
-            char *name = strtok(token, ":::");
-            short count = atoi(strtok(NULL, " "));
+            char **saveptr2;
+            char *name = strtok_r(token, ":::", saveptr2);
+            char *countString = strtok_r(NULL, ":::", saveptr2);
+            short count = atoi(countString);
+
+            #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                char x[255];
+                sprintf(x, "name: %s, countString: %s, count: %d", name, countString, count);
+                writeSerialPortDebug(boutRefNum, x);
+            #endif
 
             if (count == 0) {
+
+                token = strtok_r(NULL, ",", saveptr);
 
                 continue;
             }
 
             for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-                if (strstr(chatFriendlyNames[i], " new) ")) {
+                if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
 
-                    char *tempChatFriendlyName;
-                    strtok(chatFriendlyNames[i], " new) ");
-                    tempChatFriendlyName = strtok(NULL, " ");
+                    char chatName[64];
+                    sprintf(chatName, "%s", chatFriendlyNames[i]);
 
-                    if (strcmp(tempChatFriendlyName, name)) {
+                    // we are throwing out the first token
+                    strtok_r(chatName, " new) ", saveptr2);
+
+                    char *tempChatFriendlyName = strtok_r(NULL, " new) ", saveptr2);
+
+                    if (prefix(tempChatFriendlyName, name)) {
+
+                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                            writeSerialPortDebug(boutRefNum, "match1");
+                            writeSerialPortDebug(boutRefNum, name);
+                        #endif
 
                         sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
                         break;
                     }
                 } else {
 
-                    if (strcmp(chatFriendlyNames[i], name)) {
+                    if (prefix(chatFriendlyNames[i], name)) {
+
+                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                            writeSerialPortDebug(boutRefNum, "match2");
+                            writeSerialPortDebug(boutRefNum, name);
+                        #endif
 
                         sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
                         break;
@@ -203,10 +237,14 @@ void getChatCounts() {
                 }
             }
 
-            token = (char *)strtokm(NULL, ",");
+            token = strtok_r(NULL, ",", saveptr);
         }
 
         strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
+        forceRedraw = 3;
+    } else {
+
+        writeSerialPortDebug(boutRefNum, "no need to update current chat count");
     }
 
     return;
@@ -380,11 +418,11 @@ static void nuklearApp(struct nk_context *ctx) {
 
     chatWindowCollision = checkCollision(chats_window_size);
 
-    if ((chatWindowCollision || forceRedraw || drawChatsOneMoreTime) && nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+    if ((chatWindowCollision || forceRedraw) && nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
         if (chatWindowCollision) {
 
-            drawChatsOneMoreTime = 2;
+            forceRedraw = 2;
         }
 
         getChats();
@@ -403,7 +441,23 @@ static void nuklearApp(struct nk_context *ctx) {
 
                 if (nk_button_label(ctx, chatFriendlyNames[i])) {
 
-                    sprintf(activeChat, "%s", chatFriendlyNames[i]);
+                    if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
+
+                        char chatName[96];
+                        sprintf(chatName, "%s", chatFriendlyNames[i]);
+                        writeSerialPortDebug(boutRefNum, chatName);
+
+                        // we are throwing out the first token
+                        strtokm(chatName, " new) ");
+                        char *name = strtokm(NULL, " new) ");
+
+                        writeSerialPortDebug(boutRefNum, name);
+                        sprintf(activeChat, "%s", name);
+                    } else {
+
+                        sprintf(activeChat, "%s", chatFriendlyNames[i]);
+                    }
+
                     getMessages(activeChat, 0);
                 }
             }
@@ -412,7 +466,6 @@ static void nuklearApp(struct nk_context *ctx) {
 
         nk_end(ctx);
     }
-
 
     if (nk_begin(ctx, "Message Input", message_input_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
@@ -434,7 +487,7 @@ static void nuklearApp(struct nk_context *ctx) {
         nk_end(ctx);
     }
 
-    if ((forceRedraw || drawChatsOneMoreTime) && nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_NO_SCROLLBAR)) {
+    if ((forceRedraw) && nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_NO_SCROLLBAR)) {
 
         nk_layout_row_begin(ctx, NK_STATIC, 12, 1);
         {
@@ -453,12 +506,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
     if (forceRedraw) {
 
-        forceRedraw = 0;
-    }
-
-    if (drawChatsOneMoreTime) {
-
-        drawChatsOneMoreTime = 0;
+        forceRedraw--;
     }
 }
 
@@ -481,6 +529,8 @@ void refreshNuklearApp(Boolean blankInput) {
 struct nk_context* initializeNuklearApp() {
 
     sprintf(activeChat, "no active chat");
+    memset(&chatCountFunctionResponse, '\0', 102400);
+    memset(&previousChatCountFunctionResponse, '\0', 102400);
 
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 2 - 118, 80, 234, 100);
     chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);

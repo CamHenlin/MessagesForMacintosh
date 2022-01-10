@@ -193,7 +193,7 @@ void EventLoop(struct nk_context *ctx)
         //     PROFILE_START("eventloop");
         // #endif
 
-        if (gotKeyboardEvent && TickCount() > gotKeyboardEventTime + 80) {
+        if (gotKeyboardEvent && TickCount() > gotKeyboardEventTime + 20) {
 
             gotKeyboardEvent = false;
             ShowCursor();
@@ -224,7 +224,7 @@ void EventLoop(struct nk_context *ctx)
             if (chatFriendlyNamesCounter > 0) {
 
                 // writeSerialPortDebug(boutRefNum, "check chat counts");
-                getChatCounts(activeChat);
+                getChatCounts();
             }
         }
 
@@ -314,7 +314,7 @@ void EventLoop(struct nk_context *ctx)
         SystemTask();
 
         // only re-render if there is an event, prevents screen flickering, speeds up app
-        if (beganInput || firstOrMouseMove) {
+        if (beganInput || firstOrMouseMove || forceRedraw) { // forceRedraw is from nuklear_app
 
             #ifdef PROFILING
                 PROFILE_START("nk_input_end");
@@ -454,8 +454,9 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
 
                 HideCursor();
                 gotKeyboardEvent = true;
-                gotKeyboardEventTime = TickCount();
             }
+
+            gotKeyboardEventTime = TickCount();
 
             #ifdef MAC_APP_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "key");
