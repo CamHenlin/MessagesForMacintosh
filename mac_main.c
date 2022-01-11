@@ -682,7 +682,18 @@ void DoMenuCommand(menuResult)
         case mLight:
             // note this was co-opted to send new chats instead of the demo functionality. do the
             // same thing for other menu items as necessary
-            sendNewChat = 1;
+            switch (menuItem) {
+                case 2:
+                    getChats();
+                    break;
+                default:
+                    sendNewChat = 1;
+                    break;
+            }
+
+            char x[255];
+            sprintf(x, "MENU %d", menuItem);
+            writeSerialPortDebug(boutRefNum, x);
             break;
 
         case mHelp:

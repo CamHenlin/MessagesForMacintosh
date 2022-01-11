@@ -137,6 +137,8 @@ resource 'MENU' (mLight, preload) {
 	 {
 		"New Message",
 			noicon, nokey, nomark, plain;
+		"Refresh Chat List",
+			noicon, nokey, nomark, plain;
 	}
 };
 

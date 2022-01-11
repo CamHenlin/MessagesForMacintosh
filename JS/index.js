@@ -154,6 +154,7 @@ const widthFor12ptFont = [
 // this is tied to mac_main.c's message window max width
 const MAX_WIDTH = 304
 const SPACE_WIDTH = widthFor12ptFont[32]
+let canStart = false
 
 const getNextWordLength = (word) => {
 
@@ -325,9 +326,36 @@ if (TEST_MODE) {
   }, 10000)
 }
 
-class iMessageClient {
+let storedArgsAndResults = {
+  getMessages: {
+    args: {},
+    output: {}
+  },
+  hasNewMessagesInChat: {
+    args: {},
+    output: {}
+  },
+  getChats: {
+    args: {},
+    output: {}
+  },
+  getChatCounts: {
+    args: {},
+    output: {}
+  }
+}
+
+// this is our private interface, meant to communicate with our GraphQL server and fill caches
+// we want everything cached as much as possible to cut down on perceived perf issues on the 
+// classic Macintosh end
+class iMessageGraphClientClass {
 
   async getMessages (chatId, page) {
+
+    storedArgsAndResults.getMessages.args = {
+      chatId,
+      page
+    }
 
     if (TEST_MODE) {
 
@@ -361,23 +389,19 @@ class iMessageClient {
 
     let messages = result.data.getMessages
 
-    return splitMessages(messages)
+    storedArgsAndResults.getMessages.output = splitMessages(messages)
   }
 
   async hasNewMessagesInChat (chatId) {
 
+    storedArgsAndResults.hasNewMessagesInChat.args = {
+      chatId
+    }
+
     let currentLastMessageOutput = `${lastMessageOutput}`
     let messageOutput = await this.getMessages(chatId, 0)
 
-    return (currentLastMessageOutput !== messageOutput).toString()
-  }
-
-  async hasNewMessages (chatId) {
-
-    let currentLastMessageOutput = `${lastMessageOutput}`
-    let messageOutput = await this.getChats(chatId, 0)
-
-    return (currentLastMessageOutput !== messageOutput).toString()
+    storedArgsAndResults.hasNewMessagesInChat.output = (currentLastMessageOutput !== messageOutput).toString()
   }
 
   async sendMessage (chatId, message) {
@@ -418,6 +442,7 @@ class iMessageClient {
   }
 
   async getChats () {
+
     console.log(`getChats`)
 
     if (TEST_MODE) {
@@ -452,7 +477,9 @@ class iMessageClient {
 
     console.log(`getChats complete`)
 
-    return parseChatsToFriendlyNameString(chats)
+    storedArgsAndResults.getChats.output = parseChatsToFriendlyNameString(chats)
+
+    console.log(storedArgsAndResults.getChats.output)
   }
 
   async getChatCounts () {
@@ -512,7 +539,7 @@ class iMessageClient {
     friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
     
     console.log(friendlyNameStrings)
-    return friendlyNameStrings
+    storedArgsAndResults.getChatCounts.output = friendlyNameStrings
   }
 
   setIPAddress (IPAddress) {
@@ -520,6 +547,8 @@ class iMessageClient {
     console.log(`instantiate apolloclient with uri ${IPAddress}:4000/`)
 
     if (TEST_MODE) {
+
+      canStart = true
 
       return `success`
     }
@@ -543,7 +572,105 @@ class iMessageClient {
 
     console.log(`return success`)
 
+    canStart = true
+
     return `success`
+  }
+}
+
+let iMessageGraphClient = new iMessageGraphClientClass()
+
+// provide the public interface
+class iMessageClient {
+
+  constructor () {
+
+    // kick off an update interval
+    setInterval(async () => {
+
+      console.log(`run interval`)
+    
+      if (!canStart) {
+    
+        console.log(`can't start yet`)
+    
+        return
+      }
+    
+      console.log(`running...`)
+    
+      if (Object.keys(storedArgsAndResults.getMessages.args).length > 0) {
+    
+        await iMessageGraphClient.getMessages(storedArgsAndResults.getMessages.args.chatId, storedArgsAndResults.getMessages.args.page)
+      }
+      
+      if (Object.keys(storedArgsAndResults.hasNewMessagesInChat.args).length > 0) {
+    
+        await iMessageGraphClient.hasNewMessagesInChat(storedArgsAndResults.hasNewMessagesInChat.chatId)
+      }
+    
+      await iMessageGraphClient.getChats()
+      await iMessageGraphClient.getChatCounts()
+    
+      console.log(`complete!`)
+    }, 2000)
+  }
+
+  async getMessages (chatId, page) {
+
+    console.log(`iMessageClient.getMessages`)
+
+    if (storedArgsAndResults.getMessages.args.chatId !== chatId || storedArgsAndResults.getMessages.args.page !== page) {
+
+      await iMessageGraphClient.getMessages(chatId, page)
+    }
+
+    return storedArgsAndResults.getMessages.output
+  }
+
+  async hasNewMessagesInChat (chatId) {
+
+    console.log(`iMessageClient.hasNewMessagesInChat`)
+
+    if (storedArgsAndResults.hasNewMessagesInChat.args.chatId !== chatId) {
+
+      await iMessageGraphClient.hasNewMessagesInChat(chatId)
+    }
+
+    return storedArgsAndResults.hasNewMessagesInChat.output
+  }
+
+  async sendMessage (chatId, message) {
+
+    console.log(`iMessageClient.sendMessage`)
+
+    return await iMessageGraphClient.sendMessage(chatId, message)
+  }
+
+  async getChats () {
+
+    console.log(`iMessageClient.getChats`)
+    
+    if (Object.keys(storedArgsAndResults.getChats.output).length === 0) {
+
+      await iMessageGraphClient.getChats()
+    }
+
+    return storedArgsAndResults.getChats.output
+  }
+
+  getChatCounts () {
+
+    console.log(`iMessageClient.getChatCounts`)
+
+    return storedArgsAndResults.getChatCounts.output
+  }
+
+  setIPAddress (IPAddress) {
+
+    console.log(`iMessageClient.setIPAddress`)
+
+    return iMessageGraphClient.setIPAddress(IPAddress)
   }
 }
 
