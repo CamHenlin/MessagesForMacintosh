@@ -162,7 +162,7 @@ resource 'MENU' (mHelp, preload) {
 
 /* this ALRT and DITL are used as an About screen */
 resource 'ALRT' (rAboutAlert, purgeable) {
-	{40, 20, 160, 412},
+	{40, 20, 194, 412},
 	rAboutAlert,
 	{ /* array: 4 elements */
 		/* [1] */
@@ -180,31 +180,31 @@ resource 'ALRT' (rAboutAlert, purgeable) {
 resource 'DITL' (rAboutAlert, purgeable) {
 	{ /* array DITLarray: 5 elements */
 		/* [1] */
-		{88, 380, 108, 260},
+		{119, 8, 138, 80},
 		Button {
 			enabled,
 			"OK"
 		},
 		/* [2] */
-		{8, 8, 24, 214},
+		{8, 8, 24, 264},
 		StaticText {
 			disabled,
 			"Messages for Macintosh"
 		},
 		/* [3] */
-		{32, 8, 48, 237},
+		{32, 8, 48, 267},
 		StaticText {
 			disabled,
-			"Copyright © 2021 Cameron Henlin"
+			"Copyright © 2021-22 Cameron Henlin"
 		},
 		/* [4] */
-		{56, 8, 72, 136},
+		{56, 8, 72, 166},
 		StaticText {
 			disabled,
 			"cam.henlin@gmail.com"
 		},
 		/* [5] */
-		{80, 24, 112, 167},
+		{80, 8, 112, 407},
 		StaticText {
 			disabled,
 			"https://github.com/CamHenlin/MessagesForMacintosh"

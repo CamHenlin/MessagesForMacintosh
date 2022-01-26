@@ -19,9 +19,11 @@
 #include <Serial.h>
 #include <Devices.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "mac_main.h"
 
+// #define MAC_APP_DEBUGGING
 //#define PROFILING 1
 #ifdef PROFILING
 
@@ -107,7 +109,6 @@ Boolean		gHasWaitNextEvent;	/* set up by Initialize */
    the program can check it to find out if it is currently in the background. */
 Boolean		gInBackground;		/* maintained by Initialize and DoEvent */
 
-// #define MAC_APP_DEBUGGING
 /* The following globals are the state of the window. If we supported more than
    one window, they would be attatched to each document, rather than globals. */
 
@@ -142,9 +143,8 @@ void AlertUser( void );
 
 // this function, EventLoop, and DoEvent contain all of the business logic necessary
 // for our application to run
-#pragma segment Main
-void main()
-{	
+int main()
+{
     Initialize();					/* initialize the program */
     UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
 
@@ -158,27 +158,24 @@ void main()
     // we could build a nuklear window for selection
 
     char programResult[MAX_RECEIVE_SIZE];
-    sendProgramToCoprocessor(OUTPUT_JS, programResult);
+    sendProgramToCoprocessor((char *)OUTPUT_JS, programResult);
     writeSerialPortDebug(boutRefNum, "coprocessor loaded");
 
     coprocessorLoaded = 1;
 
     EventLoop(ctx); /* call the main event loop */
+
+    return 0;
 }
 
 Boolean gotKeyboardEvent = false;
 int gotKeyboardEventTime = 0;
 
-#pragma segment Main
 void EventLoop(struct nk_context *ctx)
 {
-    RgnHandle cursorRgn;
     Boolean	gotEvent;
-    Boolean hasNextEvent;
     EventRecord	event;
-    EventRecord nextEventRecord;
     Point mouse;
-    cursorRgn = NewRgn();
 
     int lastMouseHPos = 0;
     int lastMouseVPos = 0;
@@ -314,7 +311,7 @@ void EventLoop(struct nk_context *ctx)
         SystemTask();
 
         // only re-render if there is an event, prevents screen flickering, speeds up app
-        if (beganInput || firstOrMouseMove || forceRedraw) { // forceRedraw is from nuklear_app
+        if (beganInput || firstOrMouseMove || forceRedraw) {
 
             #ifdef PROFILING
                 PROFILE_START("nk_input_end");
@@ -344,6 +341,9 @@ void EventLoop(struct nk_context *ctx)
             #ifdef MAC_APP_DEBUGGING
 
                 writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
+                char x[255];
+                sprintf(x, "why? beganInput: %d, firstOrMouseMove: %d, forceRedraw: %d", beganInput, firstOrMouseMove, forceRedraw);
+                writeSerialPortDebug(boutRefNum, x);
             #endif
 
             nk_quickdraw_render(FrontWindow(), ctx);
@@ -377,11 +377,9 @@ void EventLoop(struct nk_context *ctx)
 /* Do the right thing for an event. Determine what kind of event it is, and call
  the appropriate routines. */
 
-#pragma segment Main
 void DoEvent(EventRecord *event, struct nk_context *ctx) {
 
     short part;
-    short err;
     WindowPtr window;
     Boolean	hit;
     char key;
@@ -495,7 +493,6 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             #endif
             if ( HiWord(event->message) != noErr ) {
                 SetPt(&aPoint, kDILeft, kDITop);
-                err = DIBadMount(aPoint, event->message);
             }
             break;
 
@@ -527,7 +524,6 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
     coordinates is to call GetMouse and LocalToGlobal, but that requires
     being sure that thePort is set to a valid port. */
 
-#pragma segment Main
 void GetGlobalMouse(mouse)
     Point	*mouse;
 {
@@ -545,7 +541,6 @@ void GetGlobalMouse(mouse)
     will handle situations where calculations for drawing or drawing
     itself is very time-consuming. */
 
-#pragma segment Main
 void DoUpdate(window)
     WindowPtr	window;
 {
@@ -561,7 +556,6 @@ void DoUpdate(window)
     deactivate events is sufficient. Other applications may have
     TextEdit records, controls, lists, etc., to activate/deactivate. */
 
-#pragma segment Main
 void DoActivate(window, becomingActive)
     WindowPtr	window;
     Boolean		becomingActive;
@@ -579,8 +573,6 @@ void DoActivate(window, becomingActive)
    machines, but color on color machines. At this point, the windowÕs visRgn
    is set to allow drawing only where it needs to be done. */
 
-static Rect				okayButtonBounds;
-
 /*	Enable and disable menus based on the current state.
     The user can only select enabled menu items. We set up all the menu items
     before calling MenuSelect or MenuKey, since these are the only times that
@@ -591,7 +583,6 @@ static Rect				okayButtonBounds;
     the application. Other application designs may take a different approach
     that is just as valid. */
 
-#pragma segment Main
 void AdjustMenus()
 {
     WindowPtr	window;
@@ -636,16 +627,15 @@ void AdjustMenus()
     It is good to have both the result of MenuSelect and MenuKey go to
     one routine like this to keep everything organized. */
 
-#pragma segment Main
 void DoMenuCommand(menuResult)
     long		menuResult;
 {
     short		menuID;				/* the resource ID of the selected menu */
     short		menuItem;			/* the item number of the selected menu */
     short		itemHit;
-    Str255		daName;
-    short		daRefNum;
-    Boolean		handledByDA;
+    // Str255		daName;
+    // short		daRefNum;
+    // Boolean		handledByDA;
 
     menuID = HiWord(menuResult);	/* use macros for efficiency to... */
     menuItem = LoWord(menuResult);	/* get menu item number and menu number */
@@ -677,7 +667,7 @@ void DoMenuCommand(menuResult)
             }
             break;
         case mEdit:					/* call SystemEdit for DA editing & MultiFinder */
-            handledByDA = SystemEdit(menuItem-1);	/* since we donÕt do any Editing */
+            // handledByDA = SystemEdit(menuItem-1);	/* since we donÕt do any Editing */
             break;
         case mLight:
             // note this was co-opted to send new chats instead of the demo functionality. do the
@@ -691,9 +681,9 @@ void DoMenuCommand(menuResult)
                     break;
             }
 
-            char x[255];
-            sprintf(x, "MENU %d", menuItem);
-            writeSerialPortDebug(boutRefNum, x);
+            // char x[255];
+            // sprintf(x, "MENU %d", menuItem);
+            // writeSerialPortDebug(boutRefNum, x);
             break;
 
         case mHelp:
@@ -760,7 +750,6 @@ void DoMenuCommand(menuResult)
     the user quits an application, but then cancels the save of a document
     associated with a window. */
 
-#pragma segment Main
 Boolean DoCloseWindow(window)
     WindowPtr	window;
 {
@@ -778,7 +767,6 @@ Boolean DoCloseWindow(window)
 /*	1.01 - If we find out that a cancel has occurred, we won't exit to the
     shell, but will return instead. */
 
-#pragma segment Main
 void Terminate()
 {
     WindowPtr	aWindow;
@@ -799,13 +787,10 @@ void Terminate()
         ExitToShell();							/* exit if no cancellation */
 } /*Terminate*/
 
-
-#pragma segment Initialize
 void Initialize()
 {
     Handle		menuBar;
     WindowPtr	window;
-    long		total, contig;
     EventRecord event;
     short		count;
 
@@ -846,8 +831,6 @@ void Initialize()
     
 } /*Initialize*/
 
-
-#pragma segment Main
 Boolean IsAppWindow(window)
     WindowPtr	window;
 {
@@ -865,7 +848,6 @@ Boolean IsAppWindow(window)
 
 /* Check to see if a window belongs to a desk accessory. */
 
-#pragma segment Main
 Boolean IsDAWindow(window)
     WindowPtr	window;
 {
@@ -876,8 +858,6 @@ Boolean IsDAWindow(window)
     return ((WindowPeek) window)->windowKind < 0;
 } /*IsDAWindow*/
 
-
-#pragma segment Initialize
 Boolean TrapAvailable(tNumber,tType)
     short		tNumber;
     TrapType	tType;
@@ -894,8 +874,6 @@ Boolean TrapAvailable(tNumber,tType)
     return NGetTrapAddress(tNumber, tType) != GetTrapAddress(_Unimplemented);
 } /*TrapAvailable*/
 
-
-#pragma segment Main
 void AlertUser() {
     short itemHit;
 

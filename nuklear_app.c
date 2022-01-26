@@ -1,5 +1,7 @@
 // TODO: 
 // - test, bug fixes, write blog posts
+// - bug: messages start over-writing eachother in main chat -- need a way to force clear it
+// - bug: delete key deletes infinitely
 
 #define WINDOW_WIDTH 510
 #define WINDOW_HEIGHT 302
@@ -17,10 +19,71 @@
 
 // #define MESSAGES_FOR_MACINTOSH_DEBUGGING
 
+// based on https://github.com/jwerle/strsplit.c -- cleaned up and modified to use strtokm rather than strtok
+int strsplit (const char *str, char *parts[], const char *delimiter) {
+
+  char *pch;
+  int i = 0;
+  char *copy = NULL;
+  char *tmp = NULL;
+
+  copy = strdup(str);
+
+  if (! copy) {
+
+    goto bad;
+  }
+
+  pch = strtokm(copy, delimiter);
+
+  tmp = strdup(pch);
+
+  if (!tmp) {
+
+    goto bad;
+  }
+
+  parts[i++] = tmp;
+
+  while (pch) {
+
+    pch = strtokm(NULL, delimiter);
+
+    if (NULL == pch) {
+
+        break;
+    }
+
+    tmp = strdup(pch);
+
+    if (! tmp) {
+
+      goto bad;
+    }
+
+    parts[i++] = tmp;
+  }
+
+  free(copy);
+
+  return i;
+
+ bad:
+
+  free(copy);
+
+  for (int j = 0; j < i; j++) {
+
+    free(parts[j]);
+  }
+
+  return -1;
+}
+
 void aFailed(char *file, int line) {
     
     MoveTo(10, 10);
-    char *textoutput;
+    char textoutput[255];
     sprintf(textoutput, "%s:%d", file, line);
     writeSerialPortDebug(boutRefNum, "assertion failure");
     writeSerialPortDebug(boutRefNum, textoutput);
@@ -28,16 +91,7 @@ void aFailed(char *file, int line) {
     while (true) {}
 }
 
-#define NK_ASSERT(e) \
-    if (!(e)) \
-        aFailed(__FILE__, __LINE__)
-
-#include <Types.h>
-#include "nuklear.h"
-#include "nuklear_quickdraw.h"
-#include "coprocessorjs.h"
-
-#define MAX_CHAT_MESSAGES 16
+#define MAX_CHAT_MESSAGES 17
 
 Boolean firstOrMouseMove = true;
 Boolean gotMouseEvent = false;
@@ -46,10 +100,10 @@ char activeChatMessages[MAX_CHAT_MESSAGES][2048]; // this should match to MAX_RO
 char box_input_buffer[2048];
 char chatFriendlyNames[16][64];
 char ip_input_buffer[255];
-char jsFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
-char chatCountFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
-char tempChatCountFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
-char previousChatCountFunctionResponse[102400]; // Matches MAX_RECEIVE_SIZE
+char jsFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
+char chatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
+char tempChatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
+char previousChatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
 char new_message_input_buffer[255];
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
@@ -69,6 +123,15 @@ struct nk_rect message_input_window_size;
 struct nk_rect messages_window_size;
 struct nk_context *ctx;
 
+#define NK_ASSERT(e) \
+    if (!(e)) \
+        aFailed(__FILE__, __LINE__)
+
+#include <Types.h>
+#include "nuklear.h"
+#include "nuklear_quickdraw.h"
+#include "coprocessorjs.h"
+
 void refreshNuklearApp(Boolean blankInput);
 
 void getMessagesFromjsFunctionResponse() {
@@ -85,7 +148,7 @@ void getMessagesFromjsFunctionResponse() {
     // loop through the string to extract all other tokens
     while (token != NULL) {
 
-        sprintf(activeChatMessages[activeMessageCounter], "%s", token); 
+        sprintf(activeChatMessages[activeMessageCounter], "%s", token);
         token = (char *)strtokm(NULL, "ENDLASTMESSAGE");
         activeMessageCounter++;
     }
@@ -96,11 +159,12 @@ void getMessagesFromjsFunctionResponse() {
 // function to send messages in chat
 void sendMessage() {
 
+    writeSerialPortDebug(boutRefNum, "sendMessage!");
+
     char output[2048];
     sprintf(output, "%s&&&%.*s", activeChat, box_input_len, box_input_buffer);
 
     memset(&box_input_buffer, '\0', 2048);
-    sprintf(box_input_buffer, "");
     box_input_len = 0;
     refreshNuklearApp(1);
 
@@ -135,6 +199,8 @@ void getChats() {
 
 void sendIPAddressToCoprocessor() {
 
+    writeSerialPortDebug(boutRefNum, "sendIPAddressToCoprocessor!");
+
     char output[2048];
     sprintf(output, "%.*s", ip_input_buffer_len, ip_input_buffer);
 
@@ -152,7 +218,9 @@ void sendIPAddressToCoprocessor() {
 // 	 figure out pagination?? button on the top that says "get previous chats"?
 void getMessages(char *thread, int page) {
 
-    char output[62];
+    writeSerialPortDebug(boutRefNum, "getMessages!");
+
+    char output[68];
     sprintf(output, "%s&&&%d", thread, page);
     // writeSerialPortDebug(boutRefNum, output);
 
@@ -172,11 +240,9 @@ Boolean prefix(const char *pre, const char *str) {
 
 void getChatCounts() {
 
-    char output[62];
-    sprintf(output, "");
-    // writeSerialPortDebug(boutRefNum, output);
+    writeSerialPortDebug(boutRefNum, "getChatCounts!");
 
-    callFunctionOnCoprocessor("getChatCounts", output, chatCountFunctionResponse);
+    callFunctionOnCoprocessor("getChatCounts", "", chatCountFunctionResponse);
 
     #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
         writeSerialPortDebug(boutRefNum, "getChatCounts");
@@ -191,27 +257,62 @@ void getChatCounts() {
         #endif
 
         SysBeep(1);
-        char *saveptr;
+
         strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
-        char *token = strtok_r(tempChatCountFunctionResponse, ",", &saveptr);
+        int chatCount = 0;
+        char *(*chats[16])[64];
+
+        chatCount = strsplit(tempChatCountFunctionResponse, chats, ",");
+
+        for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
+
+            #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
+                writeSerialPortDebug(boutRefNum, "DUMMY DELETE: update current chat count loop");
+                writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
+            #endif
+        }
 
         // loop through the string to extract all other tokens
-        while (token != NULL) {
+        for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
 
             #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
                 writeSerialPortDebug(boutRefNum, "update current chat count loop");
-                writeSerialPortDebug(boutRefNum, token);
+                writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
             #endif
-            // should be in format NAME:::COUNT
 
-            char *saveptr2;
-            char *name = strtok_r(token, ":::", &saveptr2);
-            char *countString = strtok_r(NULL, ":::", &saveptr2);
-            short count = atoi(countString);
+            // chats[chatLoopCounter] should be in format NAME:::COUNT
+
+            strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
+            int results = 0;
+            char *(*chatUpdate[2])[64];
+
+            results = strsplit(chats[chatLoopCounter], chatUpdate, ":::");
+
+            if (results != 2) {
+
+                #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
+                    char x[255];
+                    sprintf(x, "ERROR: chat update mismatch splitting on ':::', expected 2 results, got: %d: %s -- bailing out", results, chats[chatLoopCounter]);
+                    writeSerialPortDebug(boutRefNum, x);
+
+                    for (int errorResultCounter = 0; errorResultCounter < results; errorResultCounter++) {
+
+                        writeSerialPortDebug(boutRefNum, chatUpdate[errorResultCounter]);
+
+                        char y[255];
+                        sprintf(y, "%d/%d: '%s'", errorResultCounter, results, chatUpdate[errorResultCounter]);
+                        writeSerialPortDebug(boutRefNum, y);
+                    }
+                #endif
+
+                continue;
+            }
+
+            short count = atoi(chatUpdate[1]);
 
             #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                 char x[255];
-                sprintf(x, "name: %s, countString: %s, count: %d", name, countString, count);
+                sprintf(x, "name: %s, countString: %s, count: %d", chatUpdate[0], chatUpdate[1], count);
                 writeSerialPortDebug(boutRefNum, x);
             #endif
 
@@ -220,51 +321,64 @@ void getChatCounts() {
                 if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
 
                     char chatName[64];
-                    sprintf(chatName, "%s", chatFriendlyNames[i]);
+                    sprintf(chatName, "%.63s", chatFriendlyNames[i]);
 
-                    // we are throwing out the first token
-                    strtok_r(chatName, " new) ", &saveptr2);
+                    int updateResults = 0;
+                    char *(*updatePieces[2])[64];
 
-                    char *tempChatFriendlyName = strtok_r(NULL, " new) ", &saveptr2);
+                    updateResults = strsplit(chatName, updatePieces, " new) ");
 
-                    if (prefix(tempChatFriendlyName, name)) {
+                    if (updateResults != 2) {
+
+                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                            char x[255];
+                            sprintf(x, "ERROR: individual chat update mismatch splitting on ' new) ', expected 2 results, got: %d: %s -- bailing out", updateResults, chatName);
+                            writeSerialPortDebug(boutRefNum, x);
+
+                            for (int errorResultCounter = 0; errorResultCounter < updateResults; errorResultCounter++) {
+
+                                char y[255];
+                                sprintf(y, "%d/%d: '%s'", errorResultCounter, updateResults, updatePieces[errorResultCounter]);
+                                writeSerialPortDebug(boutRefNum, y);
+                            }
+                        #endif
+
+                        continue;
+                    }
+
+                    if (prefix(updatePieces[1], chatUpdate[0])) {
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "match1");
-                            writeSerialPortDebug(boutRefNum, name);
+                            writeSerialPortDebug(boutRefNum, chatUpdate[0]);
                         #endif
 
-                        if (count == 0) {
+                        if (count == 0 || !strcmp(activeChat, chatUpdate[0])) {
 
-                            sprintf(chatFriendlyNames[i], "%s", name);
+                            sprintf(chatFriendlyNames[i], "%s", chatUpdate[0]);
                         } else {
 
-                            sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
+                            sprintf(chatFriendlyNames[i], "(%d new) %s", count, chatUpdate[0]);
                         }
                         break;
                     }
-                } else {
+                } else if (prefix(chatFriendlyNames[i], chatUpdate[0])) {
 
-                    if (prefix(chatFriendlyNames[i], name)) {
+                    #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                        writeSerialPortDebug(boutRefNum, "match2");
+                        writeSerialPortDebug(boutRefNum, chatUpdate[0]);
+                    #endif
 
-                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-                            writeSerialPortDebug(boutRefNum, "match2");
-                            writeSerialPortDebug(boutRefNum, name);
-                        #endif
+                    if (count == 0 || !strcmp(activeChat, chatUpdate[0])) {
 
-                        if (count == 0) {
+                        sprintf(chatFriendlyNames[i], "%s", chatUpdate[0]);
+                    } else {
 
-                            sprintf(chatFriendlyNames[i], "%s", name);
-                        } else {
-
-                            sprintf(chatFriendlyNames[i], "(%d new) %s", count, name);
-                        }
-                        break;
+                        sprintf(chatFriendlyNames[i], "(%d new) %s", count, chatUpdate[0]);
                     }
+                    break;
                 }
             }
-
-            token = strtok_r(NULL, ",", &saveptr);
         }
 
         strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
@@ -279,7 +393,9 @@ void getChatCounts() {
 
 void getHasNewMessagesInChat(char *thread) {
 
-    char output[62];
+    writeSerialPortDebug(boutRefNum, "getHasNewMessagesInChat!");
+
+    char output[68];
     sprintf(output, "%s", thread);
     // writeSerialPortDebug(boutRefNum, output);
 
@@ -288,12 +404,15 @@ void getHasNewMessagesInChat(char *thread) {
 
     if (!strcmp(jsFunctionResponse, "true")) {
 
-        // writeSerialPortDebug(boutRefNum, "update current chat");
+        writeSerialPortDebug(boutRefNum, "update current chat");
         SysBeep(1);
         getMessages(thread, 0);
 
         // force redraw
         forceRedraw = 3;
+    } else {
+
+        writeSerialPortDebug(boutRefNum, "do not update current chat");
     }
 
     return;
@@ -376,7 +495,7 @@ static void nuklearApp(struct nk_context *ctx) {
         return;
     }
 
-    // prompt the user for  new chat
+    // prompt the user for new chat
     if (sendNewChat) {
 
         if (nk_begin_titled(ctx, "Enter New Message Recipient", "Enter New Message Recipient",  nk_rect(50, WINDOW_HEIGHT / 4, WINDOW_WIDTH - 100, 140), NK_WINDOW_TITLE|NK_WINDOW_BORDER)) {
@@ -423,11 +542,6 @@ static void nuklearApp(struct nk_context *ctx) {
 
     if ((chatWindowCollision || forceRedraw) && nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
 
-        if (chatWindowCollision) {
-
-            forceRedraw = 2;
-        }
-
         nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
         {
             for (int i = 0; i < chatFriendlyNamesCounter; i++) {
@@ -445,7 +559,7 @@ static void nuklearApp(struct nk_context *ctx) {
                     if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
 
                         char chatName[96];
-                        sprintf(chatName, "%s", chatFriendlyNames[i]);
+                        sprintf(chatName, "%.63s", chatFriendlyNames[i]);
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "clicked1 chatName");
@@ -467,8 +581,8 @@ static void nuklearApp(struct nk_context *ctx) {
                             writeSerialPortDebug(boutRefNum, name);
                         #endif
 
-                        sprintf(activeChat, "%s", name);
-                        sprintf(chatFriendlyNames[i], "%s", name);
+                        sprintf(activeChat, "%.63s", name);
+                        sprintf(chatFriendlyNames[i], "%.63s", name);
                     } else {
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
@@ -476,7 +590,7 @@ static void nuklearApp(struct nk_context *ctx) {
                             writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
                         #endif
 
-                        sprintf(activeChat, "%s", chatFriendlyNames[i]);
+                        sprintf(activeChat, "%.63s", chatFriendlyNames[i]);
                     }
 
                     getMessages(activeChat, 0);
@@ -517,6 +631,8 @@ static void nuklearApp(struct nk_context *ctx) {
 
                 nk_layout_row_push(ctx, 305);
 
+                // writeSerialPortDebug(boutRefNum, "activeChatMessages[i]");
+                // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
                 nk_label(ctx, activeChatMessages[i], NK_TEXT_ALIGN_LEFT);
             }
         }
@@ -550,8 +666,8 @@ void refreshNuklearApp(Boolean blankInput) {
 struct nk_context* initializeNuklearApp() {
 
     sprintf(activeChat, "no active chat");
-    memset(&chatCountFunctionResponse, '\0', 102400);
-    memset(&previousChatCountFunctionResponse, '\0', 102400);
+    memset(&chatCountFunctionResponse, '\0', 32767);
+    memset(&previousChatCountFunctionResponse, '\0', 32767);
 
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 2 - 118, 80, 234, 100);
     chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
@@ -562,6 +678,7 @@ struct nk_context* initializeNuklearApp() {
     refreshNuklearApp(false);
 
     sprintf(ip_input_buffer, "http://"); // doesn't work due to bug, see variable definition
+    ip_input_buffer_len = 7;
 
     return ctx;
 }

@@ -6,6 +6,7 @@ const gql = require('graphql-tag')
 
 // TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your modern Mac
 const TEST_MODE = false
+const DEBUG = false
 
 const defaultOptions = {
   watchQuery: {
@@ -155,6 +156,7 @@ const widthFor12ptFont = [
 const MAX_WIDTH = 304
 const SPACE_WIDTH = widthFor12ptFont[32]
 let canStart = false
+let hasNewMessages = false
 
 const getNextWordLength = (word) => {
 
@@ -350,7 +352,7 @@ let storedArgsAndResults = {
 // classic Macintosh end
 class iMessageGraphClientClass {
 
-  async getMessages (chatId, page) {
+  async getMessages (chatId, page, fromInterval) {
 
     storedArgsAndResults.getMessages.args = {
       chatId,
@@ -362,7 +364,10 @@ class iMessageGraphClientClass {
       return splitMessages(TEST_MESSAGES)
     }
 
-    console.log(`get messages for chat ID: ${chatId}`)
+    if (DEBUG) {
+
+      console.log(`get messages for chat ID: ${chatId}`)
+    }
 
     let result
 
@@ -378,30 +383,45 @@ class iMessageGraphClientClass {
       })
     } catch (error) {
 
-      console.log(`error with apollo query`)
+      console.log(`getMessages: error with apollo query`)
       console.log(error)
 
-      result = {
-        data: {
-        }
-      }
+      return
     }
 
     let messages = result.data.getMessages
 
+    let currentLastMessageOutput = `${lastMessageOutput}`
+
     storedArgsAndResults.getMessages.output = splitMessages(messages)
-  }
 
-  async hasNewMessagesInChat (chatId) {
+    if (!hasNewMessages && fromInterval) {
 
-    storedArgsAndResults.hasNewMessagesInChat.args = {
-      chatId
+      hasNewMessages = currentLastMessageOutput !== storedArgsAndResults.getMessages.output
+
+      if (hasNewMessages) {
+
+        console.log(`got new message. previous message was:`)
+        console.log(currentLastMessageOutput)
+        console.log(`new message set is:`)
+        console.log(storedArgsAndResults.getMessages.output)
+      }
     }
 
-    let currentLastMessageOutput = `${lastMessageOutput}`
-    let messageOutput = await this.getMessages(chatId, 0)
+    return
+  }
 
-    storedArgsAndResults.hasNewMessagesInChat.output = (currentLastMessageOutput !== messageOutput).toString()
+  async hasNewMessagesInChat () {
+
+    if (!hasNewMessages) {
+
+      return `false`
+    } else {
+
+      hasNewMessages = false
+    }
+
+    return `true`
   }
 
   async sendMessage (chatId, message) {
@@ -416,7 +436,9 @@ class iMessageGraphClientClass {
     let result
 
     try {
-    
+
+      message = message.replaceAll('"', '')
+
       result = await client.query({
         query: gql`query sendMessage {
             sendMessage(chatId: "${chatId}", message: "${message}") {
@@ -427,13 +449,10 @@ class iMessageGraphClientClass {
       })
     } catch (error) {
 
-      console.log(`error with apollo query`)
+      console.log(`sendMessage: error with apollo query`)
       console.log(error)
 
-      result = {
-        data: {
-        }
-      }
+      return
     }
 
     let messages = result.data.sendMessage
@@ -443,7 +462,11 @@ class iMessageGraphClientClass {
 
   async getChats () {
 
-    console.log(`getChats`)
+
+    if (DEBUG) {
+
+      console.log(`getChats`)
+    }
 
     if (TEST_MODE) {
 
@@ -464,27 +487,31 @@ class iMessageGraphClientClass {
       })
     } catch (error) {
 
-      console.log(`error with apollo query`)
+      console.log(`getChats: error with apollo query`)
       console.log(error)
 
-      result = {
-        data: {
-        }
-      }
+      return
     }
 
     let chats = result.data.getChats
 
-    console.log(`getChats complete`)
-
     storedArgsAndResults.getChats.output = parseChatsToFriendlyNameString(chats)
 
-    console.log(storedArgsAndResults.getChats.output)
+    if (DEBUG) {
+
+      console.log(`getChats complete`)
+      console.log(storedArgsAndResults.getChats.output)
+    }
+
+    return
   }
 
   async getChatCounts () {
 
-    console.log(`getChatCounts`)
+    if (DEBUG) {
+
+      console.log(`getChatCounts`)
+    }
 
     if (TEST_MODE) {
 
@@ -505,29 +532,24 @@ class iMessageGraphClientClass {
       })
     } catch (error) {
 
-      console.log(`error with apollo query`)
+      console.log(`getChatCounts: error with apollo query`)
       console.log(error)
 
-      result = {
-        data: {
-        }
-      }
+      return
     }
 
     let chats = result.data.getChatCounts
 
-    console.log(`got chat counts`)
-
     if (!chats) {
 
-      return ``
+      return
     }
 
     let friendlyNameStrings = ``
   
     if (chats.length === 0) {
   
-      return ``
+      return
     }
   
     for (let chat of chats) {
@@ -537,9 +559,16 @@ class iMessageGraphClientClass {
   
     // remove trailing comma
     friendlyNameStrings = friendlyNameStrings.substring(1, friendlyNameStrings.length)
-    
-    console.log(friendlyNameStrings)
+
     storedArgsAndResults.getChatCounts.output = friendlyNameStrings
+
+    if (DEBUG) {
+
+      console.log(`got chat counts`)
+      console.log(friendlyNameStrings)
+    }
+
+    return
   }
 
   setIPAddress (IPAddress) {
@@ -588,32 +617,45 @@ class iMessageClient {
     // kick off an update interval
     setInterval(async () => {
 
-      console.log(`run interval`)
+      let intervalDate = new Date().toISOString()
+
+      console.log(`${intervalDate}: run interval`)
     
       if (!canStart) {
     
-        console.log(`can't start yet`)
+        console.log(`${intervalDate}: can't start yet`)
     
         return
       }
+
+      // if (DEBUG) {
+
+        console.log(`${intervalDate}: running...`)
+      // }
+
+      try {
     
-      console.log(`running...`)
-    
-      if (Object.keys(storedArgsAndResults.getMessages.args).length > 0) {
-    
-        await iMessageGraphClient.getMessages(storedArgsAndResults.getMessages.args.chatId, storedArgsAndResults.getMessages.args.page)
-      }
+        if (Object.keys(storedArgsAndResults.getMessages.args).length > 0) {
+
+          console.log(`${intervalDate}: interval: get messages for ${storedArgsAndResults.getMessages.args.chatId}`)
+          await iMessageGraphClient.getMessages(storedArgsAndResults.getMessages.args.chatId, storedArgsAndResults.getMessages.args.page, true)
+        }
       
-      if (Object.keys(storedArgsAndResults.hasNewMessagesInChat.args).length > 0) {
-    
-        await iMessageGraphClient.hasNewMessagesInChat(storedArgsAndResults.hasNewMessagesInChat.chatId)
+        console.log(`${intervalDate}: interval: getchats`)
+        await iMessageGraphClient.getChats()
+        console.log(`${intervalDate}: interval: getchatcounts`)
+        await iMessageGraphClient.getChatCounts()
+      } catch (error) {
+
+        console.log(`${intervalDate}: caught error when running interval`)
+        console.log(error)
       }
     
-      await iMessageGraphClient.getChats()
-      await iMessageGraphClient.getChatCounts()
-    
-      console.log(`complete!`)
-    }, 2000)
+      // if (DEBUG) {
+
+        console.log(`${intervalDate}: complete!`)
+      // }
+    }, 3000)
   }
 
   async getMessages (chatId, page) {
@@ -622,8 +664,11 @@ class iMessageClient {
 
     if (storedArgsAndResults.getMessages.args.chatId !== chatId || storedArgsAndResults.getMessages.args.page !== page) {
 
-      await iMessageGraphClient.getMessages(chatId, page)
+      await iMessageGraphClient.getMessages(chatId, page, false)
     }
+
+    console.log(`iMessageClient.getMessages, return:`)
+    console.log(storedArgsAndResults.getMessages.output)
 
     return storedArgsAndResults.getMessages.output
   }
@@ -632,12 +677,12 @@ class iMessageClient {
 
     console.log(`iMessageClient.hasNewMessagesInChat`)
 
-    if (storedArgsAndResults.hasNewMessagesInChat.args.chatId !== chatId) {
+    let returnValue = await iMessageGraphClient.hasNewMessagesInChat(chatId)
 
-      await iMessageGraphClient.hasNewMessagesInChat(chatId)
-    }
+    console.log(`iMessageClient.hasNewMessagesInChat, return:`)
+    console.log(returnValue)
 
-    return storedArgsAndResults.hasNewMessagesInChat.output
+    return returnValue
   }
 
   async sendMessage (chatId, message) {
@@ -656,12 +701,16 @@ class iMessageClient {
       await iMessageGraphClient.getChats()
     }
 
+    console.log(`iMessageClient.getChats, return:`)
+    console.log(storedArgsAndResults.getChats.output)
+
     return storedArgsAndResults.getChats.output
   }
 
   getChatCounts () {
 
-    console.log(`iMessageClient.getChatCounts`)
+    console.log(`iMessageClient.getChatCounts, prestored return:`)
+    console.log(storedArgsAndResults.getChatCounts.output)
 
     return storedArgsAndResults.getChatCounts.output
   }

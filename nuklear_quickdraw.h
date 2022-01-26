@@ -49,7 +49,7 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file();
  *
  * ===============================================================
  */
-#define MAX_MEMORY_IN_KB 4
+#define MAX_MEMORY_IN_KB 6
 #ifdef NK_QUICKDRAW_IMPLEMENTATION
 #ifndef NK_QUICKDRAW_TEXT_MAX
 #define NK_QUICKDRAW_TEXT_MAX 256
@@ -476,8 +476,6 @@ void updateBounds(int top, int bottom, int left, int right) {
     void runDrawCommand(const struct nk_command *cmd) {
 #endif
 
-    int color;
-
     switch (cmd->type) {
 
         case NK_COMMAND_NOP:
@@ -541,7 +539,7 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                 #ifdef COMMAND_CACHING
 
-                    if (cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_rect");
@@ -594,7 +592,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 }
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_rect_filled");
@@ -631,7 +629,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_text *t = (const struct nk_command_text*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (t->allowCache && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
+                    if (!forceRedraw && t->allowCache && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_text)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             char log[255];
@@ -685,7 +683,7 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                 #ifdef COMMAND_CACHING
 
-                    if (cmd->type == lastCmd->type && memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(l, lastCmd, sizeof(struct nk_command_line)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_line");
@@ -713,7 +711,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_circle *c = (const struct nk_command_circle *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_circle");
@@ -748,7 +746,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle_filled)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(c, lastCmd, sizeof(struct nk_command_circle_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_circle_filled");
@@ -787,7 +785,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_triangle *t = (const struct nk_command_triangle*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_triangle");
@@ -817,7 +815,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_triangle_filled *t = (const struct nk_command_triangle_filled *)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle_filled)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(t, lastCmd, sizeof(struct nk_command_triangle_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_triangle_filled");
@@ -853,7 +851,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
@@ -893,7 +891,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_polygon_filled *p = (const struct nk_command_polygon_filled*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon_filled)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon_filled)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon_filled");
@@ -942,7 +940,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 const struct nk_command_polygon *p = (const struct nk_command_polygon*)cmd;
 
                 #ifdef COMMAND_CACHING
-                    if (cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
+                    if (!forceRedraw && cmd->type == lastCmd->type && memcmp(p, lastCmd, sizeof(struct nk_command_polygon)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "ALREADY DREW CMD nk_command_polygon");
@@ -1016,7 +1014,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_IMAGE");  
                 #endif
 
-                const struct nk_command_image *i = (const struct nk_command_image *)cmd;
+                // const struct nk_command_image *i = (const struct nk_command_image *)cmd;
                 // al_draw_bitmap_region(i->img.handle.ptr, 0, 0, i->w, i->h, i->x, i->y, 0); // TODO: look up and convert al_draw_bitmap_region
                 // TODO: consider implementing a bitmap drawing routine. we could iterate pixel by pixel and draw
                 // here is some super naive code that could work, used for another project that i was working on with a custom format but would be
@@ -1082,7 +1080,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
-            writeSerialPortDebug(boutRefNum, "NK_COMMAND_NOP");
+            writeSerialPortDebug(boutRefNum, "NO RENDER BUFFER CHANGE, ABORT");
         #endif
 
         return;
@@ -1106,7 +1104,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
     #ifdef COMMAND_CACHING
         const struct nk_command *lastCmd;
-        nk_byte *buffer;
         lastCmd = nk_ptr_add_const(struct nk_command, last, 0);
     #endif
 
@@ -1325,9 +1322,10 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                 } else if (key == eitherShiftKey) {
                     
                     nk_input_key(nuklear_context, NK_KEY_SHIFT, isKeyDown);
-                } else if (key == deleteKey) {
+                } else if (key == deleteKey && isKeyDown) {
                     
-                    nk_input_key(nuklear_context, NK_KEY_DEL, isKeyDown);
+                    nk_input_key(nuklear_context, NK_KEY_DEL, 1);
+                    nk_input_key(nuklear_context, NK_KEY_DEL, 0);
                 } else if (key == enterKey) {
                     
                     nk_input_key(nuklear_context, NK_KEY_ENTER, isKeyDown);
@@ -1398,6 +1396,8 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
             break;
         }
     }
+
+    return 1;
 }
 
 // i think these functions are close to correct, but throw an error around invalid storage class

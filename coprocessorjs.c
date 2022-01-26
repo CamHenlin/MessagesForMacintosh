@@ -12,9 +12,9 @@ IOParam outgoingSerialPortReference;
 IOParam incomingSerialPortReference;
 const bool PRINT_ERRORS = false;
 const bool DEBUGGING = false;
-const int RECEIVE_WINDOW_SIZE = 102400; // receive in up to 100kb chunks?
+const int RECEIVE_WINDOW_SIZE = 32767; // receive in up to 100kb chunks?
 const int MAX_RECEIVE_SIZE = RECEIVE_WINDOW_SIZE; // not sure if these ever need to be different
-char GlobalSerialInputBuffer[102400]; // make this match MAX_RECEIVE_SIZE
+char GlobalSerialInputBuffer[32767]; // make this match MAX_RECEIVE_SIZE
 
 char application_id[255];
 int call_counter = 0;
