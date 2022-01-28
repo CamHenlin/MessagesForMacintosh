@@ -1,7 +1,5 @@
 // TODO: 
-// - test, bug fixes, write blog posts
-// - bug: messages start over-writing eachother in main chat -- need a way to force clear it
-// - bug: delete key deletes infinitely
+// - test on physical, bug fixes, write blog posts
 
 #define WINDOW_WIDTH 510
 #define WINDOW_HEIGHT 302

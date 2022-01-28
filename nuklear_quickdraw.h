@@ -1184,7 +1184,7 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
     FindWindow(event->where, &window); 
     // char logb[255];
     // sprintf(logb, "nk_quickdraw_handle_event event %d", event->what);
-    // // writeSerialPortDebug(boutRefNum, logb);
+    // writeSerialPortDebug(boutRefNum, logb);
 
     switch (event->what) {
         case updateEvt: {
@@ -1323,9 +1323,8 @@ NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nukl
                     
                     nk_input_key(nuklear_context, NK_KEY_SHIFT, isKeyDown);
                 } else if (key == deleteKey && isKeyDown) {
-                    
-                    nk_input_key(nuklear_context, NK_KEY_DEL, 1);
-                    nk_input_key(nuklear_context, NK_KEY_DEL, 0);
+
+                    nk_input_key(nuklear_context, NK_KEY_DEL, isKeyDown);
                 } else if (key == enterKey) {
                     
                     nk_input_key(nuklear_context, NK_KEY_ENTER, isKeyDown);

@@ -7818,6 +7818,9 @@ nk_input_glyph(struct nk_context *ctx, const nk_glyph glyph)
             NK_INPUT_MAX - in->keyboard.text_len);
         in->keyboard.text_len += len;
     }
+
+    // in->keyboard.keys[key].clicked++;
+    // in->keyboard.keys[key].down = down;
 }
 NK_API void
 nk_input_char(struct nk_context *ctx, char c)
@@ -15643,6 +15646,7 @@ nk_textedit_clamp(struct nk_text_edit *state)
 NK_API void
 nk_textedit_delete(struct nk_text_edit *state, short where, short len)
 {
+
     /* delete characters while updating undo */
     nk_textedit_makeundo_delete(state, where, len);
     nk_str_delete_runes(&state->string, where, len);
@@ -16046,8 +16050,9 @@ retry:
             nk_textedit_delete_selection(state);
         else {
             short n = state->string.len;
-            if (state->cursor < n)
+            if (state->cursor < n) {
                 nk_textedit_delete(state, state->cursor, 1);
+            }
          }
          state->has_preferred_x = 0;
          break;
@@ -16706,18 +16711,29 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             cursor_follow = nk_true;
         }
 
-        {short i; /* keyboard input */
-        short old_mode = edit->mode;
-        for (i = 0; i < NK_KEY_MAX; ++i) {
-            if (i == NK_KEY_ENTER || i == NK_KEY_TAB) continue; /* special case */
-            if (nk_input_is_key_pressed(in, (enum nk_keys)i)) {
-                nk_textedit_key(edit, (enum nk_keys)i, shift_mod, font, row_height);
-                cursor_follow = nk_true;
+        { /* keyboard input */
+            short i;
+            short old_mode = edit->mode;
+            for (i = 0; i < NK_KEY_MAX; ++i) {
+
+                if (i == NK_KEY_ENTER || i == NK_KEY_TAB) {
+
+                    continue; /* special case */
+                }
+
+                if (nk_input_is_key_pressed(in, (enum nk_keys)i)) {
+
+                    nk_textedit_key(edit, (enum nk_keys)i, shift_mod, font, row_height);
+                    cursor_follow = nk_true;
+                    in->keyboard.keys[(enum nk_keys)i].down = nk_false;
+                    in->keyboard.keys[(enum nk_keys)i].clicked--;
+                }
+            }
+
+            if (old_mode != edit->mode) {
+                in->keyboard.text_len = 0;
             }
         }
-        if (old_mode != edit->mode) {
-            in->keyboard.text_len = 0;
-        }}
 
         /* text input */
         edit->filter = filter;
