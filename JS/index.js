@@ -437,7 +437,7 @@ class iMessageGraphClientClass {
 
     try {
 
-      message = message.replaceAll('"', '')
+      message = encodeURIComponent(message)
 
       result = await client.query({
         query: gql`query sendMessage {
@@ -457,7 +457,9 @@ class iMessageGraphClientClass {
 
     let messages = result.data.sendMessage
 
-    return splitMessages(messages)
+    storedArgsAndResults.getMessages.output = splitMessages(messages)
+
+    return storedArgsAndResults.getMessages.output
   }
 
   async getChats () {
@@ -628,10 +630,10 @@ class iMessageClient {
         return
       }
 
-      // if (DEBUG) {
+      if (DEBUG) {
 
         console.log(`${intervalDate}: running...`)
-      // }
+      }
 
       try {
     
@@ -651,10 +653,10 @@ class iMessageClient {
         console.log(error)
       }
     
-      // if (DEBUG) {
+      if (DEBUG) {
 
         console.log(`${intervalDate}: complete!`)
-      // }
+      }
     }, 3000)
   }
 
@@ -687,9 +689,11 @@ class iMessageClient {
 
   async sendMessage (chatId, message) {
 
-    console.log(`iMessageClient.sendMessage`)
+    console.log(`iMessageClient.sendMessage(${chatId}, ${message})`)
 
-    return await iMessageGraphClient.sendMessage(chatId, message)
+    const messages = await iMessageGraphClient.sendMessage(chatId, message)
+
+    return messages
   }
 
   async getChats () {

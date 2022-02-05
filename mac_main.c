@@ -163,7 +163,7 @@ int main()
 
     coprocessorLoaded = 1;
 
-    EventLoop(ctx); /* call the main event loop */
+    EventLoop(ctx);
 
     return 0;
 }
@@ -249,14 +249,14 @@ void EventLoop(struct nk_context *ctx)
                 GlobalToLocal(&tempPoint);
 
                 if (!beganInput) {
+
                     nk_input_begin(ctx);
+                    beganInput = true;
                 }
 
                 nk_input_motion(ctx, tempPoint.h, tempPoint.v);
 
                 firstOrMouseMove = true;
-                beganInput = true;
-
                 mouse_x = tempPoint.h;
                 mouse_y = tempPoint.v;
 
@@ -366,12 +366,12 @@ void EventLoop(struct nk_context *ctx)
             writeSerialPortDebug(boutRefNum, "nk_input_render complete");
         #endif
 
-
+        // again, don't do this
         // #ifdef PROFILING
         //     PROFILE_END("eventloop");
         // #endif
     } while ( true );	/* loop forever; we quit via ExitToShell */
-} /*EventLoop*/
+}
 
 
 /* Do the right thing for an event. Determine what kind of event it is, and call
