@@ -12,4 +12,6 @@ void callEvalOnCoprocessor(char* toEval, char* output);
 
 void wait(float whatever);
 
+char *strtokm(char *str, const char *delim);
+
 OSErr closeSerialPort();

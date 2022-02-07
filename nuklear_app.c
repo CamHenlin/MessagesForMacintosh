@@ -260,7 +260,7 @@ void getChatCounts() {
         int chatCount = 0;
         char *(*chats[16])[64];
 
-        chatCount = strsplit(tempChatCountFunctionResponse, chats, ",");
+        chatCount = strsplit(tempChatCountFunctionResponse, (char **)chats, ",");
 
         for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
 
@@ -284,7 +284,7 @@ void getChatCounts() {
             int results = 0;
             char *(*chatUpdate[2])[64];
 
-            results = strsplit(chats[chatLoopCounter], chatUpdate, ":::");
+            results = strsplit((char *)chats[chatLoopCounter], (char **)chatUpdate, ":::");
 
             if (results != 2) {
 
@@ -306,7 +306,7 @@ void getChatCounts() {
                 continue;
             }
 
-            short count = atoi(chatUpdate[1]);
+            short count = atoi((char *)chatUpdate[1]);
 
             #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                 char x[255];
@@ -324,7 +324,7 @@ void getChatCounts() {
                     int updateResults = 0;
                     char *(*updatePieces[2])[64];
 
-                    updateResults = strsplit(chatName, updatePieces, " new) ");
+                    updateResults = strsplit(chatName, (char **)updatePieces, " new) ");
 
                     if (updateResults != 2) {
 
@@ -344,35 +344,35 @@ void getChatCounts() {
                         continue;
                     }
 
-                    if (prefix(updatePieces[1], chatUpdate[0])) {
+                    if (prefix((char *)updatePieces[1], (char *)chatUpdate[0])) {
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "match1");
                             writeSerialPortDebug(boutRefNum, chatUpdate[0]);
                         #endif
 
-                        if (count == 0 || !strcmp(activeChat, chatUpdate[0])) {
+                        if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
 
-                            sprintf(chatFriendlyNames[i], "%s", chatUpdate[0]);
+                            sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
                         } else {
 
-                            sprintf(chatFriendlyNames[i], "(%d new) %s", count, chatUpdate[0]);
+                            sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
                         }
                         break;
                     }
-                } else if (prefix(chatFriendlyNames[i], chatUpdate[0])) {
+                } else if (prefix(chatFriendlyNames[i], (char *)chatUpdate[0])) {
 
                     #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                         writeSerialPortDebug(boutRefNum, "match2");
                         writeSerialPortDebug(boutRefNum, chatUpdate[0]);
                     #endif
 
-                    if (count == 0 || !strcmp(activeChat, chatUpdate[0])) {
+                    if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
 
-                        sprintf(chatFriendlyNames[i], "%s", chatUpdate[0]);
+                        sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
                     } else {
 
-                        sprintf(chatFriendlyNames[i], "(%d new) %s", count, chatUpdate[0]);
+                        sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
                     }
                     break;
                 }
