@@ -98,17 +98,17 @@ void setupSerialPort(const char *name) {
 #define PRINTER_PORT_OUT "\p.BOut"
 #define PRINTER_PORT_IN  "\p.BIn"
 
-    const char* serialPortOutputName = "";
-    const char* serialPortInputName = "";
+    const unsigned char* serialPortOutputName = "\p";
+    const unsigned char* serialPortInputName = "\p";
 
     if (strcmp (name, "modem") == 0) {
 
-        serialPortOutputName = MODEM_PORT_OUT;
-        serialPortInputName = MODEM_PORT_IN;
+        serialPortOutputName = (const unsigned char *)MODEM_PORT_OUT;
+        serialPortInputName = (const unsigned char *)MODEM_PORT_IN;
     } else if (strcmp (name, "printer") == 0) {
 
-        serialPortOutputName = PRINTER_PORT_OUT;
-        serialPortInputName = MODEM_PORT_IN;
+        serialPortOutputName = (const unsigned char *)PRINTER_PORT_OUT;
+        serialPortInputName = (const unsigned char *)MODEM_PORT_IN;
     } else {
 
         return;
@@ -220,7 +220,7 @@ void readSerialPort(char* output) {
 
             char *errorMessage = "TIMEOUT_ERROR";
 
-            strncat(output, errorMessage, strlen(errorMessage));
+            strncat(output, errorMessage, strlen(output) - 1);
 
             // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
             memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);
@@ -241,7 +241,7 @@ void readSerialPort(char* output) {
             if (DEBUGGING) {
 
                 char debugMessage[100];
-                sprintf(debugMessage, "receive loop: byteCount: %d, lastByteCount: %d\n", byteCount, lastByteCount);
+                sprintf(debugMessage, "receive loop: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
                 printf(debugMessage);
             }
 
@@ -264,7 +264,7 @@ void readSerialPort(char* output) {
                 if (DEBUGGING) {
 
                     char debugMessage[100];
-                    sprintf(debugMessage, "receive loop setting last doByteCountsMatch to true: byteCount: %d, lastByteCount: %d\n", byteCount, lastByteCount);
+                    sprintf(debugMessage, "receive loop setting last doByteCountsMatch to true: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
                     printf(debugMessage);
                 }
 
@@ -275,7 +275,7 @@ void readSerialPort(char* output) {
         if (DEBUGGING) {
 
             char debugMessage[100];
-            sprintf(debugMessage, "receive loop complete: byteCount: %d, lastByteCount: %d\n", byteCount, lastByteCount);
+            sprintf(debugMessage, "receive loop complete: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
             printf(debugMessage);
         }
 
@@ -304,7 +304,7 @@ void readSerialPort(char* output) {
                 char *debugOutput;
                 char tempString[MAX_RECEIVE_SIZE];
                 strncat(tempString, tempOutput, totalByteCount);
-                sprintf(debugOutput, "\n'%d'\n", strlen(tempString));
+                sprintf(debugOutput, "\n'%ld'\n", strlen(tempString));
                 printf(debugOutput);
                 printf("\ndone with output\n");
                 printf("\n");
@@ -453,12 +453,19 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
                     printf("setting output to token:\n");
                     printf(token);
                     char *debugOutput;
-                    sprintf(debugOutput, "\n'%d'\n", strlen(token));
+                    sprintf(debugOutput, "\n'%ld'\n", strlen(token));
                     printf(debugOutput);
                     printf("\ndone with output\n");
                 }
 
-                strncat(output, token, strlen(token) - 6); // the -6 here is to drop the ;;@@&& off the end of the response
+                int lengthWithoutControlChars = strlen(token) - 6;
+
+                if (strlen(output) - 1 < lengthWithoutControlChars) {
+
+                    lengthWithoutControlChars = strlen(output) - 1;
+                }
+
+                strncat(output, token, lengthWithoutControlChars); // drop the ;;@@&& off the end of the response
                 
                 return NULL;
 
@@ -508,7 +515,7 @@ void writeToCoprocessor(char* operation, char* operand) {
 
 // must be called after writeToCoprocessor and before other writeToCoprocessor
 // operations because we depend on the location of call_counter
-char* getReturnValueFromResponse(char *response, char *operation, char *output) {
+void getReturnValueFromResponse(char *response, char *operation, char *output) {
     
     if (DEBUGGING) {
         

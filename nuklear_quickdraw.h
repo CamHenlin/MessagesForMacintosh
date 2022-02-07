@@ -402,7 +402,7 @@ static short nk_quickdraw_font_get_text_width(nk_handle handle, short height, co
 
     for (short i = 0; i < len; i++) {
 
-        width += widthFor12ptFont[text[i]];
+        width += widthFor12ptFont[(int)text[i]];
     }
 
     return width;

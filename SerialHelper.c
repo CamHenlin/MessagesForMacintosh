@@ -22,14 +22,14 @@ OSErr writeSerialPortDebug(short refNum, const char* str)
     // OSErr err;
     // return err;
     
-    const char* nameStr = "";
+    const unsigned char* nameStr = "\p";
     switch (refNum)
     {
         case aoutRefNum:
-            nameStr = MODEM_PORT_OUT;
+            nameStr = (const unsigned char*)MODEM_PORT_OUT;
             break;
         case boutRefNum:
-            nameStr = PRINTER_PORT_OUT;
+            nameStr = (const unsigned char*)PRINTER_PORT_OUT;
             break;   
             
         default:

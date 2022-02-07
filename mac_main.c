@@ -181,6 +181,7 @@ void EventLoop(struct nk_context *ctx)
     int lastMouseVPos = 0;
     int lastUpdatedTickCountMessagesInChat = 0;
     int lastUpdatedTickCountChatCounts = 0;
+    Boolean gotNewMessages = false;
 
     do {
 
@@ -196,10 +197,14 @@ void EventLoop(struct nk_context *ctx)
             ShowCursor();
         }
 
+        gotNewMessages = false;
+
         // check for new stuff every 10 sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
         // new chat lookups
         if (TickCount() - lastUpdatedTickCountMessagesInChat > 600) {
+
+            gotNewMessages = true;
 
             // writeSerialPortDebug(boutRefNum, "update by tick count");
             lastUpdatedTickCountMessagesInChat = TickCount();
@@ -213,7 +218,7 @@ void EventLoop(struct nk_context *ctx)
 
         // this should be out of sync with the counter above it so that we dont end up making
         // two coprocessor calls on one event loop iteration
-        if (TickCount() - lastUpdatedTickCountChatCounts > 300) {
+        if (!gotNewMessages && TickCount() - lastUpdatedTickCountChatCounts > 300) {
 
             // writeSerialPortDebug(boutRefNum, "update by tick count");
             lastUpdatedTickCountChatCounts = TickCount();
@@ -632,7 +637,7 @@ void DoMenuCommand(menuResult)
 {
     short		menuID;				/* the resource ID of the selected menu */
     short		menuItem;			/* the item number of the selected menu */
-    short		itemHit;
+    // short		itemHit;
     // Str255		daName;
     // short		daRefNum;
     // Boolean		handledByDA;
@@ -644,7 +649,7 @@ void DoMenuCommand(menuResult)
             switch ( menuItem ) {
                 // case iAbout:		/* bring up alert for About */
                 default:
-                    itemHit = Alert(rAboutAlert, nil);
+                    // itemHit = Alert(rAboutAlert, nil);
                     break;
 
                 /*
@@ -689,7 +694,7 @@ void DoMenuCommand(menuResult)
         case mHelp:
             switch ( menuItem ) {
                 case iQuickHelp:
-                    itemHit = Alert(rAboutAlert, nil);                        
+                    // itemHit = Alert(rAboutAlert, nil);                        
                     break;
                 case iUserGuide:
                 {
@@ -875,9 +880,9 @@ Boolean TrapAvailable(tNumber,tType)
 } /*TrapAvailable*/
 
 void AlertUser() {
-    short itemHit;
+    // short itemHit;
 
     SetCursor(&qd.arrow);
-    itemHit = Alert(rUserAlert, nil);
+    // itemHit = Alert(rUserAlert, nil);
     ExitToShell();
 } /* AlertUser */
