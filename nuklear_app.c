@@ -1,8 +1,9 @@
 // TODO: 
 // - test on physical, bug fixes, write blog posts
 
-#define WINDOW_WIDTH 510
-#define WINDOW_HEIGHT 302
+// {42, 4, 336, 506}
+#define WINDOW_WIDTH 502
+#define WINDOW_HEIGHT 294
 
 #define NK_ZERO_COMMAND_MEMORY
 #define NK_INCLUDE_FIXED_TYPES
@@ -605,7 +606,7 @@ static void nuklearApp(struct nk_context *ctx) {
         // bottom text input
         nk_layout_row_begin(ctx, NK_STATIC, 28, 1);
         {
-            nk_layout_row_push(ctx, 320);
+            nk_layout_row_push(ctx, 312);
 
             short edit_return_value = nk_edit_string(ctx, NK_EDIT_FIELD|NK_EDIT_SIG_ENTER, box_input_buffer, &box_input_len, 2048, nk_filter_default);
 
@@ -622,7 +623,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
     if ((forceRedraw) && nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_NO_SCROLLBAR)) {
 
-        nk_layout_row_begin(ctx, NK_STATIC, 12, 1);
+        nk_layout_row_begin(ctx, NK_STATIC, 11, 1);
         {
 
             for (int i = 0; i < activeMessageCounter; i++) {

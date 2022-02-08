@@ -637,7 +637,7 @@ void DoMenuCommand(menuResult)
 {
     short		menuID;				/* the resource ID of the selected menu */
     short		menuItem;			/* the item number of the selected menu */
-    // short		itemHit;
+    //short		itemHit;
     // Str255		daName;
     // short		daRefNum;
     // Boolean		handledByDA;
@@ -647,9 +647,10 @@ void DoMenuCommand(menuResult)
     switch ( menuID ) {
         case mApple:
             switch ( menuItem ) {
-                // case iAbout:		/* bring up alert for About */
+                case iAbout:		/* bring up alert for About */
+                    Alert(rAboutAlert, nil);
+                    break;
                 default:
-                    // itemHit = Alert(rAboutAlert, nil);
                     break;
 
                 /*

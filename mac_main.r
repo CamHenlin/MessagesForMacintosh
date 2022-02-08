@@ -257,7 +257,7 @@ resource 'DITL' (rUserAlert, purgeable) {
 
 
 resource 'WIND' (rWindow, preload, purgeable) {
-	{39, 1, 341, 511},
+	{42, 4, 336, 506},
 	zoomDocProc, visible, noGoAway, 0x0, "Messages",
     centerMainScreen       // Where to show the alert
 };

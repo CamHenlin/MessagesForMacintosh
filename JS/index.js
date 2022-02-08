@@ -7,6 +7,7 @@ const gql = require('graphql-tag')
 // TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your modern Mac
 const TEST_MODE = false
 const DEBUG = false
+let lastMessageFromSerialPortTime
 
 const defaultOptions = {
   watchQuery: {
@@ -304,11 +305,8 @@ let TEST_MESSAGES = [
   {chatter: `me`, text: `some cool old thing I said earlier`},
   {chatter: `friend 2`, text: `this message is not relevant to the conversation! not at all :(`},
   {chatter: `friend 1`, text: `i watch star wars in reverse order`},
-  {chatter: `me`, text: `https://github.com/CamHenlin/MessagesForMacintosh https://github.com/CamHenlin/MessagesForMacintosh`},
-  {chatter: `friend 3`, text: `i'm just catching up`},
-  {chatter: `friend 3`, text: `nobody chat for a minute`},
-  {chatter: `friend 2`, text: `hang on`},
-  {chatter: `friend 1`, text: `no`}
+  {chatter: `me`, text: `https://github.com/CamHenlin/MessagesForMacintosh`},
+  {chatter: `friend 3`, text: `old computers are fun`}
 ]
 
 const TEST_CHATS = [
@@ -317,15 +315,24 @@ const TEST_CHATS = [
   {friendlyName: `friend 4`, name: `friend 4`},
   {friendlyName: `boss`, name: `boss`},
   {friendlyName: `friend 3`, name: `friend 3`},
-  {friendlyName: `restaurant`, name: `restaurant`}
+  {friendlyName: `restaurant`, name: `restaurant`},
+  {friendlyName: `work`, name: `work`}
 ]
 
 if (TEST_MODE) {
 
-  setInterval(() => {
+  // setInterval(() => {
 
-    TEST_MESSAGES = TEST_MESSAGES.concat({chatter: `friend 1`, text: Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 64)})
-  }, 10000)
+  //   let chatWords = Math.floor(Math.random() * 20) + 1
+  //   let chatMessage = ``
+
+  //   for (let chatWord = 0; chatWord < chatWords; chatWord++) {
+
+  //     chatMessage = `${chatMessage} ${Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, Math.floor(Math.random() * 16) + 1)}`
+  //   }
+
+  //   TEST_MESSAGES = TEST_MESSAGES.concat({chatter: `friend 1`, text: chatMessage})
+  // }, 10000)
 }
 
 let storedArgsAndResults = {
@@ -361,7 +368,16 @@ class iMessageGraphClientClass {
 
     if (TEST_MODE) {
 
-      return splitMessages(TEST_MESSAGES)
+      let currentLastMessageOutput = `${lastMessageOutput}`
+
+      storedArgsAndResults.getMessages.output = splitMessages(TEST_MESSAGES)
+
+      if (!hasNewMessages && fromInterval) {
+
+        hasNewMessages = currentLastMessageOutput !== storedArgsAndResults.getMessages.output
+      }
+
+      return storedArgsAndResults.getMessages.output
     }
 
     if (DEBUG) {
@@ -430,7 +446,9 @@ class iMessageGraphClientClass {
 
       TEST_MESSAGES = TEST_MESSAGES.concat({chatter: `me`, text: message})
 
-      return splitMessages(TEST_MESSAGES)
+      storedArgsAndResults.getMessages.output = splitMessages(TEST_MESSAGES)
+
+      return storedArgsAndResults.getMessages.output
     }
 
     let result
@@ -472,7 +490,9 @@ class iMessageGraphClientClass {
 
     if (TEST_MODE) {
 
-      return parseChatsToFriendlyNameString(TEST_CHATS)
+      storedArgsAndResults.getChats.output = parseChatsToFriendlyNameString(TEST_CHATS)
+
+      return
     }
 
     let result
@@ -517,7 +537,9 @@ class iMessageGraphClientClass {
 
     if (TEST_MODE) {
 
-      return parseChatsToFriendlyNameString(TEST_CHATS)
+      storedArgsAndResults.getChatCounts.output = parseChatsToFriendlyNameString(TEST_CHATS)
+
+      return
     }
 
     let result
@@ -617,7 +639,7 @@ class iMessageClient {
   constructor () {
 
     // kick off an update interval
-    setInterval(async () => {
+    const updateInterval = setInterval(async () => {
 
       let intervalDate = new Date().toISOString()
 
@@ -627,6 +649,15 @@ class iMessageClient {
     
         console.log(`${intervalDate}: can't start yet`)
     
+        return
+      }
+
+      if (new Date() - lastMessageFromSerialPortTime > 30000) {
+
+        console.log(`${intervalDate}: no serial comms for 30 seconds, unloading interval`)
+
+        clearInterval(updateInterval)
+
         return
       }
 
@@ -662,6 +693,8 @@ class iMessageClient {
 
   async getMessages (chatId, page) {
 
+    lastMessageFromSerialPortTime = new Date()
+
     console.log(`iMessageClient.getMessages`)
 
     if (storedArgsAndResults.getMessages.args.chatId !== chatId || storedArgsAndResults.getMessages.args.page !== page) {
@@ -677,6 +710,8 @@ class iMessageClient {
 
   async hasNewMessagesInChat (chatId) {
 
+    lastMessageFromSerialPortTime = new Date()
+
     console.log(`iMessageClient.hasNewMessagesInChat`)
 
     let returnValue = await iMessageGraphClient.hasNewMessagesInChat(chatId)
@@ -689,6 +724,8 @@ class iMessageClient {
 
   async sendMessage (chatId, message) {
 
+    lastMessageFromSerialPortTime = new Date()
+
     console.log(`iMessageClient.sendMessage(${chatId}, ${message})`)
 
     const messages = await iMessageGraphClient.sendMessage(chatId, message)
@@ -697,6 +734,8 @@ class iMessageClient {
   }
 
   async getChats () {
+
+    lastMessageFromSerialPortTime = new Date()
 
     console.log(`iMessageClient.getChats`)
     
@@ -712,6 +751,8 @@ class iMessageClient {
   }
 
   getChatCounts () {
+
+    lastMessageFromSerialPortTime = new Date()
 
     console.log(`iMessageClient.getChatCounts, prestored return:`)
     console.log(storedArgsAndResults.getChatCounts.output)
