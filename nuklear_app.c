@@ -21,6 +21,10 @@
 // based on https://github.com/jwerle/strsplit.c -- cleaned up and modified to use strtokm rather than strtok
 int strsplit (const char *str, char *parts[], const char *delimiter) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: strsplit");
+    #endif
+
   char *pch;
   int i = 0;
   char *copy = NULL;
@@ -80,6 +84,10 @@ int strsplit (const char *str, char *parts[], const char *delimiter) {
 }
 
 void aFailed(char *file, int line) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: aFailed");
+    #endif
     
     MoveTo(10, 10);
     char textoutput[255];
@@ -135,6 +143,10 @@ void refreshNuklearApp(Boolean blankInput);
 
 void getMessagesFromjsFunctionResponse() {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getMessagesFromjsFunctionResponse");
+    #endif
+
     for (int i = 0; i < MAX_CHAT_MESSAGES; i++) {
 
         memset(&activeChatMessages[i], '\0', 2048);
@@ -157,6 +169,10 @@ void getMessagesFromjsFunctionResponse() {
 
 // function to send messages in chat
 void sendMessage() {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendMessage");
+    #endif
 
     writeSerialPortDebug(boutRefNum, "sendMessage!");
 
@@ -181,6 +197,10 @@ void sendMessage() {
 // interval is set by the event loop in mac_main
 void getChats() {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getChats");
+    #endif
+
     writeSerialPortDebug(boutRefNum, "getChats!");
 
     callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
@@ -197,6 +217,10 @@ void getChats() {
 }
 
 void sendIPAddressToCoprocessor() {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendIPAddressToCoprocessor");
+    #endif
 
     writeSerialPortDebug(boutRefNum, "sendIPAddressToCoprocessor!");
 
@@ -217,6 +241,10 @@ void sendIPAddressToCoprocessor() {
 // 	 figure out pagination?? button on the top that says "get previous chats"?
 void getMessages(char *thread, int page) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getMessages");
+    #endif
+
     writeSerialPortDebug(boutRefNum, "getMessages!");
 
     char output[68];
@@ -234,10 +262,18 @@ void getMessages(char *thread, int page) {
 
 // from https://stackoverflow.com/a/4770992
 Boolean prefix(const char *pre, const char *str) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: prefix");
+    #endif
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
 void getChatCounts() {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getChatCounts");
+    #endif
 
     writeSerialPortDebug(boutRefNum, "getChatCounts!");
 
@@ -392,6 +428,10 @@ void getChatCounts() {
 
 void getHasNewMessagesInChat(char *thread) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getHasNewMessagesInChat");
+    #endif
+
     writeSerialPortDebug(boutRefNum, "getHasNewMessagesInChat!");
 
     char output[68];
@@ -421,6 +461,10 @@ Boolean chatWindowCollision;
 Boolean messageWindowCollision;
 
 Boolean checkCollision(struct nk_rect window) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: checkCollision");
+    #endif
     // writeSerialPortDebug(boutRefNum, "checkCollision!");
 
     // Boolean testout = (window.x < mouse_x &&
@@ -441,6 +485,10 @@ Boolean checkCollision(struct nk_rect window) {
 
 // UI setup and event handling goes here
 static void nuklearApp(struct nk_context *ctx) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nuklearApp");
+    #endif
 
     // prompt the user for the graphql instance
     if (!coprocessorLoaded) {
@@ -476,10 +524,10 @@ static void nuklearApp(struct nk_context *ctx) {
             {
 
                 nk_layout_row_push(ctx, WINDOW_WIDTH / 2 - 100);
-                nk_edit_string(ctx, NK_EDIT_SIMPLE, ip_input_buffer, &ip_input_buffer_len, 255, nk_filter_default);
+                short ip_edit_return_value = nk_edit_string(ctx, NK_EDIT_ALWAYS_INSERT_MODE|NK_EDIT_GOTO_END_ON_ACTIVATE, ip_input_buffer, &ip_input_buffer_len, 255, nk_filter_default);
                 nk_layout_row_push(ctx, 55);
 
-                if (nk_button_label(ctx, "save")) {
+                if (nk_button_label(ctx, "save") || ip_edit_return_value == 17) {
                 
                     ipAddressSet = 1;
                     forceRedraw = 2;
@@ -489,6 +537,12 @@ static void nuklearApp(struct nk_context *ctx) {
             nk_layout_row_end(ctx);
 
             nk_end(ctx);
+        }
+
+        // eliminate the initially-set force-redraw
+        if (forceRedraw) {
+            
+            forceRedraw--;
         }
 
         return;
@@ -608,6 +662,8 @@ static void nuklearApp(struct nk_context *ctx) {
         {
             nk_layout_row_push(ctx, 312);
 
+            nk_edit_focus(ctx, NK_EDIT_ALWAYS_INSERT_MODE);
+
             short edit_return_value = nk_edit_string(ctx, NK_EDIT_FIELD|NK_EDIT_SIG_ENTER, box_input_buffer, &box_input_len, 2048, nk_filter_default);
 
             // this is the enter key, obviously
@@ -648,6 +704,10 @@ static void nuklearApp(struct nk_context *ctx) {
 
 void refreshNuklearApp(Boolean blankInput) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: refreshNuklearApp");
+    #endif
+
     nk_input_begin(ctx);
 
     if (blankInput) {
@@ -663,6 +723,10 @@ void refreshNuklearApp(Boolean blankInput) {
 }
 
 struct nk_context* initializeNuklearApp() {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: initializeNuklearApp");
+    #endif
 
     sprintf(activeChat, "no active chat");
     memset(&chatCountFunctionResponse, '\0', 32767);

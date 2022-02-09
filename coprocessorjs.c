@@ -21,8 +21,11 @@ int call_counter = 0;
 
 // from: https://stackoverflow.com/questions/29847915/implementing-strtok-whose-delimiter-has-more-than-one-character
 // basically multichar delimter strtok
-char *strtokm(char *str, const char *delim)
-{
+char *strtokm(char *str, const char *delim) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: strtokm");
+    #endif
     static char *tok;
     static char *next;
     char *m;
@@ -71,6 +74,10 @@ http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/Devic
 // TODO: handle all OSErr - they are all unhandled at the moment
 void setupPBControlForSerialPort(short serialPortShort) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: setupPBControlForSerialPort");
+    #endif
+
     CntrlParam cb;
     cb.ioCRefNum = serialPortShort; // TODO: this is always 0 - does it matter? should we hard code 0 here? research
     cb.csCode = 8; // TODO: need to look up and document what csCode = 8 means
@@ -93,6 +100,10 @@ void setupPBControlForSerialPort(short serialPortShort) {
 
 
 void setupSerialPort(const char *name) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: setupSerialPort");
+    #endif
 #define MODEM_PORT_OUT   "\p.AOut"
 #define MODEM_PORT_IN    "\p.AIn"
 #define PRINTER_PORT_OUT "\p.BOut"
@@ -162,6 +173,10 @@ void setupSerialPort(const char *name) {
 
 void wait(float timeInSeconds) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: wait");
+    #endif
+
     // from "Inside Macintosh: Macintosh Toolbox Essentials" pg 2-112 
     // You can use the TickCount function to get the current number of ticks (a tick is
     // approximately 1/60 of a second) since the system last started up.
@@ -199,6 +214,10 @@ const int MAX_RECIEVE_LOOP_ITERATIONS = 1000;
 
 // void because this function re-assigns respo
 void readSerialPort(char* output) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: readSerialPort");
+    #endif
 
     if (DEBUGGING) {
 
@@ -325,6 +344,10 @@ void readSerialPort(char* output) {
 
 
 OSErr writeSerialPort(const char* stringToWrite) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: writeSerialPort");
+    #endif
     
     if (DEBUGGING) {
         
@@ -357,6 +380,10 @@ OSErr writeSerialPort(const char* stringToWrite) {
 }
 
 void setupCoprocessor(char *applicationId, const char *serialDeviceName) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: setupCoprocessor");
+    #endif
     
     strcpy(application_id, applicationId);
 
@@ -366,6 +393,10 @@ void setupCoprocessor(char *applicationId, const char *serialDeviceName) {
 }
 
 OSErr closeSerialPort() {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: closeSerialPort");
+    #endif
 
     OSErr err = MacCloseDriver(outgoingSerialPortReference.ioRefNum);
     
@@ -381,6 +412,10 @@ OSErr closeSerialPort() {
 
 // return time is char but this is only for error messages - final param is output variable that will be re-assigned within this function
 char* _getReturnValueFromResponse(char* response, char* application_id, char* call_counter, char* operation, char* output) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: _getReturnValueFromResponse");
+    #endif
     
     if (DEBUGGING) {
         
@@ -483,6 +518,10 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
 }
 
 void writeToCoprocessor(char* operation, char* operand) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: writeToCoprocessor");
+    #endif
     
     if (DEBUGGING) {
         
@@ -516,6 +555,10 @@ void writeToCoprocessor(char* operation, char* operand) {
 // must be called after writeToCoprocessor and before other writeToCoprocessor
 // operations because we depend on the location of call_counter
 void getReturnValueFromResponse(char *response, char *operation, char *output) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getReturnValueFromResponse");
+    #endif
     
     if (DEBUGGING) {
         
@@ -539,6 +582,10 @@ void getReturnValueFromResponse(char *response, char *operation, char *output) {
 // TODO: these should all bubble up and return legible errors
 void sendProgramToCoprocessor(char* program, char *output) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendProgramToCoprocessor");
+    #endif
+
     if (DEBUGGING) {
 
         printf("sendProgramToCoprocessor\n");
@@ -560,6 +607,10 @@ void sendProgramToCoprocessor(char* program, char *output) {
 
 // TODO: this is a function we would want to expose in a library
 void callFunctionOnCoprocessor(char* functionName, char* parameters, char* output) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: callFunctionOnCoprocessor");
+    #endif
     
     if (DEBUGGING) {
 
@@ -594,6 +645,10 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
 
 // TODO: this is a function we would want to expose in a library
 void callEvalOnCoprocessor(char* toEval, char* output) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: callEvalOnCoprocessor");
+    #endif
     
     if (DEBUGGING) {
         

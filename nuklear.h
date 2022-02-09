@@ -7713,6 +7713,9 @@ nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
 NK_API void
 nk_input_begin(struct nk_context *ctx)
 {
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_input_begin");
+    #endif
     short i;
     struct nk_input *in;
     // NK_ASSERT(ctx);
@@ -7733,6 +7736,9 @@ nk_input_begin(struct nk_context *ctx)
 NK_API void
 nk_input_end(struct nk_context *ctx)
 {
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_input_end");
+    #endif
     struct nk_input *in;
     // NK_ASSERT(ctx);
     if (!ctx) return;
@@ -9967,12 +9973,18 @@ NK_API nk_bool
 nk_begin(struct nk_context *ctx, const char *title,
     struct nk_rect bounds, nk_flags flags)
 {
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_begin");
+    #endif
     return nk_begin_titled(ctx, title, title, bounds, flags);
 }
 NK_API nk_bool
 nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
     struct nk_rect bounds, nk_flags flags)
 {
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_begin_titled");
+    #endif
     struct nk_window *win;
     struct nk_style *style;
     nk_hash name_hash;
@@ -10132,6 +10144,10 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
 NK_API void
 nk_end(struct nk_context *ctx)
 {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_end");
+    #endif
     struct nk_panel *layout;
     // NK_ASSERT(ctx);
     // NK_ASSERT(ctx->current && "if this triggers you forgot to call `nk_begin`");

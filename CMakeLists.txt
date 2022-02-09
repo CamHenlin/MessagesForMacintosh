@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set (CMAKE_C_FLAGS "-O3 -Wuninitialized -Wmaybe-uninitialized -mcpu=68000 -mtune=68000 -m68000 -Wall")
+set (CMAKE_C_FLAGS "-Ofast -Wuninitialized -Wmaybe-uninitialized -mcpu=68000 -mtune=68000 -m68000 -Wall")
 
 add_application(MessagesForMacintosh
     SerialHelper.c

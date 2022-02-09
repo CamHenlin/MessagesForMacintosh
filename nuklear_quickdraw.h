@@ -393,6 +393,11 @@ short widthFor12ptFont[128] = {
 // doing this in a "fast" way by using a precomputed table for a 12pt font
 static short nk_quickdraw_font_get_text_width(nk_handle handle, short height, const char *text, short len) {
 
+    // this is going to produce a lot of logging and not a lot of value:
+    // #ifdef DEBUG_FUNCTION_CALLS
+    //     writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_quickdraw_font_get_text_width");
+    // #endif
+
     if (!text || len == 0) {
 
         return 0;
@@ -409,6 +414,10 @@ static short nk_quickdraw_font_get_text_width(nk_handle handle, short height, co
 }
 
 static int _get_text_width(const char *text, int len) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: _get_text_width");
+    #endif
 
     if (!text || len == 0) {
 
@@ -449,6 +458,10 @@ int mostRight = WINDOW_WIDTH;
 
 void updateBounds(int top, int bottom, int left, int right) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: updateBounds");
+    #endif
+
     if (left < mostLeft) {
 
         mostLeft = left;
@@ -475,6 +488,9 @@ void updateBounds(int top, int bottom, int left, int right) {
 #else
     void runDrawCommand(const struct nk_command *cmd) {
 #endif
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: runDrawCommand");
+    #endif
 
     switch (cmd->type) {
 
@@ -1063,6 +1079,10 @@ int currentCalls;
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_quickdraw_render");
+    #endif
+
     currentCalls = 1;
 
     #ifdef PROFILING
@@ -1177,6 +1197,10 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 }
 
 NK_API int nk_quickdraw_handle_event(EventRecord *event, struct nk_context *nuklear_context) { 
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_quickdraw_handle_event");
+    #endif
     // see: inside macintosh: toolbox essentials 2-4
     // and  inside macintosh toolbox essentials 2-79
 

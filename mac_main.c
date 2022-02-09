@@ -24,7 +24,8 @@
 #include "mac_main.h"
 
 // #define MAC_APP_DEBUGGING
-//#define PROFILING 1
+// #define PROFILING 1
+#define DEBUG_FUNCTION_CALLS
 #ifdef PROFILING
 
 OSErr writeSerialPortProfile(const char* str)
@@ -318,6 +319,18 @@ void EventLoop(struct nk_context *ctx)
         // only re-render if there is an event, prevents screen flickering, speeds up app
         if (beganInput || firstOrMouseMove || forceRedraw) {
 
+            if (beganInput) {
+                writeSerialPortDebug(boutRefNum, "beganInput");
+            }
+
+            if (beganInput) {
+                writeSerialPortDebug(boutRefNum, "beganInput");
+            }
+
+            if (forceRedraw) {
+                writeSerialPortDebug(boutRefNum, "forceRedraw");
+            }
+
             #ifdef PROFILING
                 PROFILE_START("nk_input_end");
             #endif
@@ -383,6 +396,9 @@ void EventLoop(struct nk_context *ctx)
  the appropriate routines. */
 
 void DoEvent(EventRecord *event, struct nk_context *ctx) {
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: DoEvent");
+    #endif
 
     short part;
     WindowPtr window;
