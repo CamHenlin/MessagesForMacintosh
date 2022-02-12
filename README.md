@@ -3,6 +3,12 @@ Messages for Macintosh is a software suite for classic Macintosh (System 2.0 thr
 
 ![messages for macintosh](/images/messagesformacintosh.png)
 
+## How to use Messages for Macintosh
+There are two setup guides for Messages for Macintosh:
+
+- [the user-facing setup guide](https://henlin.net/), for users not interested in exploring the development workflow. This is the article you want if you just want to use your old Mac to chat.
+- [the developer-facing setup guide](https://henlin.net/), which explains how to set Messages for Macintosh up in such a way that you can make modifications to its different pieces
+
 ## Technologies
 Messages for Macintosh is built on a lot of technologies. The READMEs of each of these is each worth familiarizing yourself with if you would like to contribute to Messages for Macintosh:
 
@@ -10,12 +16,6 @@ Messages for Macintosh is built on a lot of technologies. The READMEs of each of
 - [Nuklear Quickdraw](https://github.com/CamHenlin/nuklear-quickdraw) - a heavily modified, Macintosh-specific version of [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) allowing a simple way to provide GUI services
 - [CoprocessorJS](https://github.com/CamHenlin/coprocessor.js) - a library that allows us to handle nodejs workloads sent over a serial port
 - [serialperformanceanalyzer](https://github.com/CamHenlin/serialperformanceanalyzer) - used to analyze the performance of many different parts of the application
-
-## How to use Messages for Macintosh
-There are two setup guides for Messages for Macintosh:
-
-- [the user-facing setup guide](https://henlin.net/), for users not interested in exploring the development workflow. This is the article you want if you just want to use your old Mac to chat.
-- [the developer-facing setup guide](https://henlin.net/), which explains how to set Messages for Macintosh up in such a way that you can make modifications to its different pieces
 
 ## Limitations / areas for improvement
 Messages for Macintosh is not perfect. Here are some known limitations and things that could be improved:
