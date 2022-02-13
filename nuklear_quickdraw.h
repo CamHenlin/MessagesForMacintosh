@@ -451,16 +451,16 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file() {
 }
 
 // used for bounds checking
-int mostLeft = 1;
+int mostLeft = WINDOW_WIDTH;
 int mostBottom = 1;
 int mostTop = WINDOW_HEIGHT;
-int mostRight = WINDOW_WIDTH;
+int mostRight = 1;
 
 void updateBounds(int top, int bottom, int left, int right) {
 
-    #ifdef DEBUG_FUNCTION_CALLS
+    // #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: updateBounds");
-    #endif
+    // #endif
 
     if (left < mostLeft) {
 
@@ -481,6 +481,7 @@ void updateBounds(int top, int bottom, int left, int right) {
 
         mostBottom = bottom;
     }
+    writeSerialPortDebug(boutRefNum, "END OF DEBUG_FUNCTION_CALLS: updateBounds");
 }
 
 #ifdef COMMAND_CACHING
@@ -1181,10 +1182,10 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
         CopyBits(&gMainOffScreen.bits->portBits, &window->portBits, &quickDrawRectangle, &quickDrawRectangle, srcCopy, 0L);
 
-        mostLeft = 1;
+        mostLeft = WINDOW_WIDTH;
         mostBottom = 1;
         mostTop = WINDOW_HEIGHT;
-        mostRight = WINDOW_WIDTH;
+        mostRight = 1;
 
         #ifdef PROFILING
             PROFILE_END("copy bits");

@@ -5,7 +5,7 @@ const createHttpLink = require('apollo-link-http').createHttpLink;
 const gql = require('graphql-tag')
 
 // TEST_MODE can be turned on or off to prevent communications with the Apollo iMessage Server running on your modern Mac
-const TEST_MODE = false
+const TEST_MODE = true
 const DEBUG = false
 let lastMessageFromSerialPortTime
 

@@ -181,14 +181,16 @@ void sendMessage() {
 
     memset(&box_input_buffer, '\0', 2048);
     box_input_len = 0;
-    refreshNuklearApp(1);
+
+    // this was an attempt to get the text in the textbox to go away... doesn't really work for a few more redraws
+    // so actually just makes things slower:
+    // refreshNuklearApp(1);
 
     callFunctionOnCoprocessor("sendMessage", output, jsFunctionResponse);
 
     getMessagesFromjsFunctionResponse();
 
-    forceRedraw = 2;
-    firstOrMouseMove = true;
+    forceRedraw = 3;
 
     return;
 }
@@ -205,9 +207,10 @@ void getChats() {
 
     callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
 
-    char * token = (char *)strtokm(jsFunctionResponse, ",");
-    // loop through the string to extract all other tokens
+    char *token = (char *)strtokm(jsFunctionResponse, ",");
+
     while (token != NULL) {
+
         writeSerialPortDebug(boutRefNum, token);
         sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
         token = (char *)strtokm(NULL, ",");
@@ -238,7 +241,7 @@ void sendIPAddressToCoprocessor() {
 
 // set up function to get messages in current chat
 // 	 limit to recent messages 
-// 	 figure out pagination?? button on the top that says "get previous chats"?
+// 	 figure out pagination?? button on the top that says "get previous chats"?, TODO
 void getMessages(char *thread, int page) {
 
     #ifdef DEBUG_FUNCTION_CALLS
@@ -284,123 +287,113 @@ void getChatCounts() {
         writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
     #endif
 
-    if (strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
+    // bail out if the responses ARE equal
+    if (!strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
 
-        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-            writeSerialPortDebug(boutRefNum, "update current chat count");
-            writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
+        writeSerialPortDebug(boutRefNum, "no need to update current chat count");
+        return;
+    }
+
+    //#ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+        writeSerialPortDebug(boutRefNum, "update current chat count");
+        writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
+        writeSerialPortDebug(boutRefNum, previousChatCountFunctionResponse);
+    //#endif
+
+    SysBeep(1);
+
+    strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
+    int chatCount = 0;
+    char *(*chats[16])[64];
+
+    chatCount = strsplit(tempChatCountFunctionResponse, (char **)chats, ",");
+
+    for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
+
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
+            writeSerialPortDebug(boutRefNum, "DUMMY DELETE: update current chat count loop");
+            writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
+        #endif
+    }
+
+    // loop through the string to extract all other tokens
+    for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
+
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
+            writeSerialPortDebug(boutRefNum, "update current chat count loop");
+            writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
         #endif
 
-        SysBeep(1);
+        // chats[chatLoopCounter] should be in format NAME:::COUNT
 
         strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
-        int chatCount = 0;
-        char *(*chats[16])[64];
+        int results = 0;
+        char *(*chatUpdate[2])[64];
 
-        chatCount = strsplit(tempChatCountFunctionResponse, (char **)chats, ",");
+        results = strsplit((char *)chats[chatLoopCounter], (char **)chatUpdate, ":::");
 
-        for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
+        if (results != 2) {
 
             #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
-                writeSerialPortDebug(boutRefNum, "DUMMY DELETE: update current chat count loop");
-                writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
+                char x[255];
+                sprintf(x, "ERROR: chat update mismatch splitting on ':::', expected 2 results, got: %d: %s -- bailing out", results, chats[chatLoopCounter]);
+                writeSerialPortDebug(boutRefNum, x);
+
+                for (int errorResultCounter = 0; errorResultCounter < results; errorResultCounter++) {
+
+                    writeSerialPortDebug(boutRefNum, chatUpdate[errorResultCounter]);
+
+                    char y[255];
+                    sprintf(y, "%d/%d: '%s'", errorResultCounter, results, chatUpdate[errorResultCounter]);
+                    writeSerialPortDebug(boutRefNum, y);
+                }
             #endif
+
+            continue;
         }
 
-        // loop through the string to extract all other tokens
-        for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
+        short count = atoi((char *)chatUpdate[1]);
 
-            #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
-                writeSerialPortDebug(boutRefNum, "update current chat count loop");
-                writeSerialPortDebug(boutRefNum, chats[chatLoopCounter]);
-            #endif
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+            char x[255];
+            sprintf(x, "name: %s, countString: %s, count: %d", chatUpdate[0], chatUpdate[1], count);
+            writeSerialPortDebug(boutRefNum, x);
+        #endif
 
-            // chats[chatLoopCounter] should be in format NAME:::COUNT
+        for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-            strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
-            int results = 0;
-            char *(*chatUpdate[2])[64];
+            if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
 
-            results = strsplit((char *)chats[chatLoopCounter], (char **)chatUpdate, ":::");
+                char chatName[64];
+                sprintf(chatName, "%.63s", chatFriendlyNames[i]);
 
-            if (results != 2) {
+                int updateResults = 0;
+                char *(*updatePieces[2])[64];
 
-                #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING 
-                    char x[255];
-                    sprintf(x, "ERROR: chat update mismatch splitting on ':::', expected 2 results, got: %d: %s -- bailing out", results, chats[chatLoopCounter]);
-                    writeSerialPortDebug(boutRefNum, x);
+                updateResults = strsplit(chatName, (char **)updatePieces, " new) ");
 
-                    for (int errorResultCounter = 0; errorResultCounter < results; errorResultCounter++) {
-
-                        writeSerialPortDebug(boutRefNum, chatUpdate[errorResultCounter]);
-
-                        char y[255];
-                        sprintf(y, "%d/%d: '%s'", errorResultCounter, results, chatUpdate[errorResultCounter]);
-                        writeSerialPortDebug(boutRefNum, y);
-                    }
-                #endif
-
-                continue;
-            }
-
-            short count = atoi((char *)chatUpdate[1]);
-
-            #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-                char x[255];
-                sprintf(x, "name: %s, countString: %s, count: %d", chatUpdate[0], chatUpdate[1], count);
-                writeSerialPortDebug(boutRefNum, x);
-            #endif
-
-            for (int i = 0; i < chatFriendlyNamesCounter; i++) {
-
-                if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
-
-                    char chatName[64];
-                    sprintf(chatName, "%.63s", chatFriendlyNames[i]);
-
-                    int updateResults = 0;
-                    char *(*updatePieces[2])[64];
-
-                    updateResults = strsplit(chatName, (char **)updatePieces, " new) ");
-
-                    if (updateResults != 2) {
-
-                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-                            char x[255];
-                            sprintf(x, "ERROR: individual chat update mismatch splitting on ' new) ', expected 2 results, got: %d: %s -- bailing out", updateResults, chatName);
-                            writeSerialPortDebug(boutRefNum, x);
-
-                            for (int errorResultCounter = 0; errorResultCounter < updateResults; errorResultCounter++) {
-
-                                char y[255];
-                                sprintf(y, "%d/%d: '%s'", errorResultCounter, updateResults, updatePieces[errorResultCounter]);
-                                writeSerialPortDebug(boutRefNum, y);
-                            }
-                        #endif
-
-                        continue;
-                    }
-
-                    if (prefix((char *)updatePieces[1], (char *)chatUpdate[0])) {
-
-                        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-                            writeSerialPortDebug(boutRefNum, "match1");
-                            writeSerialPortDebug(boutRefNum, chatUpdate[0]);
-                        #endif
-
-                        if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
-
-                            sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
-                        } else {
-
-                            sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
-                        }
-                        break;
-                    }
-                } else if (prefix(chatFriendlyNames[i], (char *)chatUpdate[0])) {
+                if (updateResults != 2) {
 
                     #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
-                        writeSerialPortDebug(boutRefNum, "match2");
+                        char x[255];
+                        sprintf(x, "ERROR: individual chat update mismatch splitting on ' new) ', expected 2 results, got: %d: %s -- bailing out", updateResults, chatName);
+                        writeSerialPortDebug(boutRefNum, x);
+
+                        for (int errorResultCounter = 0; errorResultCounter < updateResults; errorResultCounter++) {
+
+                            char y[255];
+                            sprintf(y, "%d/%d: '%s'", errorResultCounter, updateResults, updatePieces[errorResultCounter]);
+                            writeSerialPortDebug(boutRefNum, y);
+                        }
+                    #endif
+
+                    continue;
+                }
+
+                if (prefix((char *)updatePieces[1], (char *)chatUpdate[0])) {
+
+                    #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                        writeSerialPortDebug(boutRefNum, "match1");
                         writeSerialPortDebug(boutRefNum, chatUpdate[0]);
                     #endif
 
@@ -413,15 +406,27 @@ void getChatCounts() {
                     }
                     break;
                 }
+            } else if (prefix(chatFriendlyNames[i], (char *)chatUpdate[0])) {
+
+                #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+                    writeSerialPortDebug(boutRefNum, "match2");
+                    writeSerialPortDebug(boutRefNum, chatUpdate[0]);
+                #endif
+
+                if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
+
+                    sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
+                } else {
+
+                    sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
+                }
+                break;
             }
         }
-
-        strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
-        forceRedraw = 3;
-    } else {
-
-        writeSerialPortDebug(boutRefNum, "no need to update current chat count");
     }
+
+    strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
+    forceRedraw = 3;
 
     return;
 }
@@ -446,9 +451,6 @@ void getHasNewMessagesInChat(char *thread) {
         writeSerialPortDebug(boutRefNum, "update current chat");
         SysBeep(1);
         getMessages(thread, 0);
-
-        // force redraw
-        forceRedraw = 3;
     } else {
 
         writeSerialPortDebug(boutRefNum, "do not update current chat");

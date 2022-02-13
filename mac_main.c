@@ -25,7 +25,7 @@
 
 // #define MAC_APP_DEBUGGING
 // #define PROFILING 1
-#define DEBUG_FUNCTION_CALLS
+// #define DEBUG_FUNCTION_CALLS
 #ifdef PROFILING
 
 OSErr writeSerialPortProfile(const char* str)
@@ -182,7 +182,6 @@ void EventLoop(struct nk_context *ctx)
     int lastMouseVPos = 0;
     int lastUpdatedTickCountMessagesInChat = 0;
     int lastUpdatedTickCountChatCounts = 0;
-    Boolean gotNewMessages = false;
 
     do {
 
@@ -198,17 +197,10 @@ void EventLoop(struct nk_context *ctx)
             ShowCursor();
         }
 
-        gotNewMessages = false;
-
         // check for new stuff every 10 sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
         // new chat lookups
-        if (TickCount() - lastUpdatedTickCountMessagesInChat > 600) {
-
-            gotNewMessages = true;
-
-            // writeSerialPortDebug(boutRefNum, "update by tick count");
-            lastUpdatedTickCountMessagesInChat = TickCount();
+        if (TickCount() - lastUpdatedTickCountMessagesInChat > 300) {
 
             if (strcmp(activeChat, "no active chat")) {
 
@@ -218,8 +210,8 @@ void EventLoop(struct nk_context *ctx)
         } 
 
         // this should be out of sync with the counter above it so that we dont end up making
-        // two coprocessor calls on one event loop iteration
-        if (!gotNewMessages && TickCount() - lastUpdatedTickCountChatCounts > 300) {
+        // two coprocessor calls on one event loop iteratio
+        if (TickCount() - lastUpdatedTickCountChatCounts > 600) {
 
             // writeSerialPortDebug(boutRefNum, "update by tick count");
             lastUpdatedTickCountChatCounts = TickCount();
@@ -318,18 +310,6 @@ void EventLoop(struct nk_context *ctx)
 
         // only re-render if there is an event, prevents screen flickering, speeds up app
         if (beganInput || firstOrMouseMove || forceRedraw) {
-
-            if (beganInput) {
-                writeSerialPortDebug(boutRefNum, "beganInput");
-            }
-
-            if (beganInput) {
-                writeSerialPortDebug(boutRefNum, "beganInput");
-            }
-
-            if (forceRedraw) {
-                writeSerialPortDebug(boutRefNum, "forceRedraw");
-            }
 
             #ifdef PROFILING
                 PROFILE_START("nk_input_end");
