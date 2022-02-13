@@ -202,6 +202,8 @@ void EventLoop(struct nk_context *ctx)
         // new chat lookups
         if (TickCount() - lastUpdatedTickCountMessagesInChat > 300) {
 
+            lastUpdatedTickCountMessagesInChat = TickCount();
+
             if (strcmp(activeChat, "no active chat")) {
 
                 // writeSerialPortDebug(boutRefNum, "check chat");
