@@ -481,7 +481,6 @@ void updateBounds(int top, int bottom, int left, int right) {
 
         mostBottom = bottom;
     }
-    // writeSerialPortDebug(boutRefNum, "END OF DEBUG_FUNCTION_CALLS: updateBounds");
 }
 
 #ifdef COMMAND_CACHING
@@ -505,10 +504,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_SCISSOR: {
 
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_SCISSOR");
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 const struct nk_command_scissor *s = (const struct nk_command_scissor*)cmd;
 
@@ -545,10 +544,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_RECT: {
 
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT");
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-102.html#MARKER-9-372
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-103.html#HEADING103-0
@@ -585,10 +584,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_RECT_FILLED: {
 
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED");
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled *)cmd;
 
@@ -659,13 +658,13 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     char log[255];
 
                     sprintf(log, "NK_COMMAND_TEXT string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
                     writeSerialPortDebug(boutRefNum, log);
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = t->y;
@@ -720,10 +719,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_CIRCLE: {
             
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE");
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 const struct nk_command_circle *c = (const struct nk_command_circle *)cmd;
 
@@ -755,10 +754,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_CIRCLE_FILLED: {
 
-                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE_FILLED");
-                // ADDRESS ERROR DEBUGGING #endif
+                #endif
 
                 const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
 
@@ -1139,6 +1138,8 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         #ifdef COMMAND_CACHING
             writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD");
             if (currentCalls <= lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
+
+                writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD: IN CONDITIONAL");
 
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
