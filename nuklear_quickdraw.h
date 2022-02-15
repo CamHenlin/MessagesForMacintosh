@@ -505,10 +505,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_SCISSOR: {
 
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_SCISSOR");
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 const struct nk_command_scissor *s = (const struct nk_command_scissor*)cmd;
 
@@ -545,10 +545,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_RECT: {
 
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT");
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-102.html#MARKER-9-372
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-103.html#HEADING103-0
@@ -585,10 +585,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_RECT_FILLED: {
 
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED");
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled *)cmd;
 
@@ -659,13 +659,13 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     char log[255];
 
                     sprintf(log, "NK_COMMAND_TEXT string: \"%s\", height: %d, length: %d, x: %d, y: %d, allowCache: %d", t->string, t->height, t->length, t->x, t->y, t->allowCache);
                     writeSerialPortDebug(boutRefNum, log);
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = t->y;
@@ -720,10 +720,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_CIRCLE: {
             
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE");
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 const struct nk_command_circle *c = (const struct nk_command_circle *)cmd;
 
@@ -755,10 +755,10 @@ void updateBounds(int top, int bottom, int left, int right) {
             break;
         case NK_COMMAND_CIRCLE_FILLED: {
 
-                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                // ADDRESS ERROR DEBUGGING #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_CIRCLE_FILLED");
-                #endif
+                // ADDRESS ERROR DEBUGGING #endif
 
                 const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
 

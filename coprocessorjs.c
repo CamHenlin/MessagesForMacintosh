@@ -271,13 +271,15 @@ void readSerialPort(char* output) {
             serGetBufStatus = SerGetBuf(incomingSerialPortReference.ioRefNum, &byteCount);
 
             if (serGetBufStatus != 0 && PRINT_ERRORS) {
-                
+
                 printf("potential problem with serGetBufStatus:\n");
                 char debugMessage[100];
                 sprintf(debugMessage, "serGetBufStatus: %d\n", serGetBufStatus);
                 printf(debugMessage);
             }
 
+            // basically, we're stating that if we have a stall for 2 iterations of the loop where the byteCounts are matching, then
+            // we assume we are no longer receiving communication. could have bugs? ie, we could be "done" reading before the data is all written
             if (byteCount == lastByteCount && byteCount != 0 && lastByteCount != 0) {
 
                 if (DEBUGGING) {
@@ -310,11 +312,11 @@ void readSerialPort(char* output) {
         }
 
         memcpy(tempOutput, GlobalSerialInputBuffer, byteCount);
-        
+
         totalByteCount += byteCount;
 
         if (strstr(tempOutput, ";;@@&&") != NULL) {
-            
+
             if (DEBUGGING) {
 
                 printf("done building temp output\n");
@@ -335,6 +337,9 @@ void readSerialPort(char* output) {
 
     // attach the gathered up output from the buffer to the output variable
     strncat(output, tempOutput, totalByteCount);
+
+    writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort complete, output:");
+    writeSerialPortDebug(boutRefNum, output);
 
     // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
     memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);

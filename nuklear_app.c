@@ -294,10 +294,28 @@ void getChatCounts() {
         return;
     }
 
+    strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
+
     //#ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
         writeSerialPortDebug(boutRefNum, "update current chat count");
         writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
         writeSerialPortDebug(boutRefNum, previousChatCountFunctionResponse);
+
+        // update current chat count
+        // 1
+        // wrangled byn
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
+        // 2
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shin
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
+        // 3
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,n
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
+        // 4
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
+        // wrangled by the knockers:::0,Aaron Sunderland:::0,n
+
+
     //#endif
 
     SysBeep(1);
@@ -425,7 +443,6 @@ void getChatCounts() {
         }
     }
 
-    strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
     forceRedraw = 3;
 
     return;
@@ -669,7 +686,7 @@ static void nuklearApp(struct nk_context *ctx) {
             short edit_return_value = nk_edit_string(ctx, NK_EDIT_FIELD|NK_EDIT_SIG_ENTER, box_input_buffer, &box_input_len, 2048, nk_filter_default);
 
             // this is the enter key, obviously
-            if (edit_return_value == 17) {
+            if (edit_return_value == 17 && box_input_len > 0) {
 
                 sendMessage();
             }

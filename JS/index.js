@@ -626,6 +626,7 @@ class iMessageGraphClientClass {
     console.log(`return success`)
 
     canStart = true
+    lastMessageFromSerialPortTime = new Date()
 
     return `success`
   }
@@ -637,6 +638,8 @@ let iMessageGraphClient = new iMessageGraphClientClass()
 class iMessageClient {
 
   constructor () {
+
+    canStart = false
 
     // kick off an update interval
     const updateInterval = setInterval(async () => {
@@ -652,9 +655,9 @@ class iMessageClient {
         return
       }
 
-      if (new Date() - lastMessageFromSerialPortTime > 30000) {
+      if (new Date() - lastMessageFromSerialPortTime > 300000) {
 
-        console.log(`${intervalDate}: no serial comms for 30 seconds, unloading interval`)
+        console.log(`${intervalDate}: no serial comms for 300 seconds, unloading interval`)
 
         clearInterval(updateInterval)
 

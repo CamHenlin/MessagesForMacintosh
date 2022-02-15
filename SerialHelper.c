@@ -9,8 +9,11 @@ Serial implementation:
 https://opensource.apple.com/source/gdb/gdb-186.1/src/gdb/ser-mac.c?txt 
 http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/Devices/Devices-320.html
 */ 
-OSErr writeSerialPortDebug(short refNum, const char* str)
-{
+
+short serialPort;
+
+OSErr setupDebugSerialPort(short refNum) {
+
     #ifdef PROFILING
 
     // we need to bail on profiling, because the profile watcher will be reading this serial port
@@ -33,21 +36,37 @@ OSErr writeSerialPortDebug(short refNum, const char* str)
             break;   
             
         default:
-            return -1;        
+            return -1;
     }
     
     OSErr err;
-    short serialPort = 0;
+    serialPort = 0;
     err = OpenDriver(nameStr, &serialPort);    
-    if (err < 0) return err;    
-    
+    if (err < 0) return err;
+
     CntrlParam cb2;
     cb2.ioCRefNum = serialPort;
     cb2.csCode = 8;
     cb2.csParam[0] = stop10 | noParity | data8 | baud9600;
-    err = PBControl ((ParmBlkPtr) & cb2, 0);    
-    if (err < 0) return err; 
-            
+
+    err = PBControl ((ParmBlkPtr) & cb2, 0);
+
+    if (err < 0) {
+
+        return err;
+    }
+
+    return;
+}
+
+OSErr writeSerialPortDebug(short refNum, const char* str)
+{
+    #ifdef PROFILING
+
+    // we need to bail on profiling, because the profile watcher will be reading this serial port
+    return;
+
+    #endif
     IOParam pb2;
     pb2.ioRefNum = serialPort;
     
@@ -56,7 +75,7 @@ OSErr writeSerialPortDebug(short refNum, const char* str)
     pb2.ioBuffer = (Ptr) str2;
     pb2.ioReqCount = strlen(str2);
     
-    err = PBWrite((ParmBlkPtr)& pb2, 0);          
+    OSErr err = PBWrite((ParmBlkPtr)& pb2, 0);          
     if (err < 0) return err;
     
     // hangs on Mac512K (write hasn't finished due to slow Speed when we wants to close driver

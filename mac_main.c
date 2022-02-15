@@ -148,6 +148,8 @@ int main()
 {
     Initialize();					/* initialize the program */
     UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
+    setupDebugSerialPort(boutRefNum);
+    writeSerialPortDebug(boutRefNum, "initializing messages for macintosh");
 
     // run our nuklear app one time to render the window telling us to be patient for the coprocessor
     // app to load up 
