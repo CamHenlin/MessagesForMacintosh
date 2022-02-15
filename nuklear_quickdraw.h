@@ -458,9 +458,9 @@ int mostRight = 1;
 
 void updateBounds(int top, int bottom, int left, int right) {
 
-    // #ifdef DEBUG_FUNCTION_CALLS
+    #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: updateBounds");
-    // #endif
+    #endif
 
     if (left < mostLeft) {
 
@@ -481,7 +481,7 @@ void updateBounds(int top, int bottom, int left, int right) {
 
         mostBottom = bottom;
     }
-    writeSerialPortDebug(boutRefNum, "END OF DEBUG_FUNCTION_CALLS: updateBounds");
+    // writeSerialPortDebug(boutRefNum, "END OF DEBUG_FUNCTION_CALLS: updateBounds");
 }
 
 #ifdef COMMAND_CACHING
@@ -1137,12 +1137,14 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         #endif
 
         #ifdef COMMAND_CACHING
+            writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD");
             if (currentCalls <= lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
 
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
 
             currentCalls++;
+            writeSerialPortDebug(boutRefNum, "DONE INCREMENT LAST CMD");
         #endif
     }
 
@@ -1172,6 +1174,8 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
             PROFILE_START("copy bits");
         #endif
 
+        writeSerialPortDebug(boutRefNum, "COPYBITS PROCESS");
+
         SetPort(window);
 
         Rect quickDrawRectangle;
@@ -1181,6 +1185,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         quickDrawRectangle.right = mostRight;
 
         CopyBits(&gMainOffScreen.bits->portBits, &window->portBits, &quickDrawRectangle, &quickDrawRectangle, srcCopy, 0L);
+        writeSerialPortDebug(boutRefNum, "DONE COPYBITS PROCESS");
 
         mostLeft = WINDOW_WIDTH;
         mostBottom = 1;
