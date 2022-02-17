@@ -10,11 +10,13 @@
 
 IOParam outgoingSerialPortReference;
 IOParam incomingSerialPortReference;
-const bool PRINT_ERRORS = false;
-const bool DEBUGGING = false;
-const int RECEIVE_WINDOW_SIZE = 32767; // receive in up to 100kb chunks?
-const int MAX_RECEIVE_SIZE = RECEIVE_WINDOW_SIZE; // not sure if these ever need to be different
-char GlobalSerialInputBuffer[32767]; // make this match MAX_RECEIVE_SIZE
+// #define PRINT_ERRORS 1
+// #define DEBUGGING 1
+#define MAX_ATTEMPTS 10
+#define RECEIVE_WINDOW_SIZE 32767 // receive in up to 32kb chunks
+#define MAX_RECEIVE_SIZE 32767 // matching RECEIVE_WINDOW_SIZE for now
+char GlobalSerialInputBuffer[MAX_RECEIVE_SIZE];
+char tempOutput[MAX_RECEIVE_SIZE];
 
 char application_id[255];
 int call_counter = 0;
@@ -84,20 +86,18 @@ void setupPBControlForSerialPort(short serialPortShort) {
     cb.csParam[0] = stop10 | noParity | data8 | baud28800; // TODO: can we achieve higher than 9600 baud? - should be able to achieve at least 19.2k on a 68k machine
     OSErr err = PBControl ((ParmBlkPtr) & cb, 0); // PBControl definition: http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/Networking/Networking-296.html
 
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
 
         char errMessage[100];
         sprintf(errMessage, "err:%d\n", err);
         printf(errMessage);
-    }
+    #endif
 
     if (err < 0) {
 
         return;
     }
 }
-
-
 
 void setupSerialPort(const char *name) {
 
@@ -130,12 +130,12 @@ void setupSerialPort(const char *name) {
 
     OSErr err = MacOpenDriver(serialPortOutputName, &serialPortOutput);
     
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
 
         char errMessage[100];
         sprintf(errMessage, "err:%d\n", err);
         printf(errMessage);
-    }
+    #endif
 
     if (err < 0) {
 
@@ -144,12 +144,12 @@ void setupSerialPort(const char *name) {
 
     err = MacOpenDriver(serialPortInputName, &serialPortInput); // result in 0 but still doesn't work
 
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
 
         char errMessage[100];
         sprintf(errMessage, "err:%d\n", err);
         printf(errMessage);
-    }
+    #endif
 
     if (err < 0) {
 
@@ -219,16 +219,15 @@ void readSerialPort(char* output) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: readSerialPort");
     #endif
 
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
 
         printf("readSerialPort\n");
-    }
+    #endif
     
     // make sure output variable is clear
-    memset(&output[0], 0, MAX_RECEIVE_SIZE);
+    memset(output, '\0', MAX_RECEIVE_SIZE);
 
     bool done = false;
-    char tempOutput[MAX_RECEIVE_SIZE];
     long int totalByteCount = 0;
     incomingSerialPortReference.ioReqCount = 0;
     int loopCounter = 0;
@@ -236,13 +235,14 @@ void readSerialPort(char* output) {
     while (!done) {
 
         if (loopCounter++ > MAX_RECIEVE_LOOP_ITERATIONS) {
+            writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort MAX RECEIVE ITERATIONS");
 
             char *errorMessage = "TIMEOUT_ERROR";
 
             strncat(output, errorMessage, strlen(output) - 1);
 
             // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
-            memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);
+            memset(GlobalSerialInputBuffer, '\0', MAX_RECEIVE_SIZE);
 
             return;
         }
@@ -250,66 +250,71 @@ void readSerialPort(char* output) {
         long int byteCount = 0;
         long int lastByteCount = 0;
         bool doByteCountsMatch = false;
-        short serGetBufStatus;
 
         // the byteCount != lastByteCount portion of the loop means that we want to wait 
         // for the byteCounts to match between SerGetBuf calls - this means that the buffer
         // is full and ready to be read
         while (!doByteCountsMatch || byteCount == 0) {
 
-            if (DEBUGGING) {
+            #ifdef DEBUGGING
 
                 char debugMessage[100];
                 sprintf(debugMessage, "receive loop: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
                 printf(debugMessage);
-            }
+            #endif
 
             lastByteCount = (long int)byteCount;
 
             wait(0.01); // give the buffer a moment to fill
 
-            serGetBufStatus = SerGetBuf(incomingSerialPortReference.ioRefNum, &byteCount);
+            #ifdef PRINT_ERRORS
+                short serGetBufStatus = SerGetBuf(incomingSerialPortReference.ioRefNum, &byteCount);
 
-            if (serGetBufStatus != 0 && PRINT_ERRORS) {
+                if (serGetBufStatus != 0) {
 
-                printf("potential problem with serGetBufStatus:\n");
-                char debugMessage[100];
-                sprintf(debugMessage, "serGetBufStatus: %d\n", serGetBufStatus);
-                printf(debugMessage);
-            }
+                    printf("potential problem with serGetBufStatus:\n");
+                    char debugMessage[100];
+                    sprintf(debugMessage, "serGetBufStatus: %d\n", serGetBufStatus);
+                    printf(debugMessage);
+                }
+            #else
+                SerGetBuf(incomingSerialPortReference.ioRefNum, &byteCount);
+            #endif
 
             // basically, we're stating that if we have a stall for 2 iterations of the loop where the byteCounts are matching, then
             // we assume we are no longer receiving communication. could have bugs? ie, we could be "done" reading before the data is all written
             if (byteCount == lastByteCount && byteCount != 0 && lastByteCount != 0) {
 
-                if (DEBUGGING) {
+                #ifdef DEBUGGING
 
                     char debugMessage[100];
                     sprintf(debugMessage, "receive loop setting last doByteCountsMatch to true: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
                     printf(debugMessage);
-                }
+                #endif
 
                 doByteCountsMatch = true;
             }
         }
 
-        if (DEBUGGING) {
+        #ifdef DEBUGGING
 
             char debugMessage[100];
             sprintf(debugMessage, "receive loop complete: byteCount: %ld, lastByteCount: %ld\n", byteCount, lastByteCount);
             printf(debugMessage);
-        }
+        #endif
 
         incomingSerialPortReference.ioReqCount = byteCount;
 
-        OSErr err = PBRead((ParmBlkPtr)&incomingSerialPortReference, 0);
-
-        if (PRINT_ERRORS) {
+        #ifdef PRINT_ERRORS
+            OSErr err = PBRead((ParmBlkPtr)&incomingSerialPortReference, 0);
 
             char errMessage[100];
             sprintf(errMessage, "err:%d\n", err);
             printf(errMessage);
-        }
+        #else
+
+            PBRead((ParmBlkPtr)&incomingSerialPortReference, 0);
+        #endif
 
         memcpy(tempOutput, GlobalSerialInputBuffer, byteCount);
 
@@ -317,7 +322,7 @@ void readSerialPort(char* output) {
 
         if (strstr(tempOutput, ";;@@&&") != NULL) {
 
-            if (DEBUGGING) {
+            #ifdef DEBUGGING
 
                 printf("done building temp output\n");
                 printf(tempOutput);
@@ -329,7 +334,7 @@ void readSerialPort(char* output) {
                 printf(debugOutput);
                 printf("\ndone with output\n");
                 printf("\n");
-            }
+            #endif
 
             done = true;
         }
@@ -342,7 +347,7 @@ void readSerialPort(char* output) {
     writeSerialPortDebug(boutRefNum, output);
 
     // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
-    memset(&GlobalSerialInputBuffer[0], 0, MAX_RECEIVE_SIZE);
+    memset(GlobalSerialInputBuffer, '\0', MAX_RECEIVE_SIZE);
 
     return;
 }
@@ -354,32 +359,32 @@ OSErr writeSerialPort(const char* stringToWrite) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: writeSerialPort");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
         
         printf("writeSerialPort\n");
-    }
+    #endif
 
     outgoingSerialPortReference.ioBuffer = (Ptr) stringToWrite;
     outgoingSerialPortReference.ioReqCount = strlen(stringToWrite);
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
 
         printf("attempting to write string to serial port\n");
         printf(stringToWrite);
         printf("\n");
-    }
+    #endif
 
     // PBWrite Definition From Inside Macintosh Volume II-185:
     // PBWrite takes ioReqCount bytes from the buffer pointed to by ioBuffer and attempts to write them to the device driver having the reference number ioRefNum.
     // The drive number, if any, of the device to be written to is specified by ioVRefNum. After the write is completed, the position is returned in ioPosOffset and the number of bytes actually written is returned in ioActCount.
     OSErr err = PBWrite((ParmBlkPtr)& outgoingSerialPortReference, 0);
     
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
 
         char errMessage[100];
         sprintf(errMessage, "err:%d\n", err);
         printf(errMessage);
-    }
+    #endif
 
     return err;
 }
@@ -405,29 +410,29 @@ OSErr closeSerialPort() {
 
     OSErr err = MacCloseDriver(outgoingSerialPortReference.ioRefNum);
     
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
 
         char errMessage[100];
         sprintf(errMessage, "err:%d\n", err);
         printf(errMessage);
-    }
+    #endif
 
     return err;
 }
 
-// return time is char but this is only for error messages - final param is output variable that will be re-assigned within this function
+// return value is char but this is only for error messages - final param is output variable that will be re-assigned within this function
 char* _getReturnValueFromResponse(char* response, char* application_id, char* call_counter, char* operation, char* output) {
 
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: _getReturnValueFromResponse");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
         
         printf("_getReturnValueFromResponse\n");
         printf(response);
         printf("\n");
-    }
+    #endif
 
     // get the first token in to memory
     char *token = strtokm(response, ";;;");
@@ -435,22 +440,21 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
     // we need to track the token that we are on because the coprocessor.js responses are standardized
     // so the tokens at specific positions will map to specific items in the response
     int tokenCounter = 0;
-    const int MAX_ATTEMPTS = 10;
 
     // loop through the string to extract all other tokens
     while (token != NULL) {
 
         if (tokenCounter > MAX_ATTEMPTS) {
-            
+
             return "max attempts exceeded";
         }
-        
-        if (DEBUGGING) {
+
+        #ifdef DEBUGGING
 
             char *debugOutput;
             sprintf(debugOutput, "inspect token %d: %s\n", tokenCounter, token);
             printf(debugOutput);
-        }
+        #endif
 
         switch (tokenCounter) {
 
@@ -486,9 +490,9 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
                 }
 
                 break;
-            case 4:
+            case 4:;
             
-                if (DEBUGGING) {
+                #ifdef DEBUGGING
 
                     printf("setting output to token:\n");
                     printf(token);
@@ -496,17 +500,18 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
                     sprintf(debugOutput, "\n'%ld'\n", strlen(token));
                     printf(debugOutput);
                     printf("\ndone with output\n");
-                }
+                #endif
 
                 int lengthWithoutControlChars = strlen(token) - 6;
 
-                if (strlen(output) - 1 < lengthWithoutControlChars) {
+                // writeSerialPortDebug(boutRefNum, "SETTING OUTPUT VARIABLE");
+                // char x[2555];
+                // sprintf(x, "%s: %d (%.*s)", token, lengthWithoutControlChars, lengthWithoutControlChars, token);
+                // writeSerialPortDebug(boutRefNum, x);
 
-                    lengthWithoutControlChars = strlen(output) - 1;
-                }
+                sprintf(output, "%.*s", lengthWithoutControlChars, token); // drop the ;;@@&& off the end of the response
+                writeSerialPortDebug(boutRefNum, output);
 
-                strncat(output, token, lengthWithoutControlChars); // drop the ;;@@&& off the end of the response
-                
                 return NULL;
 
             default:
@@ -528,11 +533,11 @@ void writeToCoprocessor(char* operation, char* operand) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: writeToCoprocessor");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
         
         printf("writeToCoprocessor\n");
-    }
-    
+    #endif
+
     const char* messageTemplate = "%s;;;%s;;;%s;;;%s;;@@&&"; // see: https://github.com/CamHenlin/coprocessor.js/blob/main/index.js#L25
     char call_id[32];
 
@@ -545,14 +550,16 @@ void writeToCoprocessor(char* operation, char* operand) {
     // application_id is globally defined for now, how will that work in a library?
     sprintf(messageToSend, messageTemplate, application_id, call_id, operation, operand);
 
-    OSErr err = writeSerialPort(messageToSend);
-    
-    if (PRINT_ERRORS) {
+    #ifdef PRINT_ERRORS
+
+        OSErr err = writeSerialPort(messageToSend);
 
         char errMessage[100];
         sprintf(errMessage, "writeToCoprocessor err:%d\n", err);
         printf(errMessage);
-    }
+    #else
+        writeSerialPort(messageToSend);
+    #endif
 
     return;
 }
@@ -565,22 +572,26 @@ void getReturnValueFromResponse(char *response, char *operation, char *output) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getReturnValueFromResponse");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
         
         printf("getReturnValueFromResponse\n");
-    }
+    #endif
 
     char call_id[32];
     sprintf(call_id, "%d", call_counter - 1);
-
-    char *err = _getReturnValueFromResponse(response, application_id, call_id, operation, output);
     
-    if (err != NULL && PRINT_ERRORS) {
-        
-        printf("error getting return value from response:\n");
-        printf(err);
-        printf("\n");
+    #ifdef PRINT_ERRORS
+        char *err = _getReturnValueFromResponse(response, application_id, call_id, operation, output);
+
+        if (err != NULL) {
+            
+            printf("error getting return value from response:\n");
+            printf(err);
+            printf("\n");
     }
+    #else
+        _getReturnValueFromResponse(response, application_id, call_id, operation, output);
+    #endif
 }
 
 // TODO: this is a function we would want to expose in a library
@@ -591,10 +602,10 @@ void sendProgramToCoprocessor(char* program, char *output) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendProgramToCoprocessor");
     #endif
 
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
 
         printf("sendProgramToCoprocessor\n");
-    }
+    #endif
 
     SetCursor(*GetCursor(watchCursor));
 
@@ -617,10 +628,10 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: callFunctionOnCoprocessor");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
 
         printf("callFunctionOnCoprocessor\n");
-    }
+    #endif
 
     const char* functionTemplate = "%s&&&%s";
 
@@ -637,11 +648,13 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
 
     char serialPortResponse[MAX_RECEIVE_SIZE];
     readSerialPort(serialPortResponse);
-    // writeSerialPortDebug(boutRefNum, "========================Got response from serial port");
-    // writeSerialPortDebug(boutRefNum, serialPortResponse);
+    writeSerialPortDebug(boutRefNum, "========================Got response from serial port");
+    writeSerialPortDebug(boutRefNum, serialPortResponse);
 
     memset(output, '\0', RECEIVE_WINDOW_SIZE);
     getReturnValueFromResponse(serialPortResponse, "FUNCTION", output);
+    writeSerialPortDebug(boutRefNum, "========================and return value from response");
+    writeSerialPortDebug(boutRefNum, output);
 
     SetCursor(&qd.arrow);
     
@@ -655,10 +668,10 @@ void callEvalOnCoprocessor(char* toEval, char* output) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: callEvalOnCoprocessor");
     #endif
     
-    if (DEBUGGING) {
+    #ifdef DEBUGGING
         
         printf("callEvalOnCoprocessor\n");
-    }
+    #endif
 
     writeToCoprocessor("EVAL", toEval);
 

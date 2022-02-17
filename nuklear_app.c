@@ -99,6 +99,7 @@ void aFailed(char *file, int line) {
 }
 
 #define MAX_CHAT_MESSAGES 17
+#define MAX_RECEIVE_SIZE 32767
 
 Boolean firstOrMouseMove = true;
 Boolean gotMouseEvent = false;
@@ -107,10 +108,10 @@ char activeChatMessages[MAX_CHAT_MESSAGES][2048]; // this should match to MAX_RO
 char box_input_buffer[2048];
 char chatFriendlyNames[16][64];
 char ip_input_buffer[255];
-char jsFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
-char chatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
-char tempChatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
-char previousChatCountFunctionResponse[32767]; // Matches MAX_RECEIVE_SIZE
+char jsFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
+char chatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
+char tempChatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
+char previousChatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
 char new_message_input_buffer[255];
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
@@ -294,29 +295,13 @@ void getChatCounts() {
         return;
     }
 
-    strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
-
     //#ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
         writeSerialPortDebug(boutRefNum, "update current chat count");
         writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
         writeSerialPortDebug(boutRefNum, previousChatCountFunctionResponse);
-
-        // update current chat count
-        // 1
-        // wrangled byn
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
-        // 2
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shin
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
-        // 3
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,n
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
-        // 4
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,Shirley Waggoner:::0,waggoner6171@icloud.com:::0,Rebecca Henlin:::0,Chris Sjoblom:::0,Leo Torbochkin:::0,Jayant Sai:::0,+15095713317:::0,Adam Struthers:::0
-        // wrangled by the knockers:::0,Aaron Sunderland:::0,n
-
-
     //#endif
+
+    strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
 
     SysBeep(1);
 

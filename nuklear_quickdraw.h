@@ -1175,8 +1175,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
             PROFILE_START("copy bits");
         #endif
 
-        writeSerialPortDebug(boutRefNum, "COPYBITS PROCESS");
-
         SetPort(window);
 
         Rect quickDrawRectangle;
@@ -1186,7 +1184,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         quickDrawRectangle.right = mostRight;
 
         CopyBits(&gMainOffScreen.bits->portBits, &window->portBits, &quickDrawRectangle, &quickDrawRectangle, srcCopy, 0L);
-        writeSerialPortDebug(boutRefNum, "DONE COPYBITS PROCESS");
 
         mostLeft = WINDOW_WIDTH;
         mostBottom = 1;

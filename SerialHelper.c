@@ -56,7 +56,7 @@ OSErr setupDebugSerialPort(short refNum) {
         return err;
     }
 
-    return;
+    return 0;
 }
 
 OSErr writeSerialPortDebug(short refNum, const char* str)
