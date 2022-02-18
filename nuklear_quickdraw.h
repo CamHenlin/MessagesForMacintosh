@@ -1155,7 +1155,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
     memcpy(last, cmds, ctx->memory.allocated);
 
-    lastCalls = ctx->memory.calls;
+    lastCalls = currentCalls;
 
     #ifdef PROFILING
         PROFILE_END("memcpy commands");
