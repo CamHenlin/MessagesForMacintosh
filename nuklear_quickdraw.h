@@ -1137,7 +1137,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
         #ifdef COMMAND_CACHING
             writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD");
-            if (currentCalls <= lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
+            if (currentCalls < lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
 
                 writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD: IN CONDITIONAL");
 
