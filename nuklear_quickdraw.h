@@ -2,7 +2,7 @@
  * Nuklear - 1.32.0 - public domain
  * no warranty implied; use at your own risk.
  * based on allegro5 version authored from 2015-2016 by Micha Mettke
- * quickdraw version camhenlin 2021
+ * quickdraw version camhenlin 2021-2022
  * 
  * v1 intent:
  * - only default system font support
@@ -258,7 +258,7 @@ NK_API void nk_quickdraw_del_image(struct nk_image* image) {
     free(image);
 }
 
-// NOTE: you will need to generate this yourself!
+// NOTE: you will need to generate this yourself if you want to add additional font support!
 short widthFor12ptFont[128] = {
     0,
     10,
@@ -1074,8 +1074,10 @@ void updateBounds(int top, int bottom, int left, int right) {
     #endif
 }
 
-int lastCalls = 0;
-int currentCalls;
+#ifdef COMMAND_CACHING
+    int lastCalls = 0;
+    int currentCalls;
+#endif
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
@@ -1083,7 +1085,9 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_quickdraw_render");
     #endif
 
-    currentCalls = 1;
+    #ifdef COMMAND_CACHING
+        currentCalls = 1;
+    #endif
 
     #ifdef PROFILING
         PROFILE_START("IN nk_quickdraw_render");
@@ -1136,16 +1140,15 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         #endif
 
         #ifdef COMMAND_CACHING
-            writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD");
+            // TODO: if this becomes worth pursuing later, it causes address errors. I suspect that the memcpy
+            // command that builds up the last variable is not properly allocating memory.
+            // the address error pops up on the line of the conditional itself and can sometimes take hours to trigger.
             if (currentCalls < lastCalls && lastCmd && lastCmd->next && lastCmd->next < ctx->memory.allocated) {
-
-                writeSerialPortDebug(boutRefNum, "INCREMENT LAST CMD: IN CONDITIONAL");
 
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
 
             currentCalls++;
-            writeSerialPortDebug(boutRefNum, "DONE INCREMENT LAST CMD");
         #endif
     }
 
@@ -1154,8 +1157,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     memcpy(last, cmds, ctx->memory.allocated);
-
-    lastCalls = currentCalls;
 
     #ifdef PROFILING
         PROFILE_END("memcpy commands");
@@ -1166,6 +1167,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     #ifdef COMMAND_CACHING
+        lastCalls = currentCalls;
         lastInputWasBackspace = false;
     #endif
 
@@ -1465,92 +1467,12 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
     last = calloc(1, MAX_MEMORY_IN_KB * 1024);
     buf = calloc(1, MAX_MEMORY_IN_KB * 1024);
     nk_init_fixed(&quickdraw.nuklear_context, buf, MAX_MEMORY_IN_KB * 1024, font);
-    
-    // nk_init_default(&quickdraw.nuklear_context, font);
-    nk_style_push_font(&quickdraw.nuklear_context, font);
 
-    // this is pascal code but i think we would need to do something like this if we want this function 
-    // to be responsible for setting the window size
-    //    Region locUpdateRgn = NewRgn();
-    //    SetRect(limitRect, kMinDocSize, kMinDocSize, kMaxDocSize, kMaxDocSize);
-    //    // {call Window Manager to let user drag size box}
-    //    growSize = GrowWindow(thisWindow, event.where, limitRect);
-    //    SizeWindow(thisWindow, LoWord(growSize), HiWord(growSize), TRUE);
-    //    SectRect(oldViewRect, myData^^.editRec^^.viewRect, oldViewRect);
-    //    // {validate the intersection (don't update)}
-    //    ValidRect(oldViewRect);
-    //    // {invalidate any prior update region}
-    //    InvalRgn(locUpdateRgn);
-    //    DisposeRgn(locUpdateRgn);
+    nk_style_push_font(&quickdraw.nuklear_context, font);
 
     quickdraw.nuklear_context.clip.copy = nk_quickdraw_clipboard_copy;
     quickdraw.nuklear_context.clip.paste = nk_quickdraw_clipboard_paste;
     quickdraw.nuklear_context.clip.userdata = nk_handle_ptr(0);
-
-    // // fix styles to be more "mac-like"
-    // struct nk_style *style;
-    // struct nk_style_toggle *toggle;
-    // struct nk_style_button *button;
-    // style = &quickdraw.nuklear_context.style;
-
-    // /* checkbox toggle */
-    // toggle = &style->checkbox;
-    // nk_zero_struct(*toggle);
-    // // toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
-    // // toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
-    // // toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
-    // // toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
-    // // toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
-    // toggle->userdata        = nk_handle_ptr(0);
-    // toggle->text_background = qd.black;
-    // // toggle->text_normal     = nk_rgba(70, 70, 70, 255);
-    // // toggle->text_hover      = nk_rgba(70, 70, 70, 255);
-    // // toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    // toggle->padding         = nk_vec2(3, 3);
-    // toggle->touch_padding   = nk_vec2(0,0);
-    // // toggle->border_color    = nk_rgba(0,0,0,0);
-    // toggle->border          = 0;
-    // toggle->spacing         = 5;
-
-    // /* option toggle */
-    // toggle = &style->option;
-    // nk_zero_struct(*toggle);
-    // // toggle->normal          = nk_style_item_color(nk_rgba(45, 45, 45, 255));
-    // // toggle->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255)); // this is the "background" hover state regardless of checked status - we want light gray
-    // // toggle->active          = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // i can't tell what this does yet
-    // // toggle->cursor_normal   = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the "checked" box itself - we want "black"
-    // // toggle->cursor_hover    = nk_style_item_color(nk_rgba(255, 255, 255, 255)); // this is the hover state of a "checked" box - anything lighter than black is ok
-    // toggle->userdata        = nk_handle_ptr(0);
-    // toggle->text_background = qd.black;
-    // // toggle->text_normal     = nk_rgba(70, 70, 70, 255);
-    // // toggle->text_hover      = nk_rgba(70, 70, 70, 255);
-    // // toggle->text_active     = nk_rgba(70, 70, 70, 255);
-    // toggle->padding         = nk_vec2(3, 3);
-    // toggle->touch_padding   = nk_vec2(0,0);
-    // // toggle->border_color    = nk_rgba(0,0,0,0);
-    // toggle->border          = 0;
-    // toggle->spacing         = 5;
-
-    // // button
-    // button = &style->button;
-    // nk_zero_struct(*button);
-    // // button->normal          = nk_style_item_color(nk_rgba(0, 0, 0, 255));
-    // // button->hover           = nk_style_item_color(nk_rgba(80, 80, 80, 255));
-    // // button->active          = nk_style_item_color(nk_rgba(150, 150, 150, 255));
-    // // button->border_color    = nk_rgba(255, 255, 255, 255);
-    // button->text_background = qd.black;
-    // // button->text_normal     = nk_rgba(70, 70, 70, 255);
-    // // button->text_hover      = nk_rgba(70, 70, 70, 255);
-    // // button->text_active     = nk_rgba(0, 0, 0, 255);
-    // button->padding         = nk_vec2(2,2);
-    // button->image_padding   = nk_vec2(0,0);
-    // button->touch_padding   = nk_vec2(0, 0);
-    // button->userdata        = nk_handle_ptr(0);
-    // button->text_alignment  = NK_TEXT_CENTERED;
-    // button->border          = 1;
-    // button->rounding        = 10;
-    // button->draw_begin      = 0;
-    // button->draw_end        = 0;
 
     ForeColor(blackColor);
 

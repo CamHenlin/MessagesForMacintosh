@@ -215,7 +215,7 @@ void EventLoop(struct nk_context *ctx)
 
         // this should be out of sync with the counter above it so that we dont end up making
         // two coprocessor calls on one event loop iteratio
-        if (TickCount() - lastUpdatedTickCountChatCounts > 600) {
+        if (TickCount() - lastUpdatedTickCountChatCounts > 500) {
 
             // writeSerialPortDebug(boutRefNum, "update by tick count");
             lastUpdatedTickCountChatCounts = TickCount();
@@ -313,7 +313,7 @@ void EventLoop(struct nk_context *ctx)
         SystemTask();
 
         // only re-render if there is an event, prevents screen flickering, speeds up app
-        if (beganInput || firstOrMouseMove || forceRedraw) {
+        if (beganInput || firstOrMouseMove || forceRedrawChats || forceRedrawMessages) {
 
             #ifdef PROFILING
                 PROFILE_START("nk_input_end");
@@ -344,7 +344,7 @@ void EventLoop(struct nk_context *ctx)
 
                 writeSerialPortDebug(boutRefNum, "nk_quickdraw_render");
                 char x[255];
-                sprintf(x, "why? beganInput: %d, firstOrMouseMove: %d, forceRedraw: %d", beganInput, firstOrMouseMove, forceRedraw);
+                sprintf(x, "why? beganInput: %d, firstOrMouseMove: %d, forceRedraw: %d", beganInput, firstOrMouseMove, forceRedrawChats);
                 writeSerialPortDebug(boutRefNum, x);
             #endif
 
@@ -401,8 +401,7 @@ void DoEvent(EventRecord *event, struct nk_context *ctx) {
             #endif
 
             part = FindWindow(event->where, &window);
-            switch (part)
-            {
+            switch (part) {
                 case inContent:
                     nk_quickdraw_handle_event(event, ctx);
                     break;

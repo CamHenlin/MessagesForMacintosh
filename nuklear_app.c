@@ -1,6 +1,3 @@
-// TODO: 
-// - test on physical, bug fixes, write blog posts
-
 // {42, 4, 336, 506}
 #define WINDOW_WIDTH 502
 #define WINDOW_HEIGHT 294
@@ -99,7 +96,7 @@ void aFailed(char *file, int line) {
 }
 
 #define MAX_CHAT_MESSAGES 17
-#define MAX_RECEIVE_SIZE 32767
+#define MAX_RECEIVE_SIZE 32767 // this has a corresponding value in coprocessor.c
 
 Boolean firstOrMouseMove = true;
 Boolean gotMouseEvent = false;
@@ -108,15 +105,16 @@ char activeChatMessages[MAX_CHAT_MESSAGES][2048]; // this should match to MAX_RO
 char box_input_buffer[2048];
 char chatFriendlyNames[16][64];
 char ip_input_buffer[255];
-char jsFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
-char chatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
-char tempChatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
-char previousChatCountFunctionResponse[MAX_RECEIVE_SIZE]; // Matches MAX_RECEIVE_SIZE
+char jsFunctionResponse[MAX_RECEIVE_SIZE]; 
+char chatCountFunctionResponse[MAX_RECEIVE_SIZE];
+char tempChatCountFunctionResponse[MAX_RECEIVE_SIZE];
+char previousChatCountFunctionResponse[MAX_RECEIVE_SIZE];
 char new_message_input_buffer[255];
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
 int coprocessorLoaded = 0;
-int forceRedraw = 2; // this is how many 'iterations' of the UI that we need to see every element for
+int forceRedrawChats= 2; // this is how many 'iterations' of the chat list UI that we need to see every element for, starting with 2 to draw the UI appropriately
+int forceRedrawMessages = 2; // same as above but for messages
 int ipAddressSet = 0;
 int mouse_x;
 int mouse_y;
@@ -124,7 +122,7 @@ int sendNewChat = 0;
 short box_input_len;
 short box_len;
 short new_message_input_buffer_len;
-static short ip_input_buffer_len; // TODO: setting a length here will make the default `http://...` work, but doesn't work right -- maybe due to perf work in nuklear
+static short ip_input_buffer_len;
 struct nk_rect chats_window_size;
 struct nk_rect graphql_input_window_size;
 struct nk_rect message_input_window_size;
@@ -175,8 +173,6 @@ void sendMessage() {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendMessage");
     #endif
 
-    writeSerialPortDebug(boutRefNum, "sendMessage!");
-
     char output[2048];
     sprintf(output, "%s&&&%.*s", activeChat, box_input_len, box_input_buffer);
 
@@ -191,7 +187,7 @@ void sendMessage() {
 
     getMessagesFromjsFunctionResponse();
 
-    forceRedraw = 3;
+    forceRedrawMessages = 3;
 
     return;
 }
@@ -203,8 +199,6 @@ void getChats() {
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getChats");
     #endif
-
-    writeSerialPortDebug(boutRefNum, "getChats!");
 
     callFunctionOnCoprocessor("getChats", "", jsFunctionResponse);
 
@@ -226,12 +220,9 @@ void sendIPAddressToCoprocessor() {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: sendIPAddressToCoprocessor");
     #endif
 
-    writeSerialPortDebug(boutRefNum, "sendIPAddressToCoprocessor!");
-
     char output[2048];
     sprintf(output, "%.*s", ip_input_buffer_len, ip_input_buffer);
 
-    writeSerialPortDebug(boutRefNum, output);
     callFunctionOnCoprocessor("setIPAddress", output, jsFunctionResponse);
 
     // now that the IP is set, we can get all of our chats
@@ -249,17 +240,13 @@ void getMessages(char *thread, int page) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getMessages");
     #endif
 
-    writeSerialPortDebug(boutRefNum, "getMessages!");
-
     char output[68];
     sprintf(output, "%s&&&%d", thread, page);
-    // writeSerialPortDebug(boutRefNum, output);
 
     callFunctionOnCoprocessor("getMessages", output, jsFunctionResponse);
-    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
     getMessagesFromjsFunctionResponse();
 
-    forceRedraw = 3;
+    forceRedrawMessages = 3;
 
     return;
 }
@@ -295,11 +282,13 @@ void getChatCounts() {
         return;
     }
 
-    //#ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+    #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+        // TODO: if you hear a random sysbeep, it's probably caused by a mismatch here
+        // potentially due to a bad serial port read or allocation. needs more investigation
         writeSerialPortDebug(boutRefNum, "update current chat count");
         writeSerialPortDebug(boutRefNum, chatCountFunctionResponse);
         writeSerialPortDebug(boutRefNum, previousChatCountFunctionResponse);
-    //#endif
+    #endif
 
     strcpy(previousChatCountFunctionResponse, chatCountFunctionResponse);
 
@@ -428,7 +417,7 @@ void getChatCounts() {
         }
     }
 
-    forceRedraw = 3;
+    forceRedrawChats = 3;
 
     return;
 }
@@ -439,14 +428,10 @@ void getHasNewMessagesInChat(char *thread) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getHasNewMessagesInChat");
     #endif
 
-    writeSerialPortDebug(boutRefNum, "getHasNewMessagesInChat!");
-
     char output[68];
     sprintf(output, "%s", thread);
-    // writeSerialPortDebug(boutRefNum, output);
 
     callFunctionOnCoprocessor("hasNewMessagesInChat", output, jsFunctionResponse);
-    // writeSerialPortDebug(boutRefNum, jsFunctionResponse);
 
     if (!strcmp(jsFunctionResponse, "true")) {
 
@@ -469,16 +454,6 @@ Boolean checkCollision(struct nk_rect window) {
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: checkCollision");
     #endif
-    // writeSerialPortDebug(boutRefNum, "checkCollision!");
-
-    // Boolean testout = (window.x < mouse_x &&
-    //    window.x + window.w > mouse_x &&
-    //    window.y < mouse_y &&
-    //    window.y + window.h > mouse_y);
-    // char str[255];
-    // sprintf(str, "what %d", testout);
-    //     	writeSerialPortDebug(boutRefNum, str);
-
 
     // if truthy return, mouse is over window!
     return (window.x < mouse_x &&
@@ -534,7 +509,8 @@ static void nuklearApp(struct nk_context *ctx) {
                 if (nk_button_label(ctx, "save") || ip_edit_return_value == 17) {
                 
                     ipAddressSet = 1;
-                    forceRedraw = 2;
+                    forceRedrawChats = 2;
+                    forceRedrawMessages = 2;
                     sendIPAddressToCoprocessor();
                 }
             }
@@ -544,9 +520,14 @@ static void nuklearApp(struct nk_context *ctx) {
         }
 
         // eliminate the initially-set force-redraw
-        if (forceRedraw) {
+        if (forceRedrawChats) {
             
-            forceRedraw--;
+            forceRedrawChats--;
+        }
+
+        if (forceRedrawMessages) {
+            
+            forceRedrawMessages--;
         }
 
         return;
@@ -575,7 +556,8 @@ static void nuklearApp(struct nk_context *ctx) {
                 if (nk_button_label(ctx, "open chat")) {
                 
                     sendNewChat = 0;
-                    forceRedraw = 2;
+                    forceRedrawChats = 2;
+                    forceRedrawMessages = 2;
 
                     sprintf(activeChat, "%.*s", new_message_input_buffer_len, new_message_input_buffer);
 
@@ -597,7 +579,14 @@ static void nuklearApp(struct nk_context *ctx) {
 
     chatWindowCollision = checkCollision(chats_window_size);
 
-    if ((chatWindowCollision || forceRedraw) && nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+    if ((chatWindowCollision || forceRedrawChats) && nk_begin(ctx, "Chats", chats_window_size, NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR)) {
+
+        // we force a redraw for several following iterations in case the mouse has moved away,
+        // we want to ensure that the button highlighting disappears
+        if (chatWindowCollision) {
+
+            forceRedrawChats = 3;
+        }
 
         nk_layout_row_begin(ctx, NK_STATIC, 25, 1);
         {
@@ -681,7 +670,7 @@ static void nuklearApp(struct nk_context *ctx) {
         nk_end(ctx);
     }
 
-    if ((forceRedraw) && nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_NO_SCROLLBAR)) {
+    if ((forceRedrawMessages) && nk_begin_titled(ctx, "Message", activeChat, messages_window_size, NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_NO_SCROLLBAR)) {
 
         nk_layout_row_begin(ctx, NK_STATIC, 11, 1);
         {
@@ -700,9 +689,14 @@ static void nuklearApp(struct nk_context *ctx) {
         nk_end(ctx);
     }
 
-    if (forceRedraw) {
+    if (forceRedrawChats) {
 
-        forceRedraw--;
+        forceRedrawChats--;
+    }
+
+    if (forceRedrawMessages) {
+
+        forceRedrawMessages--;
     }
 }
 
@@ -733,8 +727,8 @@ struct nk_context* initializeNuklearApp() {
     #endif
 
     sprintf(activeChat, "no active chat");
-    memset(&chatCountFunctionResponse, '\0', 32767);
-    memset(&previousChatCountFunctionResponse, '\0', 32767);
+    memset(&chatCountFunctionResponse, '\0', MAX_RECEIVE_SIZE);
+    memset(&previousChatCountFunctionResponse, '\0', MAX_RECEIVE_SIZE);
 
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 2 - 118, 80, 234, 100);
     chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);
@@ -744,7 +738,7 @@ struct nk_context* initializeNuklearApp() {
     ctx = nk_quickdraw_init(WINDOW_WIDTH, WINDOW_HEIGHT);
     refreshNuklearApp(false);
 
-    sprintf(ip_input_buffer, "http://"); // doesn't work due to bug, see variable definition
+    sprintf(ip_input_buffer, "http://");
     ip_input_buffer_len = 7;
 
     return ctx;

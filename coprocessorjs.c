@@ -83,7 +83,7 @@ void setupPBControlForSerialPort(short serialPortShort) {
     CntrlParam cb;
     cb.ioCRefNum = serialPortShort; // TODO: this is always 0 - does it matter? should we hard code 0 here? research
     cb.csCode = 8; // TODO: need to look up and document what csCode = 8 means
-    cb.csParam[0] = stop10 | noParity | data8 | baud28800; // TODO: can we achieve higher than 9600 baud? - should be able to achieve at least 19.2k on a 68k machine
+    cb.csParam[0] = stop10 | noParity | data8 | baud28800; // 28.8k has been pretty reliable on my Macintosh Classic...
     OSErr err = PBControl ((ParmBlkPtr) & cb, 0); // PBControl definition: http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/Networking/Networking-296.html
 
     #ifdef PRINT_ERRORS
@@ -235,7 +235,9 @@ void readSerialPort(char* output) {
     while (!done) {
 
         if (loopCounter++ > MAX_RECIEVE_LOOP_ITERATIONS) {
-            writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort MAX RECEIVE ITERATIONS");
+            #ifdef DEBUGGING
+                writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort MAX RECEIVE ITERATIONS");
+            #endif
 
             char *errorMessage = "TIMEOUT_ERROR";
 
@@ -343,8 +345,10 @@ void readSerialPort(char* output) {
     // attach the gathered up output from the buffer to the output variable
     strncat(output, tempOutput, totalByteCount);
 
-    writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort complete, output:");
-    writeSerialPortDebug(boutRefNum, output);
+    #ifdef DEBUGGING
+        writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort complete, output:");
+        writeSerialPortDebug(boutRefNum, output);
+    #endif
 
     // once we are done reading the buffer entirely, we need to clear it. i'm not sure if this is the best way or not but seems to work
     memset(GlobalSerialInputBuffer, '\0', MAX_RECEIVE_SIZE);
@@ -364,7 +368,7 @@ OSErr writeSerialPort(const char* stringToWrite) {
         printf("writeSerialPort\n");
     #endif
 
-    outgoingSerialPortReference.ioBuffer = (Ptr) stringToWrite;
+    outgoingSerialPortReference.ioBuffer = (Ptr)stringToWrite;
     outgoingSerialPortReference.ioReqCount = strlen(stringToWrite);
     
     #ifdef DEBUGGING
@@ -510,7 +514,10 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
                 // writeSerialPortDebug(boutRefNum, x);
 
                 sprintf(output, "%.*s", lengthWithoutControlChars, token); // drop the ;;@@&& off the end of the response
-                writeSerialPortDebug(boutRefNum, output);
+
+                #ifdef DEBUGGING
+                    writeSerialPortDebug(boutRefNum, output);
+                #endif
 
                 return NULL;
 
@@ -594,7 +601,6 @@ void getReturnValueFromResponse(char *response, char *operation, char *output) {
     #endif
 }
 
-// TODO: this is a function we would want to expose in a library
 // TODO: these should all bubble up and return legible errors
 void sendProgramToCoprocessor(char* program, char *output) {
 
@@ -621,7 +627,6 @@ void sendProgramToCoprocessor(char* program, char *output) {
     return;
 }
 
-// TODO: this is a function we would want to expose in a library
 void callFunctionOnCoprocessor(char* functionName, char* parameters, char* output) {
 
     #ifdef DEBUG_FUNCTION_CALLS
@@ -643,33 +648,41 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
     sprintf(functionCallMessage, functionTemplate, functionName, parameters);
 
     SetCursor(*GetCursor(watchCursor));
-    //                         writeSerialPortDebug(boutRefNum, functionCallMessage);
+
+    #ifdef DEBUGGING
+        writeSerialPortDebug(boutRefNum, functionCallMessage);
+    #endif
+
     writeToCoprocessor("FUNCTION", functionCallMessage);
 
     char serialPortResponse[MAX_RECEIVE_SIZE];
     readSerialPort(serialPortResponse);
-    writeSerialPortDebug(boutRefNum, "========================Got response from serial port");
-    writeSerialPortDebug(boutRefNum, serialPortResponse);
+
+    #ifdef DEBUGGING
+        writeSerialPortDebug(boutRefNum, "Got response from serial port:");
+        writeSerialPortDebug(boutRefNum, serialPortResponse);
+    #endif
 
     memset(output, '\0', RECEIVE_WINDOW_SIZE);
     getReturnValueFromResponse(serialPortResponse, "FUNCTION", output);
-    writeSerialPortDebug(boutRefNum, "========================and return value from response");
-    writeSerialPortDebug(boutRefNum, output);
+
+    #ifdef DEBUGGING
+        writeSerialPortDebug(boutRefNum, "Greturn value from response");
+        writeSerialPortDebug(boutRefNum, output);
+    #endif
 
     SetCursor(&qd.arrow);
     
     return;
 }
 
-// TODO: this is a function we would want to expose in a library
 void callEvalOnCoprocessor(char* toEval, char* output) {
 
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: callEvalOnCoprocessor");
     #endif
-    
+
     #ifdef DEBUGGING
-        
         printf("callEvalOnCoprocessor\n");
     #endif
 
