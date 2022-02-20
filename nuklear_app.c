@@ -583,7 +583,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
         // we force a redraw for several following iterations in case the mouse has moved away,
         // we want to ensure that the button highlighting disappears
-        if (chatWindowCollision) {
+        if (chatWindowCollision && firstOrMouseMove) {
 
             forceRedrawChats = 3;
         }
@@ -639,6 +639,7 @@ static void nuklearApp(struct nk_context *ctx) {
                         sprintf(activeChat, "%.63s", chatFriendlyNames[i]);
                     }
 
+                    forceRedrawChats = 6; // redraw the chat list for several iterations in an attempt to get rid of the hovered button
                     getMessages(activeChat, 0);
                 }
             }

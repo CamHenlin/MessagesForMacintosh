@@ -512,7 +512,7 @@ char* _getReturnValueFromResponse(char* response, char* application_id, char* ca
                 // char x[2555];
                 // sprintf(x, "%s: %d (%.*s)", token, lengthWithoutControlChars, lengthWithoutControlChars, token);
                 // writeSerialPortDebug(boutRefNum, x);
-
+                // this seems to be the location where we can sometimes mangle our response data
                 sprintf(output, "%.*s", lengthWithoutControlChars, token); // drop the ;;@@&& off the end of the response
 
                 #ifdef DEBUGGING

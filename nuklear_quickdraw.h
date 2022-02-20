@@ -27,6 +27,7 @@
 #define ENABLED_DOUBLE_BUFFERING
 // #define COMMAND_CACHING
 // #define NK_QUICKDRAW_GRAPHICS_DEBUGGING
+// #define DRAW_BLIT_LOCATION
 
 Boolean lastInputWasBackspace;
 
@@ -1186,6 +1187,11 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         quickDrawRectangle.right = mostRight;
 
         CopyBits(&gMainOffScreen.bits->portBits, &window->portBits, &quickDrawRectangle, &quickDrawRectangle, srcCopy, 0L);
+
+        #ifdef DRAW_BLIT_LOCATION
+            ForeColor(blackColor);
+            FrameRoundRect(&quickDrawRectangle, 0, 0);
+        #endif
 
         mostLeft = WINDOW_WIDTH;
         mostBottom = 1;

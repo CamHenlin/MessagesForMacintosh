@@ -17002,19 +17002,21 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         Pattern sel_background_color;
         int sel_text_color;
         Pattern cursor_color;
-        int cursor_text_color;
+        // int cursor_text_color;
         Pattern *background;
         clip.w = area.w;
 
         nk_push_scissor(out, clip);
 
         // this is meant to fix text boxes when scrolling to the right when typing long text
-        struct nk_rect whiteTextarea;
-        whiteTextarea.x = clip.x + line_width - edit->scrollbar.x;
-        whiteTextarea.y = clip.y;
-        whiteTextarea.h = clip.h;
-        whiteTextarea.w = line_width - (line_width - edit->scrollbar.x) - 1;
-        nk_fill_rect(out, whiteTextarea, style->rounding, qd.black, false);
+        #ifdef COMMAND_CACHING
+            struct nk_rect whiteTextarea;
+            whiteTextarea.x = clip.x + line_width - edit->scrollbar.x;
+            whiteTextarea.y = clip.y;
+            whiteTextarea.h = clip.h;
+            whiteTextarea.w = line_width - (line_width - edit->scrollbar.x) - 1;
+            nk_fill_rect(out, whiteTextarea, style->rounding, qd.black, false);
+        #endif
 
         /* select correct colors to draw */
         if (*state & NK_WIDGET_STATE_ACTIVED) {
@@ -17023,13 +17025,13 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             sel_text_color = style->selected_text_hover;
             sel_background_color = style->selected_hover;
             cursor_color = style->cursor_hover;
-            cursor_text_color = style->cursor_text_hover;
+            // cursor_text_color = style->cursor_text_hover;
         } else if (*state & NK_WIDGET_STATE_HOVER) {
             background = &style->hover;
             text_color = style->text_hover;
             sel_text_color = style->selected_text_hover;
             sel_background_color = style->selected_hover;
-            cursor_text_color = style->cursor_text_hover;
+            // cursor_text_color = style->cursor_text_hover;
             cursor_color = style->cursor_hover;
         } else {
             background = &style->normal;
@@ -17037,7 +17039,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             sel_text_color = style->selected_text_normal;
             sel_background_color = style->selected_normal;
             cursor_color = style->cursor_normal;
-            cursor_text_color = style->cursor_text_normal;
+            // cursor_text_color = style->cursor_text_normal;
         }
         background_color = *background;
 
@@ -17102,37 +17104,39 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             if (edit->cursor >= nk_str_len(&edit->string) || (cursor_ptr && *cursor_ptr == '\n')) {
                 /* draw cursor at end of line */
                 struct nk_rect cursor;
-                cursor.w = style->cursor_size;
+                cursor.w = 1; // style->cursor_size;
                 cursor.h = font->height;
                 cursor.x = area.x + cursor_pos.x - edit->scrollbar.x;
                 cursor.y = area.y + cursor_pos.y + row_height/2 - cursor.h/2;
                 cursor.y -= edit->scrollbar.y;
                 nk_fill_rect(out, cursor, 0, cursor_color, true);
 
+                #ifdef COMMAND_CACHING
                 struct nk_rect whiteTextarea2;
                 whiteTextarea2.x = cursor.x + cursor.w;
                 whiteTextarea2.y = cursor.y - 2;
                 whiteTextarea2.h = cursor.h + 6;
                 whiteTextarea2.w = 9; //cursor.w * 2; // this was previously used when cursor.w = 4, doesn't work well at = 1
                 nk_fill_rect(out, whiteTextarea2, 0, qd.black, false);
+                #endif
             } else {
                 /* draw cursor inside text */
-                short glyph_len;
+                // short glyph_len;
                 struct nk_rect label;
-                struct nk_text txt;
+                // struct nk_text txt;
 
-                nk_rune unicode;
+                // nk_rune unicode;
                 // NK_ASSERT(cursor_ptr);
-                glyph_len = nk_utf_decode(cursor_ptr, &unicode, 4);
+                // glyph_len = nk_utf_decode(cursor_ptr, &unicode, 4);
 
                 label.x = area.x + cursor_pos.x - edit->scrollbar.x;
                 label.y = area.y + cursor_pos.y - edit->scrollbar.y;
-                label.w = font->width(font->userdata, font->height, cursor_ptr, glyph_len);
+                label.w = 1; // font->width(font->userdata, font->height, cursor_ptr, glyph_len);
                 label.h = row_height;
 
-                txt.padding = nk_vec2(0,0);
-                txt.background = cursor_color;
-                txt.text = cursor_text_color;
+                // txt.padding = nk_vec2(0,0);
+                // txt.background = cursor_color;
+                // txt.text = cursor_text_color;
                 nk_fill_rect(out, label, 0, cursor_color, true);
 
                 // struct nk_rect whiteTextarea2;
@@ -17142,7 +17146,7 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 // whiteTextarea2.w = label.w;
                 // nk_fill_rect(out, whiteTextarea2, 0, qd.black, false);
 
-                nk_widget_text(out, label, cursor_ptr, glyph_len, &txt, NK_TEXT_LEFT, font, false);
+                // nk_widget_text(out, label, cursor_ptr, glyph_len, &txt, NK_TEXT_LEFT, font, false);
             }
         }}
     } else {
@@ -17168,13 +17172,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         //     background_color = whiteColor;
         // else
         //     background_color = background;
-
+        #ifdef COMMAND_CACHING
         struct nk_rect whiteTextarea;
         whiteTextarea.x = area.x;
         whiteTextarea.y = area.y;
         whiteTextarea.h = area.h;
         whiteTextarea.w = area.w;
         nk_fill_rect(out, whiteTextarea, 0, qd.black, false);
+        #endif
 
         nk_edit_draw_text(out, style, area.x - edit->scrollbar.x, area.y - edit->scrollbar.y, 0, begin, l, row_height, font, style->normal, style->text_normal, nk_false, true);
     }

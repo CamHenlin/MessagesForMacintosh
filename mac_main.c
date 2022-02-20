@@ -326,14 +326,14 @@ void EventLoop(struct nk_context *ctx)
                 PROFILE_START("nuklearApp");
             #endif
 
-            firstOrMouseMove = false;
-
             #ifdef MAC_APP_DEBUGGING
 
                 writeSerialPortDebug(boutRefNum, "nuklearApp");
             #endif
 
             nuklearApp(ctx);
+
+            firstOrMouseMove = false;
 
             #ifdef PROFILING
                 PROFILE_END("nuklearApp");
