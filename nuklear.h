@@ -17111,14 +17111,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 cursor.y -= edit->scrollbar.y;
                 nk_fill_rect(out, cursor, 0, cursor_color, true);
 
-                #ifdef COMMAND_CACHING
-                struct nk_rect whiteTextarea2;
-                whiteTextarea2.x = cursor.x + cursor.w;
-                whiteTextarea2.y = cursor.y - 2;
-                whiteTextarea2.h = cursor.h + 6;
-                whiteTextarea2.w = 9; //cursor.w * 2; // this was previously used when cursor.w = 4, doesn't work well at = 1
-                nk_fill_rect(out, whiteTextarea2, 0, qd.black, false);
-                #endif
+                // #ifdef COMMAND_CACHING
+                // struct nk_rect whiteTextarea2;
+                // whiteTextarea2.x = cursor.x + cursor.w;
+                // whiteTextarea2.y = cursor.y - 2;
+                // whiteTextarea2.h = cursor.h + 6;
+                // whiteTextarea2.w = 9; //cursor.w * 2; // this was previously used when cursor.w = 4, doesn't work well at = 1
+                // nk_fill_rect(out, whiteTextarea2, 0, qd.black, false);
+                // #endif
             } else {
                 /* draw cursor inside text */
                 // short glyph_len;
@@ -17139,8 +17139,11 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 // txt.text = cursor_text_color;
                 nk_fill_rect(out, label, 0, cursor_color, true);
 
+                // TODO: if we want to fix the dangling cursor when typing in the middle of the text,
+                // we need to create a white box at the previous cursor location, and draw it there.
+                // this is a start towards that, but it will draw over the top of the text:
                 // struct nk_rect whiteTextarea2;
-                // whiteTextarea2.x = label.x + label.w;
+                // whiteTextarea2.x = label.x - label.w;
                 // whiteTextarea2.y = label.y - 2;
                 // whiteTextarea2.h = label.h + 6;
                 // whiteTextarea2.w = label.w;
@@ -17172,14 +17175,14 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         //     background_color = whiteColor;
         // else
         //     background_color = background;
-        #ifdef COMMAND_CACHING
-        struct nk_rect whiteTextarea;
-        whiteTextarea.x = area.x;
-        whiteTextarea.y = area.y;
-        whiteTextarea.h = area.h;
-        whiteTextarea.w = area.w;
-        nk_fill_rect(out, whiteTextarea, 0, qd.black, false);
-        #endif
+        // #ifdef COMMAND_CACHING
+        // struct nk_rect whiteTextarea;
+        // whiteTextarea.x = area.x;
+        // whiteTextarea.y = area.y;
+        // whiteTextarea.h = area.h;
+        // whiteTextarea.w = area.w;
+        // nk_fill_rect(out, whiteTextarea, 0, qd.black, false);
+        // #endif
 
         nk_edit_draw_text(out, style, area.x - edit->scrollbar.x, area.y - edit->scrollbar.y, 0, begin, l, row_height, font, style->normal, style->text_normal, nk_false, true);
     }

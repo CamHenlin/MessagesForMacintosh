@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <Serial.h>
 #include <math.h>
 #include <Devices.h>
@@ -15,10 +16,9 @@ IOParam incomingSerialPortReference;
 #define MAX_ATTEMPTS 10
 #define RECEIVE_WINDOW_SIZE 32767 // receive in up to 32kb chunks
 #define MAX_RECEIVE_SIZE 32767 // matching RECEIVE_WINDOW_SIZE for now
-char GlobalSerialInputBuffer[MAX_RECEIVE_SIZE];
-char tempOutput[MAX_RECEIVE_SIZE];
-
-char application_id[255];
+char *GlobalSerialInputBuffer;
+char *tempOutput;
+char *application_id;
 int call_counter = 0;
 
 // from: https://stackoverflow.com/questions/29847915/implementing-strtok-whose-delimiter-has-more-than-one-character
@@ -142,7 +142,7 @@ void setupSerialPort(const char *name) {
         return;
     }
 
-    err = MacOpenDriver(serialPortInputName, &serialPortInput); // result in 0 but still doesn't work
+    err = MacOpenDriver(serialPortInputName, &serialPortInput);
 
     #ifdef PRINT_ERRORS
 
@@ -398,6 +398,10 @@ void setupCoprocessor(char *applicationId, const char *serialDeviceName) {
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: setupCoprocessor");
     #endif
+
+    GlobalSerialInputBuffer = malloc(sizeof(char) * MAX_RECEIVE_SIZE);
+    tempOutput = malloc(sizeof(char) * MAX_RECEIVE_SIZE);
+    application_id = malloc(sizeof(char) * 255);
     
     strcpy(application_id, applicationId);
 
@@ -667,7 +671,7 @@ void callFunctionOnCoprocessor(char* functionName, char* parameters, char* outpu
     getReturnValueFromResponse(serialPortResponse, "FUNCTION", output);
 
     #ifdef DEBUGGING
-        writeSerialPortDebug(boutRefNum, "Greturn value from response");
+        writeSerialPortDebug(boutRefNum, "Got return value from response");
         writeSerialPortDebug(boutRefNum, output);
     #endif
 

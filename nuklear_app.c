@@ -97,19 +97,20 @@ void aFailed(char *file, int line) {
 
 #define MAX_CHAT_MESSAGES 17
 #define MAX_RECEIVE_SIZE 32767 // this has a corresponding value in coprocessor.c
+#define MAX_FRIENDLY_NAME_LENGTH 64
 
 Boolean firstOrMouseMove = true;
 Boolean gotMouseEvent = false;
-char activeChat[64];
-char activeChatMessages[MAX_CHAT_MESSAGES][2048]; // this should match to MAX_ROWS in index.js
-char box_input_buffer[2048];
-char chatFriendlyNames[16][64];
-char ip_input_buffer[255];
-char jsFunctionResponse[MAX_RECEIVE_SIZE]; 
-char chatCountFunctionResponse[MAX_RECEIVE_SIZE];
-char tempChatCountFunctionResponse[MAX_RECEIVE_SIZE];
-char previousChatCountFunctionResponse[MAX_RECEIVE_SIZE];
-char new_message_input_buffer[255];
+char *activeChat;
+char *activeChatMessages;
+char *box_input_buffer;
+char *chatFriendlyNames;
+char *ip_input_buffer;
+char *jsFunctionResponse;
+char *chatCountFunctionResponse;
+char *tempChatCountFunctionResponse;
+char *previousChatCountFunctionResponse;
+char *new_message_input_buffer;
 int activeMessageCounter = 0;
 int chatFriendlyNamesCounter = 0;
 int coprocessorLoaded = 0;
@@ -134,7 +135,6 @@ struct nk_context *ctx;
         aFailed(__FILE__, __LINE__)
 
 #include <Types.h>
-#include "nuklear.h"
 #include "nuklear_quickdraw.h"
 #include "coprocessorjs.h"
 
@@ -148,7 +148,7 @@ void getMessagesFromjsFunctionResponse() {
 
     for (int i = 0; i < MAX_CHAT_MESSAGES; i++) {
 
-        memset(&activeChatMessages[i], '\0', 2048);
+        memset(&activeChatMessages[i * 2048], '\0', 2048);
     }
 
     activeMessageCounter = 0;
@@ -158,7 +158,7 @@ void getMessagesFromjsFunctionResponse() {
     // loop through the string to extract all other tokens
     while (token != NULL) {
 
-        sprintf(activeChatMessages[activeMessageCounter], "%s", token);
+        sprintf(&activeChatMessages[activeMessageCounter * 2048], "%s", token);
         token = (char *)strtokm(NULL, "ENDLASTMESSAGE");
         activeMessageCounter++;
     }
@@ -176,7 +176,7 @@ void sendMessage() {
     char output[2048];
     sprintf(output, "%s&&&%.*s", activeChat, box_input_len, box_input_buffer);
 
-    memset(&box_input_buffer, '\0', 2048);
+    memset(box_input_buffer, '\0', 2048);
     box_input_len = 0;
 
     // this was an attempt to get the text in the textbox to go away... doesn't really work for a few more redraws
@@ -207,7 +207,7 @@ void getChats() {
     while (token != NULL) {
 
         writeSerialPortDebug(boutRefNum, token);
-        sprintf(chatFriendlyNames[chatFriendlyNamesCounter++], "%s", token); 
+        sprintf(&chatFriendlyNames[chatFriendlyNamesCounter++ * MAX_FRIENDLY_NAME_LENGTH], "%s", token); 
         token = (char *)strtokm(NULL, ",");
     }
 
@@ -354,10 +354,10 @@ void getChatCounts() {
 
         for (int i = 0; i < chatFriendlyNamesCounter; i++) {
 
-            if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
+            if (strstr(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], " new) ") != NULL) {
 
                 char chatName[64];
-                sprintf(chatName, "%.63s", chatFriendlyNames[i]);
+                sprintf(chatName, "%.63s", &chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH]);
 
                 int updateResults = 0;
                 char *(*updatePieces[2])[64];
@@ -391,14 +391,14 @@ void getChatCounts() {
 
                     if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
 
-                        sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
+                        sprintf(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], "%.63s", (char *)chatUpdate[0]);
                     } else {
 
-                        sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
+                        sprintf(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], "(%d new) %.63s", count, (char *)chatUpdate[0]);
                     }
                     break;
                 }
-            } else if (prefix(chatFriendlyNames[i], (char *)chatUpdate[0])) {
+            } else if (prefix(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], (char *)chatUpdate[0])) {
 
                 #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                     writeSerialPortDebug(boutRefNum, "match2");
@@ -407,10 +407,10 @@ void getChatCounts() {
 
                 if (count == 0 || !strcmp(activeChat, (char *)chatUpdate[0])) {
 
-                    sprintf(chatFriendlyNames[i], "%.63s", (char *)chatUpdate[0]);
+                    sprintf(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], "%.63s", (char *)chatUpdate[0]);
                 } else {
 
-                    sprintf(chatFriendlyNames[i], "(%d new) %.63s", count, (char *)chatUpdate[0]);
+                    sprintf(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], "(%d new) %.63s", count, (char *)chatUpdate[0]);
                 }
                 break;
             }
@@ -563,7 +563,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
                     for (int i = 0; i < MAX_CHAT_MESSAGES; i++) {
 
-                        memset(&activeChatMessages[i], '\0', 2048);
+                        memset(&activeChatMessages[i * 2048], '\0', 2048);
                     }
 
                     getMessages(activeChat, 0);
@@ -600,12 +600,12 @@ static void nuklearApp(struct nk_context *ctx) {
 
                 nk_layout_row_push(ctx, 169);
 
-                if (nk_button_label(ctx, chatFriendlyNames[i])) {
+                if (nk_button_label(ctx, &chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH])) {
 
-                    if (strstr(chatFriendlyNames[i], " new) ") != NULL) {
+                    if (strstr(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], " new) ") != NULL) {
 
                         char chatName[96];
-                        sprintf(chatName, "%.63s", chatFriendlyNames[i]);
+                        sprintf(chatName, "%.63s", &chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH]);
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "clicked1 chatName");
@@ -628,15 +628,15 @@ static void nuklearApp(struct nk_context *ctx) {
                         #endif
 
                         sprintf(activeChat, "%.63s", name);
-                        sprintf(chatFriendlyNames[i], "%.63s", name);
+                        sprintf(&chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH], "%.63s", name);
                     } else {
 
                         #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
                             writeSerialPortDebug(boutRefNum, "clicked2 chatName");
-                            writeSerialPortDebug(boutRefNum, chatFriendlyNames[i]);
+                            writeSerialPortDebug(boutRefNum, chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH]);
                         #endif
 
-                        sprintf(activeChat, "%.63s", chatFriendlyNames[i]);
+                        sprintf(activeChat, "%.63s", &chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH]);
                     }
 
                     forceRedrawChats = 6; // redraw the chat list for several iterations in an attempt to get rid of the hovered button
@@ -682,7 +682,7 @@ static void nuklearApp(struct nk_context *ctx) {
 
                 // writeSerialPortDebug(boutRefNum, "activeChatMessages[i]");
                 // writeSerialPortDebug(boutRefNum, activeChatMessages[i]);
-                nk_label(ctx, activeChatMessages[i], NK_TEXT_ALIGN_LEFT);
+                nk_label(ctx, &activeChatMessages[i * 2048], NK_TEXT_ALIGN_LEFT);
             }
         }
 
@@ -727,9 +727,18 @@ struct nk_context* initializeNuklearApp() {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: initializeNuklearApp");
     #endif
 
+    activeChat = malloc(sizeof(char) * MAX_FRIENDLY_NAME_LENGTH);
+    activeChatMessages = malloc(sizeof(char) * (MAX_CHAT_MESSAGES * 2048)); // this should match to MAX_ROWS in index.js
+    box_input_buffer = malloc(sizeof(char) * 2048);
+    chatFriendlyNames = malloc(sizeof(char) * (16 * MAX_FRIENDLY_NAME_LENGTH));
+    ip_input_buffer = malloc(sizeof(char) * 255);
+    jsFunctionResponse = malloc(sizeof(char) * MAX_RECEIVE_SIZE); 
+    chatCountFunctionResponse = malloc(sizeof(char) * MAX_RECEIVE_SIZE);
+    tempChatCountFunctionResponse = malloc(sizeof(char) * MAX_RECEIVE_SIZE);
+    previousChatCountFunctionResponse = malloc(sizeof(char) * MAX_RECEIVE_SIZE);
+    new_message_input_buffer = malloc(sizeof(char) * 255);
+
     sprintf(activeChat, "no active chat");
-    memset(&chatCountFunctionResponse, '\0', MAX_RECEIVE_SIZE);
-    memset(&previousChatCountFunctionResponse, '\0', MAX_RECEIVE_SIZE);
 
     graphql_input_window_size = nk_rect(WINDOW_WIDTH / 2 - 118, 80, 234, 100);
     chats_window_size = nk_rect(0, 0, 180, WINDOW_HEIGHT);

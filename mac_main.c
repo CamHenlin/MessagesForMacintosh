@@ -95,7 +95,6 @@ void PROFILE_COMPLETE() {
 #include "Quickdraw.h"
 #include "output_js.h"
 #include "coprocessorjs.h"
-
 #include "nuklear_app.c"
 
 /* GMac is used to hold the result of a SysEnvirons call. This makes
