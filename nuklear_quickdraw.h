@@ -28,7 +28,7 @@
 #define ENABLED_DOUBLE_BUFFERING
 #define COMMAND_CACHING
 #include "nuklear.h"
-// #define NK_QUICKDRAW_GRAPHICS_DEBUGGING
+#define NK_QUICKDRAW_GRAPHICS_DEBUGGING
 // #define DRAW_BLIT_LOCATION
 
 Boolean lastInputWasBackspace;
