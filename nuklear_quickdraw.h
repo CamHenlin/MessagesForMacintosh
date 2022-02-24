@@ -559,6 +559,13 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                 #ifdef COMMAND_CACHING
 
+                    char x[255];
+                    sprintf(x, "cmd: %d", cmd->type);
+                    writeSerialPortDebug(boutRefNum, x);
+                    char y[255];
+                    sprintf(y, "lastCmd: %d", lastCmd->type);
+                    writeSerialPortDebug(boutRefNum, y);
+
                     if (!lastInputWasBackspace && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
