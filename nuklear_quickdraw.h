@@ -1136,7 +1136,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     #ifdef COMMAND_CACHING
-        const struct nk_command *lastCmd;
+        const struct nk_command *lastCmd = malloc(sizeof(struct nk_command));
         lastCmd = nk_ptr_add_const(struct nk_command, last, 0);
     #endif
 
@@ -1149,14 +1149,25 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
         #endif
 
         #ifdef COMMAND_CACHING
+
+            #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: get next cached command");
+            #endif
             // TODO: if this becomes worth pursuing later, it causes address errors. I suspect that the memcpy
             // command that builds up the last variable is not properly allocating memory.
             // the address error pops up on the line of the conditional itself and can sometimes take hours to trigger.
-            if (currentCalls < lastCalls && lastCmd && lastCmd->next) {
+            if (currentCalls < lastCalls - 1 && lastCmd && lastCmd->next) {
+
+                #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                    writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: inside conditional");
+                #endif
 
                 lastCmd = nk_ptr_add_const(struct nk_command, last, lastCmd->next);
             }
 
+            #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+                writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: done getting lastCmd");
+            #endif
             currentCalls++;
         #endif
     }
