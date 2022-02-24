@@ -236,6 +236,9 @@ void readSerialPort(char* output) {
         writeSerialPortDebug(boutRefNum, "readSerialPort, enter loop");
     #endif
 
+    // wait a moment for the buffer to fill
+    wait(0.01);
+
     while (!done) {
 
         if (loopCounter++ > MAX_RECIEVE_LOOP_ITERATIONS) {
@@ -337,6 +340,14 @@ void readSerialPort(char* output) {
                 // writeSerialPortDebug(boutRefNum, debugOutput);
                 // writeSerialPortDebug(boutRefNum, "\ndone with output\n");
                 // writeSerialPortDebug(boutRefNum, "\n");
+            #endif
+
+            done = true;
+        } else {
+
+            #ifdef DEBUGGING
+                writeSerialPortDebug(boutRefNum, "receive loop complete, but terminator is missing");
+                writeSerialPortDebug(boutRefNum, tempOutput);
             #endif
 
             done = true;
