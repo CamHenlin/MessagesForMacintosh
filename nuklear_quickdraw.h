@@ -599,8 +599,10 @@ void updateBounds(int top, int bottom, int left, int right) {
                 #endif
 
                 const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled *)cmd;
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED1");
 
                 if (r->allowCache == false) {
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED2");
 
                     Rect quickDrawRectangle;
                     quickDrawRectangle.top = r->y;
@@ -608,14 +610,17 @@ void updateBounds(int top, int bottom, int left, int right) {
                     quickDrawRectangle.bottom = r->y + r->h;
                     quickDrawRectangle.right = r->x + r->w;
 
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED3");
                     #ifdef ENABLED_DOUBLE_BUFFERING
                         updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                     #endif
 
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED4");
                     FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &qd.white);
                     break;
                 }
 
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED5");
                 #ifdef COMMAND_CACHING
                     if (!lastInputWasBackspace && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
 
@@ -627,6 +632,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED6");
                 // TODO: to support coloring the lines, we need to map from qd Pattern types to integer colors
                 // color = nk_color_to_quickdraw_bw_color(r->color);
                 // ForeColor(color);
@@ -640,12 +646,18 @@ void updateBounds(int top, int bottom, int left, int right) {
                 quickDrawRectangle.bottom = r->y + r->h;
                 quickDrawRectangle.right = r->x + r->w;
 
+
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED7");
+
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED8");
                 FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &r->color);
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED9");
                 FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding); // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-105.html#HEADING105-0
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED10 (done)");
             }
 
             break;
