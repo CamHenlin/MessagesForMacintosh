@@ -12,7 +12,7 @@
 IOParam outgoingSerialPortReference;
 IOParam incomingSerialPortReference;
 // #define PRINT_ERRORS 1
-// #define DEBUGGING 1
+#define DEBUGGING 1
 #define MAX_ATTEMPTS 10
 #define RECEIVE_WINDOW_SIZE 32767 // receive in up to 32kb chunks
 #define MAX_RECEIVE_SIZE 32767 // matching RECEIVE_WINDOW_SIZE for now

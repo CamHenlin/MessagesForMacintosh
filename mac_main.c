@@ -25,7 +25,7 @@
 
 // #define MAC_APP_DEBUGGING
 // #define PROFILING 1
-// #define DEBUG_FUNCTION_CALLS
+#define DEBUG_FUNCTION_CALLS
 #ifdef PROFILING
 
 OSErr writeSerialPortProfile(const char* str)
