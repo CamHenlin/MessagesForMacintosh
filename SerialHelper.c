@@ -47,7 +47,7 @@ OSErr setupDebugSerialPort(short refNum) {
     CntrlParam cb2;
     cb2.ioCRefNum = serialPort;
     cb2.csCode = 8;
-    cb2.csParam[0] = stop10 | noParity | data8 | baud28800;
+    cb2.csParam[0] = stop10 | noParity | data8 | baud19200;
 
     err = PBControl ((ParmBlkPtr) & cb2, 0);
 
