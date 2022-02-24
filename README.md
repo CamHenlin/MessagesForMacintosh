@@ -13,7 +13,7 @@ There are two setup guides for Messages for Macintosh:
 Messages for Macintosh is built on a lot of technologies. The READMEs of each of these is each worth familiarizing yourself with if you would like to contribute to Messages for Macintosh:
 
 - [Retro68](https://github.com/autc04/Retro68) - a GCC-based cross compilation env for classic Macintosh systems
-- [Nuklear Quickdraw](https://github.com/CamHenlin/nuklear-quickdraw) - a heavily modified, Macintosh-specific version of [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) allowing a simple way to provide GUI services
+- [Nuklear Quickdraw](https://github.com/CamHenlin/nuklear-quickdraw) - a heavily modified, classic Macintosh-specific version of [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) allowing a simple way to provide GUI services
 - [CoprocessorJS](https://github.com/CamHenlin/coprocessor.js) - a library that allows us to handle nodejs workloads sent over a serial port
 - [serialperformanceanalyzer](https://github.com/CamHenlin/serialperformanceanalyzer) - used to analyze the performance of many different parts of the application
 
