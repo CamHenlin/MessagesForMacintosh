@@ -555,6 +555,7 @@ void updateBounds(int top, int bottom, int left, int right) {
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-102.html#MARKER-9-372
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-103.html#HEADING103-0
                 const struct nk_command_rect *r = (const struct nk_command_rect *)cmd;
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT2");
 
                 #ifdef COMMAND_CACHING
 
@@ -567,21 +568,26 @@ void updateBounds(int top, int bottom, int left, int right) {
                         break;
                     }
                 #endif
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT3");
 
                 ForeColor(r->color);
                 PenSize(r->line_thickness, r->line_thickness);
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT4");
 
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = r->y;
                 quickDrawRectangle.left = r->x;
                 quickDrawRectangle.bottom = r->y + r->h;
                 quickDrawRectangle.right = r->x + r->w;
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT5");
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT6");
 
                 FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding);
+                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT7 (done)");
             }
 
             break;
