@@ -225,6 +225,7 @@ void readSerialPort(char* output) {
     
     // make sure output variable is clear
     memset(output, '\0', MAX_RECEIVE_SIZE);
+    memset(tempOutput, '\0', MAX_RECEIVE_SIZE);
 
     bool done = false;
     long int totalByteCount = 0;
@@ -326,7 +327,7 @@ void readSerialPort(char* output) {
 
             #ifdef DEBUGGING
 
-                writeSerialPortDebug(boutRefNum, "done building temp output\n");
+                writeSerialPortDebug(boutRefNum, "done building temp output");
                 writeSerialPortDebug(boutRefNum, tempOutput);
 
                 // char debugOutput[255];
@@ -343,7 +344,7 @@ void readSerialPort(char* output) {
     }
 
     // attach the gathered up output from the buffer to the output variable
-    strncat(output, tempOutput, totalByteCount);
+    memcpy(output, tempOutput, totalByteCount);
 
     #ifdef DEBUGGING
         writeSerialPortDebug(boutRefNum, "coprocessor.readSerialPort complete, output:");

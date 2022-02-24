@@ -17,6 +17,10 @@
 
 // based on https://github.com/mr21/strsplit.c/blob/master/strsplit.c
 static char** _strsplit( const char* s, const char* delim, int* nb ) {
+
+    #ifdef DEBUG_FUNCTION_CALLS
+        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: _strsplit");
+    #endif
     void* data;
     char* _s = ( char* )s;
     const char** ptrs;
