@@ -52,7 +52,7 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file();
  *
  * ===============================================================
  */
-#define MAX_MEMORY_IN_KB 6
+#define MAX_MEMORY_IN_KB 8
 #ifdef NK_QUICKDRAW_IMPLEMENTATION
 #ifndef NK_QUICKDRAW_TEXT_MAX
 #define NK_QUICKDRAW_TEXT_MAX 256
