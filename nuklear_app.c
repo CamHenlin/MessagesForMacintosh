@@ -15,69 +15,48 @@
 
 // #define MESSAGES_FOR_MACINTOSH_DEBUGGING
 
-// based on https://github.com/jwerle/strsplit.c -- cleaned up and modified to use strtokm rather than strtok
-int strsplit (const char *str, char *parts[], const char *delimiter) {
+// based on https://github.com/mr21/strsplit.c/blob/master/strsplit.c
+static char** _strsplit( const char* s, const char* delim, int* nb ) {
+    void* data;
+    char* _s = ( char* )s;
+    const char** ptrs;
+    int
+        ptrsSize,
+        nbWords = 1,
+        sLen = strlen( s ),
+        delimLen = strlen( delim );
 
-    #ifdef DEBUG_FUNCTION_CALLS
-        writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: strsplit");
-    #endif
-
-  char *pch;
-  int i = 0;
-  char *copy = NULL;
-  char *tmp = NULL;
-
-  copy = strdup(str);
-
-  if (! copy) {
-
-    goto bad;
-  }
-
-  pch = strtokm(copy, delimiter);
-
-  tmp = strdup(pch);
-
-  if (!tmp) {
-
-    goto bad;
-  }
-
-  parts[i++] = tmp;
-
-  while (pch) {
-
-    pch = strtokm(NULL, delimiter);
-
-    if (NULL == pch) {
-
-        break;
+    while ( ( _s = strstr( _s, delim ) ) ) {
+        _s += delimLen;
+        ++nbWords;
     }
-
-    tmp = strdup(pch);
-
-    if (! tmp) {
-
-      goto bad;
+    ptrsSize = ( nbWords + 1 ) * sizeof( char* );
+    ptrs =
+    data = malloc( ptrsSize + sLen + 1 );
+    if ( data ) {
+        *ptrs =
+        _s = strcpy( ( ( char* )data ) + ptrsSize, s );
+        if ( nbWords > 1 ) {
+            while ( ( _s = strstr( _s, delim ) ) ) {
+                *_s = '\0';
+                _s += delimLen;
+                *++ptrs = _s;
+            }
+        }
+        *++ptrs = NULL;
     }
+    if ( nb ) {
+        *nb = data ? nbWords : 0;
+    }
+    return data;
+}
 
-    parts[i++] = tmp;
-  }
+char** strsplit( const char* s, const char* delim ) {
+    return _strsplit( s, delim, NULL );
+}
 
-  free(copy);
-
-  return i;
-
- bad:
-
-  free(copy);
-
-  for (int j = 0; j < i; j++) {
-
-    free(parts[j]);
-  }
-
-  return -1;
+char** strsplit_count( const char* s, const char* delim, int* nb ) {
+    return _strsplit( s, delim, nb );
 }
 
 void aFailed(char *file, int line) {
@@ -232,8 +211,8 @@ void sendIPAddressToCoprocessor() {
 }
 
 // set up function to get messages in current chat
-// 	 limit to recent messages 
-// 	 figure out pagination?? button on the top that says "get previous chats"?, TODO
+// limit to recent messages 
+// figure out pagination?? button on the top that says "get previous chats"?, TODO
 void getMessages(char *thread, int page) {
 
     #ifdef DEBUG_FUNCTION_CALLS
@@ -296,9 +275,8 @@ void getChatCounts() {
 
     strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
     int chatCount = 0;
-    char *(*chats[16])[64];
 
-    chatCount = strsplit(tempChatCountFunctionResponse, (char **)chats, ",");
+    char **chats = strsplit_count(tempChatCountFunctionResponse, ",", &chatCount);
 
     for (int chatLoopCounter = 0; chatLoopCounter < chatCount; chatLoopCounter++) {
 
@@ -320,9 +298,8 @@ void getChatCounts() {
 
         strcpy(tempChatCountFunctionResponse, chatCountFunctionResponse);
         int results = 0;
-        char *(*chatUpdate[2])[64];
 
-        results = strsplit((char *)chats[chatLoopCounter], (char **)chatUpdate, ":::");
+        char **chatUpdate = strsplit_count((char *)chats[chatLoopCounter], ":::", &results);
 
         if (results != 2) {
 
@@ -360,9 +337,8 @@ void getChatCounts() {
                 sprintf(chatName, "%.63s", &chatFriendlyNames[i * MAX_FRIENDLY_NAME_LENGTH]);
 
                 int updateResults = 0;
-                char *(*updatePieces[2])[64];
 
-                updateResults = strsplit(chatName, (char **)updatePieces, " new) ");
+                char **updatePieces = strsplit_count(chatName, " new) ", &updateResults);
 
                 if (updateResults != 2) {
 
