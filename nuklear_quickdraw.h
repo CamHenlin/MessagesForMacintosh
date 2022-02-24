@@ -1086,6 +1086,7 @@ void updateBounds(int top, int bottom, int left, int right) {
 #ifdef COMMAND_CACHING
     int lastCalls = 0;
     int currentCalls;
+    const struct nk_command *lastCmd;
 #endif
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
@@ -1136,7 +1137,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     #ifdef COMMAND_CACHING
-        const struct nk_command *lastCmd = malloc(sizeof(struct nk_command));
         lastCmd = nk_ptr_add_const(struct nk_command, last, 0);
     #endif
 
@@ -1498,6 +1498,10 @@ NK_API struct nk_context* nk_quickdraw_init(unsigned int width, unsigned int hei
 
     NkQuickDrawFont *quickdrawfont = nk_quickdraw_font_create_from_file();
     struct nk_user_font *font = &quickdrawfont->nk;
+
+    #ifdef COMMAND_CACHING
+        lastCmd = malloc(sizeof(struct nk_command));
+    #endif
 
     last = calloc(1, MAX_MEMORY_IN_KB * 1024);
     buf = calloc(1, MAX_MEMORY_IN_KB * 1024);
