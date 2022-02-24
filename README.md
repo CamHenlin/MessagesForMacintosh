@@ -1,7 +1,7 @@
 # Messages For Macintosh
 Messages for Macintosh is a software suite for classic Macintosh (System 2.0 through MacOS 9.2.2) systems to interoperate with Apple iMessages via a familiar interface, with [supporting software](https://github.com/CamHenlin/imessagegraphqlserver) running on a newer Mac computer.
 
-![messages for macintosh](/images/messagesformacintosh.png)
+![messages for macintosh](https://henlin.net/images/messagesformacintosh.png)
 
 ## How to use Messages for Macintosh
 There are two setup guides for Messages for Macintosh:
