@@ -28,7 +28,7 @@
 #define ENABLED_DOUBLE_BUFFERING
 #define COMMAND_CACHING
 #include "nuklear.h"
-#define NK_QUICKDRAW_GRAPHICS_DEBUGGING
+// #define NK_QUICKDRAW_GRAPHICS_DEBUGGING
 // #define DRAW_BLIT_LOCATION
 
 Boolean lastInputWasBackspace;
@@ -495,12 +495,14 @@ void updateBounds(int top, int bottom, int left, int right) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: runDrawCommand");
     #endif
 
-    char x[255];
-    sprintf(x, "cmd: %d", cmd->type);
-    writeSerialPortDebug(boutRefNum, x);
-    char y[255];
-    sprintf(y, "lastCmd: %d", lastCmd->type);
-    writeSerialPortDebug(boutRefNum, y);
+    #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
+        char x[255];
+        sprintf(x, "cmd: %d", cmd->type);
+        writeSerialPortDebug(boutRefNum, x);
+        char y[255];
+        sprintf(y, "lastCmd: %d", lastCmd->type);
+        writeSerialPortDebug(boutRefNum, y);
+    #endif
 
     switch (cmd->type) {
 
@@ -562,7 +564,6 @@ void updateBounds(int top, int bottom, int left, int right) {
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-102.html#MARKER-9-372
                 // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-103.html#HEADING103-0
                 const struct nk_command_rect *r = (const struct nk_command_rect *)cmd;
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT2");
 
                 #ifdef COMMAND_CACHING
 
@@ -575,26 +576,21 @@ void updateBounds(int top, int bottom, int left, int right) {
                         break;
                     }
                 #endif
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT3");
 
                 ForeColor(r->color);
                 PenSize(r->line_thickness, r->line_thickness);
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT4");
 
                 Rect quickDrawRectangle;
                 quickDrawRectangle.top = r->y;
                 quickDrawRectangle.left = r->x;
                 quickDrawRectangle.bottom = r->y + r->h;
                 quickDrawRectangle.right = r->x + r->w;
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT5");
 
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT6");
 
                 FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding);
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT7 (done)");
             }
 
             break;
@@ -606,10 +602,8 @@ void updateBounds(int top, int bottom, int left, int right) {
                 #endif
 
                 const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled *)cmd;
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED1");
 
                 if (r->allowCache == false) {
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED2");
 
                     Rect quickDrawRectangle;
                     quickDrawRectangle.top = r->y;
@@ -617,17 +611,14 @@ void updateBounds(int top, int bottom, int left, int right) {
                     quickDrawRectangle.bottom = r->y + r->h;
                     quickDrawRectangle.right = r->x + r->w;
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED3");
                     #ifdef ENABLED_DOUBLE_BUFFERING
                         updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                     #endif
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED4");
                     FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &qd.white);
                     break;
                 }
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED5");
                 #ifdef COMMAND_CACHING
 
                     if (!lastInputWasBackspace && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
@@ -640,7 +631,6 @@ void updateBounds(int top, int bottom, int left, int right) {
                     }
                 #endif
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED6");
                 // TODO: to support coloring the lines, we need to map from qd Pattern types to integer colors
                 // color = nk_color_to_quickdraw_bw_color(r->color);
                 // ForeColor(color);
@@ -654,18 +644,12 @@ void updateBounds(int top, int bottom, int left, int right) {
                 quickDrawRectangle.bottom = r->y + r->h;
                 quickDrawRectangle.right = r->x + r->w;
 
-
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED7");
-
                 #ifdef ENABLED_DOUBLE_BUFFERING
                     updateBounds(quickDrawRectangle.top, quickDrawRectangle.bottom, quickDrawRectangle.left, quickDrawRectangle.right);
                 #endif
 
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED8");
                 FillRoundRect(&quickDrawRectangle, r->rounding, r->rounding, &r->color);
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED9");
                 FrameRoundRect(&quickDrawRectangle, r->rounding, r->rounding); // http://mirror.informatimago.com/next/developer.apple.com/documentation/mac/QuickDraw/QuickDraw-105.html#HEADING105-0
-                    writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED10 (done)");
             }
 
             break;
@@ -1104,40 +1088,13 @@ void updateBounds(int top, int bottom, int left, int right) {
 }
 
 #ifdef COMMAND_CACHING
-    int lastCalls = 0;
-    int currentCalls;
     const struct nk_command *lastCmd;
-
-    Boolean VALID_COMMANDS[18] = {
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-    };
 #endif
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
 
     #ifdef DEBUG_FUNCTION_CALLS
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: nk_quickdraw_render");
-    #endif
-
-    #ifdef COMMAND_CACHING
-        currentCalls = 1;
     #endif
 
     #ifdef PROFILING
@@ -1195,7 +1152,7 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
                 writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: get next cached command");
             #endif
 
-            if (currentCalls < lastCalls && lastCmd && VALID_COMMANDS[lastCmd->type]) {
+            if (lastCmd && lastCmd->next) {
 
                 #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                     writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: inside conditional");
@@ -1207,7 +1164,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
             #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: done getting lastCmd");
             #endif
-            currentCalls++;
         #endif
     }
 
@@ -1228,7 +1184,6 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
     #endif
 
     #ifdef COMMAND_CACHING
-        lastCalls = currentCalls;
         lastInputWasBackspace = false;
     #endif
 
