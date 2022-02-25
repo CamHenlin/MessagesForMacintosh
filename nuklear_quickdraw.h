@@ -52,7 +52,7 @@ NK_API NkQuickDrawFont* nk_quickdraw_font_create_from_file();
  *
  * ===============================================================
  */
-#define MAX_MEMORY_IN_KB 8
+#define MAX_MEMORY_IN_KB 6
 #ifdef NK_QUICKDRAW_IMPLEMENTATION
 #ifndef NK_QUICKDRAW_TEXT_MAX
 #define NK_QUICKDRAW_TEXT_MAX 256
@@ -495,6 +495,13 @@ void updateBounds(int top, int bottom, int left, int right) {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: runDrawCommand");
     #endif
 
+    char x[255];
+    sprintf(x, "cmd: %d", cmd->type);
+    writeSerialPortDebug(boutRefNum, x);
+    char y[255];
+    sprintf(y, "lastCmd: %d", lastCmd->type);
+    writeSerialPortDebug(boutRefNum, y);
+
     switch (cmd->type) {
 
         case NK_COMMAND_NOP:
@@ -559,13 +566,6 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                 #ifdef COMMAND_CACHING
 
-                    char x[255];
-                    sprintf(x, "cmd: %d", cmd->type);
-                    writeSerialPortDebug(boutRefNum, x);
-                    char y[255];
-                    sprintf(y, "lastCmd: %d", lastCmd->type);
-                    writeSerialPortDebug(boutRefNum, y);
-
                     if (!lastInputWasBackspace && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect)) == 0) {
 
                         #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
@@ -629,13 +629,6 @@ void updateBounds(int top, int bottom, int left, int right) {
 
                     writeSerialPortDebug(boutRefNum, "NK_COMMAND_RECT_FILLED5");
                 #ifdef COMMAND_CACHING
-
-                    char x[255];
-                    sprintf(x, "cmd: %d", cmd->type);
-                    writeSerialPortDebug(boutRefNum, x);
-                    char y[255];
-                    sprintf(y, "lastCmd: %d", lastCmd->type);
-                    writeSerialPortDebug(boutRefNum, y);
 
                     if (!lastInputWasBackspace && cmd->type == lastCmd->type && memcmp(r, lastCmd, sizeof(struct nk_command_rect_filled)) == 0) {
 
@@ -1114,6 +1107,27 @@ void updateBounds(int top, int bottom, int left, int right) {
     int lastCalls = 0;
     int currentCalls;
     const struct nk_command *lastCmd;
+
+    Boolean VALID_COMMANDS[18] = {
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+    };
 #endif
 
 NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
@@ -1180,10 +1194,8 @@ NK_API void nk_quickdraw_render(WindowPtr window, struct nk_context *ctx) {
             #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                 writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: get next cached command");
             #endif
-            // TODO: if this becomes worth pursuing later, it causes address errors. I suspect that the memcpy
-            // command that builds up the last variable is not properly allocating memory.
-            // the address error pops up on the line of the conditional itself and can sometimes take hours to trigger.
-            if (currentCalls < lastCalls - 1 && lastCmd && lastCmd->next) {
+
+            if (currentCalls < lastCalls && lastCmd && VALID_COMMANDS[lastCmd->type]) {
 
                 #ifdef NK_QUICKDRAW_GRAPHICS_DEBUGGING
                     writeSerialPortDebug(boutRefNum, "COMMAND_CACHING: inside conditional");
