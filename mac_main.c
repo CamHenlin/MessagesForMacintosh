@@ -147,8 +147,10 @@ int main()
 {
     Initialize();					/* initialize the program */
     UnloadSeg((Ptr) Initialize);	/* note that Initialize must not be in Main! */
-    setupDebugSerialPort(boutRefNum);
-    writeSerialPortDebug(boutRefNum, "initializing messages for macintosh");
+    #ifdef MAC_APP_DEBUGGING
+        setupDebugSerialPort(boutRefNum);
+        writeSerialPortDebug(boutRefNum, "initializing messages for macintosh");
+    #endif
 
     // run our nuklear app one time to render the window telling us to be patient for the coprocessor
     // app to load up 
@@ -161,7 +163,10 @@ int main()
 
     char programResult[MAX_RECEIVE_SIZE];
     sendProgramToCoprocessor((char *)OUTPUT_JS, programResult);
-    writeSerialPortDebug(boutRefNum, "coprocessor loaded");
+
+    #ifdef MAC_APP_DEBUGGING
+        writeSerialPortDebug(boutRefNum, "coprocessor loaded");
+    #endif
 
     coprocessorLoaded = 1;
 
@@ -198,7 +203,7 @@ void EventLoop(struct nk_context *ctx)
             ShowCursor();
         }
 
-        // check for new stuff every 10 sec?
+        // check for new stuff every x sec?
         // note! this is used by some of the functionality in our nuklear_app to trigger
         // new chat lookups
         if (TickCount() - lastUpdatedTickCountMessagesInChat > 300) {
@@ -597,7 +602,7 @@ void AdjustMenus()
     if ( IsDAWindow(window) )		/* we can allow desk accessories to be closed from the menu */
         EnableItem(menu, iClose);
     else
-        DisableItem(menu, iClose);	/* but not our traffic light window */
+        DisableItem(menu, iClose);	/* but not our messages window */
 
     menu = GetMenuHandle(mEdit);
     if ( IsDAWindow(window) ) {		/* a desk accessory might need the edit menuÉ */
@@ -615,12 +620,16 @@ void AdjustMenus()
     }
 
     menu = GetMenuHandle(mLight);
-    if ( IsAppWindow(window) ) {	/* we know that it must be the traffic light */
-        EnableItem(menu, iStop);
-        EnableItem(menu, iGo);
+    if ( IsAppWindow(window) ) {	/* this is the messages menu */
+        EnableItem(menu, NEW_MESSAGE);
+        EnableItem(menu, RESET_CHAT_LIST);
+        EnableItem(menu, REFRESH_MESSAGES);
+        EnableItem(menu, CLEAR_CHAT_INPUT);
     } else {
-        DisableItem(menu, iStop);
-        DisableItem(menu, iGo);
+        DisableItem(menu, NEW_MESSAGE);
+        DisableItem(menu, RESET_CHAT_LIST);
+        DisableItem(menu, REFRESH_MESSAGES);
+        DisableItem(menu, CLEAR_CHAT_INPUT);
     }
 } /*AdjustMenus*/
 
@@ -679,6 +688,14 @@ void DoMenuCommand(menuResult)
             switch (menuItem) {
                 case 2:
                     getChats();
+                    break;
+                case 3:
+                    getMessages(activeChat, 0);
+                    break;
+                case 4:
+                    memset(box_input_buffer, '\0', 2048);
+                    box_input_len = 0;
+                    forceRedrawMessages = 3;
                     break;
                 default:
                     sendNewChat = 1;

@@ -189,7 +189,9 @@ void getChats() {
 
     while (token != NULL) {
 
-        writeSerialPortDebug(boutRefNum, token);
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+            writeSerialPortDebug(boutRefNum, token);
+        #endif
         sprintf(&chatFriendlyNames[chatFriendlyNamesCounter++ * MAX_FRIENDLY_NAME_LENGTH], "%s", token); 
         token = (char *)strtokm(NULL, ",");
     }
@@ -249,8 +251,6 @@ void getChatCounts() {
         writeSerialPortDebug(boutRefNum, "DEBUG_FUNCTION_CALLS: getChatCounts");
     #endif
 
-    writeSerialPortDebug(boutRefNum, "getChatCounts!");
-
     callFunctionOnCoprocessor("getChatCounts", "", chatCountFunctionResponse);
 
     #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
@@ -261,7 +261,10 @@ void getChatCounts() {
     // bail out if the responses ARE equal
     if (!strcmp(chatCountFunctionResponse, previousChatCountFunctionResponse)) {
 
-        writeSerialPortDebug(boutRefNum, "no need to update current chat count");
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+            writeSerialPortDebug(boutRefNum, "no need to update current chat count");
+        #endif
+
         return;
     }
 
@@ -415,13 +418,19 @@ void getHasNewMessagesInChat(char *thread) {
 
     if (!strcmp(jsFunctionResponse, "true")) {
 
-        writeSerialPortDebug(boutRefNum, "update current chat");
+        #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+            writeSerialPortDebug(boutRefNum, "update current chat");
+        #endif
+
         SysBeep(1);
         getMessages(thread, 0);
-    } else {
-
-        writeSerialPortDebug(boutRefNum, "do not update current chat");
     }
+    #ifdef MESSAGES_FOR_MACINTOSH_DEBUGGING
+        else {
+
+            writeSerialPortDebug(boutRefNum, "do not update current chat");
+        }
+    #endif
 
     return;
 }

@@ -139,6 +139,10 @@ resource 'MENU' (mLight, preload) {
 			noicon, nokey, nomark, plain;
 		"Refresh Chat List",
 			noicon, nokey, nomark, plain;
+		"Refresh Messages",
+			noicon, nokey, nomark, plain;
+		"Clear Chat Input",
+			noicon, nokey, nomark, plain;
 	}
 };
 
