@@ -14,14 +14,14 @@ Messages for Macintosh is built on a lot of technologies. The READMEs of each of
 
 - [Retro68](https://github.com/autc04/Retro68) - a GCC-based cross compilation env for classic Macintosh systems
 - [Nuklear Quickdraw](https://github.com/CamHenlin/nuklear-quickdraw) - a heavily modified, classic Macintosh-specific version of [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) allowing a simple way to provide GUI services
-- [CoprocessorJS](https://github.com/CamHenlin/coprocessor.js) - a library that allows us to handle nodejs workloads sent over a serial port
+- [CoprocessorJS](https://github.com/CamHenlin/coprocessor.js) - a library that allows us to handle nodejs workloads sent over a serial port to talk to [supporting software](https://github.com/CamHenlin/imessagegraphqlserver)
 - [serialperformanceanalyzer](https://github.com/CamHenlin/serialperformanceanalyzer) - used to analyze the performance of many different parts of the application
 
 ## Limitations / areas for improvement
 Messages for Macintosh is not perfect. Here are some known limitations and things that could be improved:
 
-- 10 conversations at a time, with the ability to open a new conversation if you know the recipient's address book entry
-- Up to the most 15 recent messages are displayed in your selected chat. No pagination
+- 10 conversations at a time, with the ability to open a new conversation if you know the recipient's address book entry. Nuklear supports scrolling and we could likely add more to the list, but the performance may begin degrading on 68000-based systems.
+- Up to the most 15 recent messages are displayed in your selected chat. No pagination. Nuklear supports scrolling so we could add more messages, but again it may be slow on 68000-based systems if we do that
 - No image / emoji support (although emojis are generally translated to text)
 
 ## Pull requests and issues welcome
