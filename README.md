@@ -24,6 +24,7 @@ Messages for Macintosh is not perfect. Here are some known limitations and thing
 - Up to the most 15 recent messages are displayed in your selected chat. No pagination. Nuklear supports scrolling so we could add more messages, but again it may be slow on 68000-based systems if we do that
 - No image / emoji support (although emojis are generally translated to text)
 - Performance can still be improved. We set a good baseline here, but there is still more that can be done. There are lots of traces in the codebase supporting [serialperformanceanalyzer](https://github.com/CamHenlin/serialperformanceanalyzer) if someone would like to take a stab at further improving performance.
+- All updates are based on polling and can sometimes be slow
 
 ## Pull requests and issues welcome
 If you make any improvements or run into any issues, please feel free to bring them back to this repo with pull requests or issue reports. Both are welcome and will help Messages for Macintosh to be more useful in the future. 
