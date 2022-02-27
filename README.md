@@ -6,8 +6,8 @@ Messages for Macintosh is a software suite for classic Macintosh (System 2.0 thr
 ## How to use Messages for Macintosh
 There are two setup guides for Messages for Macintosh:
 
-- [the user-facing setup guide](https://henlin.net/), for users not interested in exploring the development workflow. This is the article you want if you just want to use your old Mac to chat.
-- [the developer-facing setup guide](https://henlin.net/), which explains how to set Messages for Macintosh up in such a way that you can make modifications to its different pieces
+- [the user-facing setup guide](https://henlin.net/2022/02/26/Introducing-Messages-for-Macintosh/), for users not interested in exploring the development workflow. This is the article you want if you just want to use your old Mac to chat.
+- [the developer-facing setup guide](https://henlin.net/2022/02/26/Messages-for-Macintosh-Developer-Guide/), which explains how to set Messages for Macintosh up in such a way that you can make modifications to its different pieces
 
 ## Technologies
 Messages for Macintosh is built on a lot of technologies. The READMEs of each of these is each worth familiarizing yourself with if you would like to contribute to Messages for Macintosh:
