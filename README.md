@@ -18,7 +18,7 @@ Messages for Macintosh is built on a lot of technologies. The READMEs of each of
 - [serialperformanceanalyzer](https://github.com/CamHenlin/serialperformanceanalyzer) - used to analyze the performance of many different parts of the application during its development lifecycle
 
 ## Limitations / areas for improvement
-Messages for Macintosh is not perfect. Here are some known limitations and things that could be improved:
+Messages for Macintosh is not perfect, but it is usable. Here are some known limitations and things that could be improved:
 
 - 10 conversations at a time, with the ability to open a new conversation if you know the recipient's address book entry. Nuklear supports scrolling and we could likely add more to the list, but the performance may begin degrading on 68000-based systems.
 - Up to the most 15 recent messages are displayed in your selected chat. No pagination. Nuklear supports scrolling so we could add more messages, but again it may be slow on 68000-based systems if we do that
